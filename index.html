@@ -568,15 +568,6 @@ function initFirebase() {
   const { onSnapshot, query, orderBy } = window._fns;
   const col = window._col;
 
-  // Check if config is still placeholder
-  if (window._db._delegate._databaseId.projectId === 'PASTE_YOUR_PROJECT_ID' ||
-      !window._db._delegate._databaseId.projectId) {
-    document.getElementById('configBanner').classList.add('visible');
-    setSyncStatus('error');
-    recipes = [];
-    render();
-    return;
-  }
 
   setSyncStatus('syncing');
   const q = query(col, orderBy('createdAt', 'desc'));
@@ -891,3 +882,4 @@ function setValue(id,val) { const el=document.getElementById(id); if(el && val) 
 </script>
 </body>
 </html>
+
