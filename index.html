@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Family Cookbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, onSnapshot,
+    addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // ═══════════════════════════════════════════════════════════
+  // 🔧 PASTE YOUR FIREBASE CONFIG HERE
+  // Go to console.firebase.google.com → New project → Firestore
+  // → Project Settings → Your apps → Add web app → copy config
+  // ═══════════════════════════════════════════════════════════
+  const firebaseConfig = {
+    apiKey:            "AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
+    authDomain:        "wortmann-family-recipes.firebaseapp.com",
+    projectId:         "wortmann-family-recipes",
+    storageBucket:     "wortmann-family-recipes.firebasestorage.app",
+    messagingSenderId: "178316367199",
+    appId:             "1:178316367199:web:d63bc04b8a30dd3b07d2ea"
+  };
+  // ═══════════════════════════════════════════════════════════
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const col = collection(db, "recipes");
+
+  // expose to non-module code
+  window._db  = db;
+  window._col = col;
+  window._fns = { addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, onSnapshot };
+  window._dbReady = true;
+  document.dispatchEvent(new Event("firebase-ready"));
+</script>
+
+<style>
+  :root {
+    --parchment: #F9F4EC;
+    --parchment2: #F2EAD8;
+    --warm:  #FFFDF8;
+    --ink:   #2C2416;
+    --ink2:  #5C4F38;
+    --ink3:  #9C8B6E;
+    --rust:  #C0622A;
+    --rust2: #E8946A;
+    --rust-pale: #FDF0E8;
+    --green: #3A6B4A;
+    --green-pale: #E8F4EC;
+    --blue:  #2C5282;
+    --blue-pale: #EBF2FB;
+    --red:   #9B2626;
+    --red-pale: #FDEAEA;
+    --border: #E0D5C0;
+    --border2:#C8BAA0;
+    --r: 12px;
+    --rs: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--parchment);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* subtle paper texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--ink);
+    color: var(--parchment);
+    padding: 0 2rem;
+    height: 68px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon { font-size: 26px; }
+  .logo-sub { font-size: 12px; font-weight: 300; opacity: 0.65; margin-top: 2px; display: block; letter-spacing: 1.5px; text-transform: uppercase; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .sync-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #4ADE80;
+    box-shadow: 0 0 6px #4ADE80;
+    flex-shrink: 0;
+  }
+  .sync-dot.syncing { background: var(--rust2); box-shadow: 0 0 6px var(--rust2); animation: pulse 1s infinite; }
+  .sync-dot.error   { background: #F87171; box-shadow: 0 0 6px #F87171; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .sync-label { font-size: 12px; opacity: 0.7; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 9px 20px;
+    border-radius: var(--rs);
+    border: 1.5px solid var(--border2);
+    background: var(--warm);
+    color: var(--ink2);
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:hover { background: var(--parchment2); border-color: var(--ink3); }
+  .btn-primary { background: var(--rust); color: #fff; border-color: var(--rust); }
+  .btn-primary:hover { background: #A0521F; border-color: #A0521F; }
+  .btn-ghost { background: transparent; border-color: rgba(255,255,255,0.25); color: rgba(255,255,255,0.9); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+  .btn-danger { color: var(--red); border-color: #FECACA; background: var(--red-pale); }
+  .btn-danger:hover { background: #FECACA; }
+  .btn-sm { padding: 6px 14px; font-size: 13px; }
+  .btn-xs { padding: 4px 10px; font-size: 12px; }
+
+  /* ── LAYOUT ── */
+  .container { max-width: 1160px; margin: 0 auto; padding: 2rem 1.5rem; position: relative; z-index: 1; }
+
+  /* ── SEARCH BAR ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--ink3); width:16px; height:16px; }
+  .search-input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--rs);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    background: var(--warm);
+    color: var(--ink);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .search-input:focus { border-color: var(--rust2); }
+  .filter-select {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--rs);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    background: var(--warm);
+    color: var(--ink2);
+    outline: none;
+    cursor: pointer;
+  }
+  .recipe-count {
+    font-size: 12px;
+    background: var(--rust-pale);
+    color: var(--rust);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── GRID ── */
+  .recipe-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── CARD ── */
+  .recipe-card {
+    background: var(--warm);
+    border: 1.5px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .18s, box-shadow .18s;
+    animation: fadeUp .3s ease both;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+  .recipe-card:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(44,36,22,.12); }
+  .card-img { width:100%; height:186px; object-fit:cover; display:block; }
+  .card-placeholder {
+    width:100%; height:186px;
+    background: var(--parchment2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:56px;
+  }
+  .card-body { padding: 1rem 1.25rem 1.25rem; }
+  .card-cat { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--rust); margin-bottom: 5px; }
+  .card-title { font-family: 'Lora', serif; font-size: 18px; font-weight: 600; line-height: 1.3; margin-bottom: 8px; }
+  .card-meta { display:flex; gap:14px; font-size:13px; color:var(--ink3); margin-bottom:10px; flex-wrap:wrap; }
+  .card-meta span { display:flex; align-items:center; gap:4px; }
+  .badges { display:flex; gap:6px; flex-wrap:wrap; }
+  .badge {
+    font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px;
+  }
+  .b-cal     { background:var(--rust-pale);  color:#92400E; }
+  .b-protein { background:var(--blue-pale);  color:var(--blue); }
+  .b-carbs   { background:var(--green-pale); color:var(--green); }
+  .b-fat     { background:var(--red-pale);   color:var(--red); }
+
+  /* ── EMPTY STATE ── */
+  .empty { text-align:center; padding:80px 20px; grid-column:1/-1; color:var(--ink3); }
+  .empty .big { font-size:72px; margin-bottom:16px; }
+  .empty h3 { font-family:'Lora',serif; font-size:24px; color:var(--ink2); margin-bottom:8px; }
+
+  /* ── LOADING ── */
+  .loading { text-align:center; padding:80px; grid-column:1/-1; }
+  .spinner {
+    width:36px; height:36px; border:3px solid var(--border2);
+    border-top-color:var(--rust); border-radius:50%;
+    animation:spin .7s linear infinite; margin:0 auto 16px;
+  }
+  @keyframes spin{ to{transform:rotate(360deg)} }
+
+  /* ── MODAL ── */
+  .overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(44,36,22,.6);
+    z-index:200; overflow-y:auto; padding:2rem 1rem;
+    backdrop-filter: blur(2px);
+  }
+  .overlay.open { display:block; }
+  .modal {
+    background:var(--warm); border-radius:var(--r);
+    max-width:740px; margin:0 auto;
+    box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    animation: modalIn .2s ease;
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:none} }
+  .modal-head {
+    padding:1.5rem 2rem; border-bottom:1.5px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--parchment2); border-radius:var(--r) var(--r) 0 0;
+  }
+  .modal-head h2 { font-family:'Lora',serif; font-size:22px; font-weight:600; }
+  .x-btn { background:none; border:none; font-size:22px; cursor:pointer; color:var(--ink3); padding:4px 8px; border-radius:4px; line-height:1; }
+  .x-btn:hover { background:var(--border); color:var(--ink); }
+  .modal-body { padding:2rem; }
+  .modal-foot {
+    padding:1.25rem 2rem; border-top:1.5px solid var(--border);
+    display:flex; justify-content:flex-end; gap:10px;
+    background:var(--parchment2); border-radius:0 0 var(--r) var(--r);
+  }
+
+  /* ── FORM ── */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .fg { display:flex; flex-direction:column; gap:5px; }
+  .fg.full { grid-column:1/-1; }
+  label { font-size:13px; font-weight:600; color:var(--ink2); }
+  input[type=text], input[type=number], input[type=url], select, textarea {
+    font-family:'Nunito',sans-serif; font-size:14px;
+    padding:10px 12px; border:1.5px solid var(--border);
+    border-radius:var(--rs); background:var(--warm); color:var(--ink);
+    outline:none; transition:border-color .15s; width:100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color:var(--rust2); }
+  textarea { resize:vertical; min-height:80px; }
+  .section-sep {
+    font-family:'Lora',serif; font-size:16px; font-weight:600;
+    color:var(--ink); margin:22px 0 10px;
+    padding-bottom:8px; border-bottom:1.5px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .nutri-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .nutri-wrap { display:flex; flex-direction:column; gap:4px; }
+  .nutri-wrap label { font-size:12px; }
+
+  /* ── INGREDIENT / STEP ROWS ── */
+  .ing-row { display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:8px; margin-bottom:8px; align-items:center; }
+  .step-row { display:grid; grid-template-columns:28px 1fr auto; gap:10px; margin-bottom:8px; align-items:flex-start; }
+  .step-num {
+    width:28px; height:28px; border-radius:50%;
+    background:var(--rust-pale); color:var(--rust);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; flex-shrink:0; margin-top:9px;
+  }
+  .icon-btn {
+    width:36px; height:36px; border:1.5px solid var(--border);
+    border-radius:var(--rs); background:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink3); font-size:15px; flex-shrink:0; transition:all .15s;
+  }
+  .icon-btn:hover { border-color:var(--red); color:var(--red); background:var(--red-pale); }
+  .add-row-btn {
+    font-family:'Nunito',sans-serif; font-size:13px; font-weight:600;
+    padding:5px 14px; border:1.5px dashed var(--border2);
+    border-radius:var(--rs); background:none; cursor:pointer;
+    color:var(--ink3); transition:all .15s;
+  }
+  .add-row-btn:hover { border-color:var(--rust); color:var(--rust); background:var(--rust-pale); }
+
+  /* ── IMG PREVIEW ── */
+  .img-preview { width:100%; height:150px; object-fit:cover; border-radius:var(--rs); margin-top:8px; display:none; }
+
+  /* ── VIEW MODAL ── */
+  .view-hero { width:100%; height:280px; object-fit:cover; border-radius:var(--r) var(--r) 0 0; display:block; }
+  .view-hero-ph {
+    width:100%; height:220px; border-radius:var(--r) var(--r) 0 0;
+    background:var(--parchment2);
+    display:flex; align-items:center; justify-content:center; font-size:80px;
+  }
+  .view-body { padding:2rem; }
+  .view-meta { display:flex; gap:18px; flex-wrap:wrap; color:var(--ink3); font-size:14px; margin-bottom:1.25rem; }
+  .nutri-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:1.5rem; }
+  .nc {
+    background:var(--parchment2); border:1.5px solid var(--border);
+    border-radius:var(--rs); padding:12px; text-align:center;
+  }
+  .nc .val { font-family:'Lora',serif; font-size:22px; font-weight:600; line-height:1; margin-bottom:3px; }
+  .nc .lbl { font-size:11px; color:var(--ink3); text-transform:uppercase; letter-spacing:.5px; }
+  .ing-list { list-style:none; margin-bottom:1.5rem; }
+  .ing-list li {
+    display:flex; justify-content:space-between;
+    padding:8px 0; border-bottom:1px solid var(--border); font-size:14px;
+  }
+  .ing-list li:last-child { border-bottom:none; }
+  .steps-ol { list-style:none; }
+  .steps-ol li { display:grid; grid-template-columns:34px 1fr; gap:12px; margin-bottom:16px; }
+  .sc {
+    width:34px; height:34px; border-radius:50%; background:var(--rust); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:700; flex-shrink:0; margin-top:2px;
+  }
+  .st { font-size:14px; line-height:1.75; padding-top:7px; }
+  .view-subhead {
+    font-family:'Lora',serif; font-size:17px; font-weight:600;
+    margin-bottom:10px; padding-bottom:8px; border-bottom:1.5px solid var(--border);
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position:fixed; bottom:24px; right:24px; z-index:999;
+    background:var(--ink); color:var(--parchment);
+    padding:12px 20px; border-radius:var(--rs);
+    font-size:14px; font-weight:600;
+    transform:translateY(80px); opacity:0;
+    transition:all .3s; pointer-events:none;
+  }
+  .toast.show { transform:none; opacity:1; }
+
+  /* ── CONFIG BANNER ── */
+  .config-banner {
+    background: #FEF3C7; border: 2px solid #F59E0B;
+    border-radius: var(--r); padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem; display: none;
+  }
+  .config-banner.visible { display: block; }
+  .config-banner h3 { font-family:'Lora',serif; color:#92400E; margin-bottom:6px; }
+  .config-banner p { font-size:13px; color:#78350F; line-height:1.7; }
+  .config-banner code { background:#FDE68A; padding:1px 5px; border-radius:3px; font-size:12px; }
+
+  @media(max-width:600px) {
+    .form-grid { grid-template-columns:1fr; }
+    .nutri-grid { grid-template-columns:repeat(2,1fr); }
+    .nutri-cards { grid-template-columns:repeat(2,1fr); }
+    .ing-row { grid-template-columns:1fr 1fr auto; }
+    .ing-row .ing-unit { display:none; }
+    .header { padding:0 1rem; }
+    .modal-body, .view-body { padding:1.25rem; }
+    .modal-head, .modal-foot { padding:1rem 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <span class="logo-icon">📖</span>
+    <div>
+      Our Family Cookbook
+      <span class="logo-sub">Shared recipes, shared memories</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="sync-dot" id="syncDot"></div>
+    <span class="sync-label" id="syncLabel">Connecting…</span>
+    <button class="btn btn-ghost btn-sm" onclick="openAdd()">＋ Add Recipe</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Firebase config helper banner -->
+  <div class="config-banner" id="configBanner">
+    <h3>🔧 One-time Firebase setup needed</h3>
+    <p>
+      Open <code>index.html</code> in a text editor and replace the placeholder values in the
+      <code>firebaseConfig</code> block near the top with your own Firebase project credentials.<br><br>
+      <strong>How to get them (free, takes ~3 minutes):</strong><br>
+      1. Go to <a href="https://console.firebase.google.com" target="_blank" style="color:var(--rust)">console.firebase.google.com</a> → Create project<br>
+      2. Add a <strong>Web app</strong> → copy the config object<br>
+      3. In the left menu: <strong>Firestore Database</strong> → Create database → Start in <em>test mode</em><br>
+      4. Paste your config into this file and you're done — all family devices sync instantly!
+    </p>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInput" placeholder="Search recipes, ingredients…" oninput="render()">
+    </div>
+    <select class="filter-select" id="catFilter" onchange="render()">
+      <option value="">All Categories</option>
+      <option>Breakfast</option><option>Lunch</option><option>Dinner</option>
+      <option>Dessert</option><option>Snack</option><option>Soup</option>
+      <option>Salad</option><option>Baking</option><option>Drink</option>
+      <option>Side Dish</option><option>Appetizer</option><option>Other</option>
+    </select>
+    <select class="filter-select" id="sortFilter" onchange="render()">
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+      <option value="az">Name A–Z</option>
+      <option value="cal_asc">Calories ↑</option>
+      <option value="cal_desc">Calories ↓</option>
+    </select>
+    <span class="recipe-count" id="recipeCount">Loading…</span>
+  </div>
+
+  <div class="recipe-grid" id="grid">
+    <div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">New Recipe</h2>
+      <button class="x-btn" onclick="closeOverlay('addOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="fg full">
+          <label>Recipe Name *</label>
+          <input type="text" id="f_name" placeholder="e.g. Grandma's Apple Pie">
+        </div>
+        <div class="fg">
+          <label>Category</label>
+          <select id="f_cat">
+            <option>Breakfast</option><option>Lunch</option><option>Dinner</option>
+            <option>Dessert</option><option>Snack</option><option>Soup</option>
+            <option>Salad</option><option>Baking</option><option>Drink</option>
+            <option>Side Dish</option><option>Appetizer</option><option>Other</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Added by</label>
+          <input type="text" id="f_author" placeholder="e.g. Mom, Dad, Grandpa…">
+        </div>
+        <div class="fg">
+          <label>Servings</label>
+          <input type="number" id="f_servings" placeholder="4" min="1">
+        </div>
+        <div class="fg">
+          <label>Prep time (mins)</label>
+          <input type="number" id="f_prep" placeholder="15" min="0">
+        </div>
+        <div class="fg">
+          <label>Cook time (mins)</label>
+          <input type="number" id="f_cook" placeholder="30" min="0">
+        </div>
+        <div class="fg full">
+          <label>Photo URL (paste a link to any image)</label>
+          <input type="url" id="f_photo" placeholder="https://example.com/photo.jpg" oninput="previewPhoto()">
+          <img class="img-preview" id="photoPreview" alt="">
+        </div>
+        <div class="fg full">
+          <label>Description / Story behind this dish</label>
+          <textarea id="f_desc" placeholder="A short note about this recipe — who made it first, a memory, a tip…"></textarea>
+        </div>
+      </div>
+
+      <div class="section-sep">Nutrition <small style="font-size:12px;font-weight:400;color:var(--ink3)">(per serving)</small></div>
+      <div class="nutri-grid">
+        <div class="nutri-wrap"><label>Calories (kcal)</label><input type="number" id="f_cal" placeholder="350" min="0"></div>
+        <div class="nutri-wrap"><label>Protein (g)</label><input type="number" id="f_protein" placeholder="25" min="0"></div>
+        <div class="nutri-wrap"><label>Carbs (g)</label><input type="number" id="f_carbs" placeholder="40" min="0"></div>
+        <div class="nutri-wrap"><label>Fat (g)</label><input type="number" id="f_fat" placeholder="12" min="0"></div>
+      </div>
+
+      <div class="section-sep">
+        Ingredients
+        <button class="add-row-btn" onclick="addIng()">＋ Add ingredient</button>
+      </div>
+      <div id="ingList"></div>
+
+      <div class="section-sep">
+        Steps
+        <button class="add-row-btn" onclick="addStep()">＋ Add step</button>
+      </div>
+      <div id="stepList"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="deleteBtn" style="display:none;margin-right:auto" onclick="deleteRecipe()">🗑 Delete</button>
+      <button class="btn" onclick="closeOverlay('addOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRecipe()">💾 Save Recipe</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW MODAL -->
+<div class="overlay" id="viewOverlay">
+  <div class="modal" style="max-width:700px">
+    <div id="viewContent"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── state ─────────────────────────────────────────────────────────────────────
+let recipes = [];
+let editingId = null;
+let dbReady = false;
+
+const EMOJIS = {
+  Breakfast:"🍳",Lunch:"🥗",Dinner:"🍽️",Dessert:"🍰",Snack:"🧆",
+  Soup:"🍲",Salad:"🥙",Baking:"🍞",Drink:"🥤","Side Dish":"🥦",Appetizer:"🫕",Other:"🍴"
+};
+
+// ── sync status ───────────────────────────────────────────────────────────────
+function setSyncStatus(state) {
+  const dot = document.getElementById('syncDot');
+  const lbl = document.getElementById('syncLabel');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  lbl.textContent = state === 'live' ? 'Live sync' : state === 'syncing' ? 'Syncing…' : 'Offline';
+}
+
+// ── Firebase init ─────────────────────────────────────────────────────────────
+function initFirebase() {
+  const { onSnapshot, query, orderBy } = window._fns;
+  const col = window._col;
+
+  // Check if config is still placeholder
+  if (window._db._delegate._databaseId.projectId === 'PASTE_YOUR_PROJECT_ID' ||
+      !window._db._delegate._databaseId.projectId) {
+    document.getElementById('configBanner').classList.add('visible');
+    setSyncStatus('error');
+    recipes = [];
+    render();
+    return;
+  }
+
+  setSyncStatus('syncing');
+  const q = query(col, orderBy('createdAt', 'desc'));
+  onSnapshot(q,
+    (snap) => {
+      recipes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setSyncStatus('live');
+      render();
+    },
+    (err) => {
+      console.error(err);
+      setSyncStatus('error');
+      showToast('⚠️ Could not connect to database');
+    }
+  );
+}
+
+document.addEventListener('firebase-ready', () => {
+  dbReady = true;
+  try { initFirebase(); } catch(e) {
+    document.getElementById('configBanner').classList.add('visible');
+    setSyncStatus('error');
+    render();
+  }
+});
+
+// ── render grid ───────────────────────────────────────────────────────────────
+function render() {
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const srt = document.getElementById('sortFilter').value;
+
+  let list = recipes.filter(r => {
+    const matchQ = !q ||
+      (r.name||'').toLowerCase().includes(q) ||
+      (r.description||'').toLowerCase().includes(q) ||
+      (r.author||'').toLowerCase().includes(q) ||
+      (r.ingredients||[]).some(i => (i.name||'').toLowerCase().includes(q));
+    return matchQ && (!cat || r.category === cat);
+  });
+
+  list.sort((a,b) => {
+    if (srt==='newest')   return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+    if (srt==='oldest')   return (a.createdAt?.seconds||0)-(b.createdAt?.seconds||0);
+    if (srt==='az')       return (a.name||'').localeCompare(b.name||'');
+    if (srt==='cal_asc')  return (+a.cal||0)-(+b.cal||0);
+    if (srt==='cal_desc') return (+b.cal||0)-(+a.cal||0);
+    return 0;
+  });
+
+  const total = recipes.length;
+  document.getElementById('recipeCount').textContent =
+    `${total} recipe${total!==1?'s':''}`;
+
+  const grid = document.getElementById('grid');
+
+  if (!dbReady) {
+    grid.innerHTML = `<div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Connecting…</p></div>`;
+    return;
+  }
+
+  if (list.length === 0) {
+    grid.innerHTML = `<div class="empty">
+      <div class="big">📖</div>
+      <h3>${total===0 ? 'Your cookbook is empty' : 'No recipes found'}</h3>
+      <p style="margin-bottom:20px">${total===0 ? 'Add your first family recipe!' : 'Try a different search or filter.'}</p>
+      ${total===0 ? '<button class="btn btn-primary" onclick="openAdd()">＋ Add First Recipe</button>' : ''}
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map((r,i) => `
+    <div class="recipe-card" style="animation-delay:${i*0.04}s" onclick="viewRecipe('${r.id}')">
+      ${r.photo
+        ? `<img class="card-img" src="${h(r.photo)}" alt="${h(r.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        : ''}
+      <div class="card-placeholder" style="${r.photo?'display:none':''}">${EMOJIS[r.category]||'🍴'}</div>
+      <div class="card-body">
+        <div class="card-cat">${h(r.category||'')}${r.author ? ` · ${h(r.author)}` : ''}</div>
+        <div class="card-title">${h(r.name)}</div>
+        <div class="card-meta">
+          ${r.servings ? `<span>👤 ${r.servings} serv.</span>` : ''}
+          ${(r.prep||r.cook) ? `<span>⏱ ${(+r.prep||0)+(+r.cook||0)} min</span>` : ''}
+          ${(r.ingredients||[]).length ? `<span>🧂 ${r.ingredients.length} ingr.</span>` : ''}
+        </div>
+        <div class="badges">
+          ${r.cal     ? `<span class="badge b-cal">${r.cal} kcal</span>` : ''}
+          ${r.protein ? `<span class="badge b-protein">${r.protein}g protein</span>` : ''}
+          ${r.carbs   ? `<span class="badge b-carbs">${r.carbs}g carbs</span>` : ''}
+          ${r.fat     ? `<span class="badge b-fat">${r.fat}g fat</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── view recipe ───────────────────────────────────────────────────────────────
+function viewRecipe(id) {
+  const r = recipes.find(x => x.id === id);
+  if (!r) return;
+  const total = (+r.prep||0)+(+r.cook||0);
+  document.getElementById('viewContent').innerHTML = `
+    ${r.photo
+      ? `<img class="view-hero" src="${h(r.photo)}" alt="${h(r.name)}" onerror="this.style.display='none'">`
+      : `<div class="view-hero-ph">${EMOJIS[r.category]||'🍴'}</div>`}
+    <div style="padding:0 2rem">
+      <div class="modal-head" style="border-radius:0;padding:1.25rem 0;background:transparent">
+        <div>
+          <div style="font-size:11px;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">
+            ${h(r.category||'')}${r.author ? ` · Added by ${h(r.author)}` : ''}
+          </div>
+          <h2 style="font-family:'Lora',serif;font-size:26px">${h(r.name)}</h2>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-sm" onclick="openEdit('${r.id}');closeOverlay('viewOverlay')">✏️ Edit</button>
+          <button class="x-btn" onclick="closeOverlay('viewOverlay')">✕</button>
+        </div>
+      </div>
+    </div>
+    <div class="view-body">
+      ${r.description ? `<p style="color:var(--ink2);font-style:italic;margin-bottom:1rem;line-height:1.8;border-left:3px solid var(--rust2);padding-left:12px">"${h(r.description)}"</p>` : ''}
+      <div class="view-meta">
+        ${r.servings ? `<span>👤 ${r.servings} servings</span>` : ''}
+        ${r.prep  ? `<span>🥄 Prep: ${r.prep} min</span>`  : ''}
+        ${r.cook  ? `<span>🔥 Cook: ${r.cook} min</span>`  : ''}
+        ${total   ? `<span>⏱ Total: ${total} min</span>`   : ''}
+      </div>
+      ${(r.cal||r.protein||r.carbs||r.fat) ? `
+      <div class="nutri-cards">
+        ${r.cal     ? `<div class="nc"><div class="val" style="color:var(--rust)">${r.cal}</div><div class="lbl">kcal</div></div>` : ''}
+        ${r.protein ? `<div class="nc"><div class="val" style="color:var(--blue)">${r.protein}g</div><div class="lbl">Protein</div></div>` : ''}
+        ${r.carbs   ? `<div class="nc"><div class="val" style="color:var(--green)">${r.carbs}g</div><div class="lbl">Carbs</div></div>` : ''}
+        ${r.fat     ? `<div class="nc"><div class="val" style="color:var(--red)">${r.fat}g</div><div class="lbl">Fat</div></div>` : ''}
+      </div>` : ''}
+      ${(r.ingredients||[]).length ? `
+        <div class="view-subhead">Ingredients</div>
+        <ul class="ing-list">
+          ${r.ingredients.map(i=>`<li><span>${h(i.name)}</span><span style="color:var(--ink3)">${h(i.qty||'')}${i.unit?' '+h(i.unit):''}</span></li>`).join('')}
+        </ul>` : ''}
+      ${(r.steps||[]).length ? `
+        <div class="view-subhead">Instructions</div>
+        <ol class="steps-ol">
+          ${r.steps.map((s,i)=>`<li><div class="sc">${i+1}</div><div class="st">${h(s)}</div></li>`).join('')}
+        </ol>` : ''}
+    </div>
+  `;
+  openOverlay('viewOverlay');
+}
+
+// ── add / edit form ───────────────────────────────────────────────────────────
+function openAdd() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'New Recipe';
+  document.getElementById('deleteBtn').style.display = 'none';
+  clearForm();
+  addIng(); addIng(); addIng();
+  addStep(); addStep();
+  openOverlay('addOverlay');
+}
+
+function openEdit(id) {
+  const r = recipes.find(x => x.id === id);
+  if (!r) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Recipe';
+  document.getElementById('deleteBtn').style.display = '';
+  clearForm();
+  setValue('f_name', r.name); setValue('f_cat', r.category);
+  setValue('f_author', r.author); setValue('f_servings', r.servings);
+  setValue('f_prep', r.prep); setValue('f_cook', r.cook);
+  setValue('f_photo', r.photo); setValue('f_desc', r.description);
+  setValue('f_cal', r.cal); setValue('f_protein', r.protein);
+  setValue('f_carbs', r.carbs); setValue('f_fat', r.fat);
+  previewPhoto();
+  (r.ingredients||[]).forEach(i => addIng(i.name, i.qty, i.unit));
+  if (!(r.ingredients||[]).length) addIng();
+  (r.steps||[]).forEach(s => addStep(s));
+  if (!(r.steps||[]).length) addStep();
+  openOverlay('addOverlay');
+}
+
+function clearForm() {
+  ['f_name','f_author','f_servings','f_prep','f_cook','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat']
+    .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('f_cat').selectedIndex=0;
+  document.getElementById('ingList').innerHTML='';
+  document.getElementById('stepList').innerHTML='';
+  document.getElementById('photoPreview').style.display='none';
+}
+
+function addIng(name='',qty='',unit='') {
+  const d = document.createElement('div');
+  d.className='ing-row';
+  d.innerHTML=`
+    <input type="text" placeholder="Ingredient" value="${h(name)}" class="ing-name">
+    <input type="text" placeholder="Amount" value="${h(qty)}" class="ing-qty">
+    <input type="text" placeholder="Unit" value="${h(unit)}" class="ing-unit">
+    <button class="icon-btn" onclick="this.closest('.ing-row').remove()" title="Remove">✕</button>`;
+  document.getElementById('ingList').appendChild(d);
+}
+
+function addStep(text='') {
+  const list = document.getElementById('stepList');
+  const n = list.children.length+1;
+  const d = document.createElement('div');
+  d.className='step-row';
+  d.innerHTML=`
+    <div class="step-num">${n}</div>
+    <textarea placeholder="Step ${n}…" rows="2">${h(text)}</textarea>
+    <button class="icon-btn" onclick="removeStep(this)">✕</button>`;
+  list.appendChild(d);
+}
+
+function removeStep(btn) {
+  btn.closest('.step-row').remove();
+  document.querySelectorAll('.step-num').forEach((el,i)=>el.textContent=i+1);
+}
+
+function previewPhoto() {
+  const url = document.getElementById('f_photo').value.trim();
+  const img = document.getElementById('photoPreview');
+  img.src = url; img.style.display = url ? 'block' : 'none';
+}
+
+async function saveRecipe() {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { document.getElementById('f_name').focus(); showToast('⚠️ Please enter a recipe name'); return; }
+  if (!dbReady) { showToast('⚠️ Database not connected'); return; }
+
+  const ingredients = [...document.querySelectorAll('.ing-row')].map(row=>({
+    name: row.querySelector('.ing-name').value.trim(),
+    qty:  row.querySelector('.ing-qty').value.trim(),
+    unit: row.querySelector('.ing-unit').value.trim(),
+  })).filter(i=>i.name);
+
+  const steps = [...document.querySelectorAll('#stepList textarea')]
+    .map(t=>t.value.trim()).filter(Boolean);
+
+  const data = {
+    name,
+    category: document.getElementById('f_cat').value,
+    author:   document.getElementById('f_author').value.trim(),
+    servings: document.getElementById('f_servings').value,
+    prep:     document.getElementById('f_prep').value,
+    cook:     document.getElementById('f_cook').value,
+    photo:    document.getElementById('f_photo').value.trim(),
+    description: document.getElementById('f_desc').value.trim(),
+    cal:      document.getElementById('f_cal').value,
+    protein:  document.getElementById('f_protein').value,
+    carbs:    document.getElementById('f_carbs').value,
+    fat:      document.getElementById('f_fat').value,
+    ingredients, steps,
+  };
+
+  setSyncStatus('syncing');
+  try {
+    const { addDoc, updateDoc, doc, serverTimestamp } = window._fns;
+    if (editingId) {
+      await updateDoc(doc(window._db, 'recipes', editingId), data);
+      showToast('✅ Recipe updated!');
+    } else {
+      data.createdAt = serverTimestamp();
+      await addDoc(window._col, data);
+      showToast('✅ Recipe saved for the whole family!');
+    }
+    closeOverlay('addOverlay');
+  } catch(e) {
+    console.error(e);
+    showToast('❌ Save failed — check your connection');
+    setSyncStatus('error');
+  }
+}
+
+async function deleteRecipe() {
+  if (!editingId || !confirm('Delete this recipe? This cannot be undone.')) return;
+  try {
+    const { deleteDoc, doc } = window._fns;
+    await deleteDoc(doc(window._db, 'recipes', editingId));
+    showToast('🗑 Recipe deleted');
+    closeOverlay('addOverlay');
+  } catch(e) { showToast('❌ Delete failed'); }
+}
+
+// ── overlays ──────────────────────────────────────────────────────────────────
+function openOverlay(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeOverlay(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow='';
+}
+document.querySelectorAll('.overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target===el) closeOverlay(el.id); });
+});
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeOverlay('viewOverlay'); closeOverlay('addOverlay'); }
+});
+
+// ── toast ─────────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// ── utils ─────────────────────────────────────────────────────────────────────
+function h(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function setValue(id,val) { const el=document.getElementById(id); if(el && val) el.value=val; }
+</script>
+</body>
+</html>
