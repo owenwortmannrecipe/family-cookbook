@@ -6,492 +6,533 @@
 <title>Wortmann Family Cookbook</title>
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy }
-    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   const firebaseConfig = {
-    apiKey:            "AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
-    authDomain:        "wortmann-family-recipes.firebaseapp.com",
-    projectId:         "wortmann-family-recipes",
-    storageBucket:     "wortmann-family-recipes.firebasestorage.app",
-    messagingSenderId: "178316367199",
-    appId:             "1:178316367199:web:d63bc04b8a30dd3b07d2ea"
+    apiKey:"AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
+    authDomain:"wortmann-family-recipes.firebaseapp.com",
+    projectId:"wortmann-family-recipes",
+    storageBucket:"wortmann-family-recipes.firebasestorage.app",
+    messagingSenderId:"178316367199",
+    appId:"1:178316367199:web:d63bc04b8a30dd3b07d2ea"
   };
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const col = collection(db, "recipes");
-  window._db  = db;
-  window._col = col;
-  window._fns = { addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, onSnapshot };
-  window._dbReady = true;
+  const app=initializeApp(firebaseConfig);
+  const db=getFirestore(app);
+  const col=collection(db,"recipes");
+  window._db=db;window._col=col;
+  window._fns={addDoc,updateDoc,deleteDoc,doc,serverTimestamp,query,orderBy,onSnapshot};
   document.dispatchEvent(new Event("firebase-ready"));
 </script>
-
 <style>
-:root {
-  --parchment:#F9F4EC; --parchment2:#F2EAD8; --warm:#FFFDF8;
-  --ink:#2C2416; --ink2:#5C4F38; --ink3:#9C8B6E;
-  --rust:#C0622A; --rust2:#E8946A; --rust-pale:#FDF0E8;
-  --green:#3A6B4A; --green-pale:#E8F4EC;
-  --blue:#2C5282; --blue-pale:#EBF2FB;
-  --red:#9B2626; --red-pale:#FDEAEA;
-  --purple:#5B21B6; --purple-pale:#EDE9FE;
-  --border:#E0D5C0; --border2:#C8BAA0;
-  --sidebar:255px; --r:12px; --rs:8px;
-}
+:root{--parchment:#F9F4EC;--parchment2:#F2EAD8;--warm:#FFFDF8;--ink:#2C2416;--ink2:#5C4F38;--ink3:#9C8B6E;--rust:#C0622A;--rust2:#E8946A;--rust-pale:#FDF0E8;--green:#3A6B4A;--green-pale:#E8F4EC;--blue:#2C5282;--blue-pale:#EBF2FB;--red:#9B2626;--red-pale:#FDEAEA;--purple:#5B21B6;--purple-pale:#EDE9FE;--border:#E0D5C0;--border2:#C8BAA0;--sidebar:255px;--r:12px;--rs:8px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Nunito',sans-serif;background:var(--parchment);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.65;display:flex}
-
-/* SIDEBAR */
 .sidebar{width:var(--sidebar);background:var(--ink);color:var(--parchment);position:fixed;top:0;left:0;height:100vh;z-index:200;display:flex;flex-direction:column;overflow-y:auto;transition:transform .25s}
-.sb-logo{padding:1.2rem 1.4rem;border-bottom:1px solid rgba(255,255,255,.1)}
-.sb-logo .title{font-family:'Lora',serif;font-size:17px;font-weight:600;line-height:1.25}
-.sb-logo .sub{font-size:10px;opacity:.45;letter-spacing:1.2px;text-transform:uppercase;margin-top:3px}
-.sb-nav{flex:1;padding:.6rem 0}
-.nav-sec{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.3);padding:.7rem 1.4rem .2rem}
-.nav-item{display:flex;align-items:center;gap:9px;padding:.6rem 1.4rem;font-size:13.5px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.sb-logo{padding:1.1rem 1.3rem;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-logo .title{font-family:'Lora',serif;font-size:16px;font-weight:600;line-height:1.25}
+.sb-logo .sub{font-size:10px;opacity:.4;letter-spacing:1.2px;text-transform:uppercase;margin-top:3px}
+.sb-nav{flex:1;padding:.5rem 0}
+.nav-sec{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.28);padding:.65rem 1.3rem .2rem}
+.nav-item{display:flex;align-items:center;gap:8px;padding:.55rem 1.3rem;font-size:13px;font-weight:600;color:rgba(255,255,255,.68);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
 .nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
 .nav-item.active{background:rgba(192,98,42,.2);color:var(--rust2);border-left-color:var(--rust2)}
-.nav-item .ic{font-size:16px;width:20px;text-align:center;flex-shrink:0}
-.sb-foot{padding:.9rem 1.4rem;border-top:1px solid rgba(255,255,255,.1);font-size:11px}
-.sync-row{display:flex;align-items:center;gap:7px;margin-bottom:.4rem;font-size:12px;opacity:.75}
+.nav-item .ic{font-size:15px;width:19px;text-align:center;flex-shrink:0}
+.sb-foot{padding:.8rem 1.3rem;border-top:1px solid rgba(255,255,255,.1)}
+.sync-row{display:flex;align-items:center;gap:7px;margin-bottom:.35rem;font-size:12px;opacity:.75}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:#4ADE80;box-shadow:0 0 5px #4ADE80;flex-shrink:0}
 .sync-dot.syncing{background:var(--rust2);animation:pulse 1s infinite}
 .sync-dot.error{background:#F87171}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.sb-toggle{display:none;position:fixed;top:10px;left:10px;z-index:300;background:var(--ink);border:none;color:var(--parchment);font-size:19px;width:38px;height:38px;border-radius:var(--rs);cursor:pointer;align-items:center;justify-content:center}
-
-/* MAIN */
+.sb-toggle{display:none;position:fixed;top:10px;left:10px;z-index:300;background:var(--ink);border:none;color:var(--parchment);font-size:18px;width:36px;height:36px;border-radius:var(--rs);cursor:pointer;align-items:center;justify-content:center}
 .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;min-width:0}
 .page{display:none;flex:1;flex-direction:column}
 .page.active{display:flex}
-
-/* TOPBAR */
-.topbar{background:var(--warm);border-bottom:1px solid var(--border);padding:.7rem 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;position:sticky;top:0;z-index:50}
-.topbar-title{font-family:'Lora',serif;font-size:19px;font-weight:600}
-.tb-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
-
-/* BUTTONS */
-.btn{font-family:'Nunito',sans-serif;font-size:13.5px;font-weight:600;padding:7px 16px;border-radius:var(--rs);border:1.5px solid var(--border2);background:var(--warm);color:var(--ink2);cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.topbar{background:var(--warm);border-bottom:1px solid var(--border);padding:.65rem 1.6rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Lora',serif;font-size:18px;font-weight:600}
+.tb-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn{font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;padding:7px 15px;border-radius:var(--rs);border:1.5px solid var(--border2);background:var(--warm);color:var(--ink2);cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
 .btn:hover{background:var(--parchment2);border-color:var(--ink3)}
 .btn-primary{background:var(--rust);color:#fff;border-color:var(--rust)}
-.btn-primary:hover{background:#A0521F;border-color:#A0521F}
+.btn-primary:hover{background:#A0521F}
 .btn-green{background:var(--green);color:#fff;border-color:var(--green)}
 .btn-green:hover{background:#2d5439}
 .btn-danger{color:var(--red);border-color:#FECACA;background:var(--red-pale)}
-.btn-danger:hover{background:#FECACA}
-.btn-sm{padding:5px 11px;font-size:13px}
-
-/* CONTAINER */
-.container{max-width:1080px;margin:0 auto;padding:1.75rem 1.5rem;width:100%}
-
-/* TOOLBAR */
-.toolbar{display:flex;gap:8px;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center}
-.search-wrap{position:relative;flex:1;min-width:170px}
+.btn-sm{padding:5px 11px;font-size:12.5px}
+.container{max-width:1080px;margin:0 auto;padding:1.6rem 1.4rem;width:100%}
+.toolbar{display:flex;gap:7px;margin-bottom:1.1rem;flex-wrap:wrap;align-items:center}
+.search-wrap{position:relative;flex:1;min-width:160px}
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--ink3);width:14px;height:14px}
-.search-input{width:100%;padding:8px 11px 8px 33px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:14px;background:var(--warm);color:var(--ink);outline:none;transition:border-color .15s}
+.search-input{width:100%;padding:8px 10px 8px 32px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:13.5px;background:var(--warm);color:var(--ink);outline:none;transition:border-color .15s}
 .search-input:focus{border-color:var(--rust2)}
-.filter-select{padding:8px 11px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:13.5px;background:var(--warm);color:var(--ink2);outline:none;cursor:pointer}
-.recipe-count{font-size:12px;background:var(--rust-pale);color:var(--rust);padding:3px 11px;border-radius:20px;font-weight:700;white-space:nowrap}
-
-/* DIET CHIPS */
-.chip-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.1rem}
-.chip{font-size:12px;padding:4px 11px;border-radius:20px;border:1.5px solid var(--border);background:var(--warm);color:var(--ink3);cursor:pointer;font-weight:600;transition:all .15s}
+.filter-select{padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'Nunito',sans-serif;font-size:13px;background:var(--warm);color:var(--ink2);outline:none;cursor:pointer}
+.recipe-count{font-size:12px;background:var(--rust-pale);color:var(--rust);padding:3px 10px;border-radius:20px;font-weight:700;white-space:nowrap}
+.chip-bar{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:1rem}
+.chip{font-size:12px;padding:3px 10px;border-radius:20px;border:1.5px solid var(--border);background:var(--warm);color:var(--ink3);cursor:pointer;font-weight:600;transition:all .15s}
 .chip:hover{border-color:var(--ink3);color:var(--ink)}
 .chip.active{background:var(--green);color:#fff;border-color:var(--green)}
-
-/* GRID */
-.recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:16px}
-
-/* CARD */
+.recipe-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:15px}
 .recipe-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .18s,box-shadow .18s;animation:fadeUp .3s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .recipe-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(44,36,22,.12)}
-.card-img{width:100%;height:172px;object-fit:cover;display:block}
-.card-ph{width:100%;height:172px;background:var(--parchment2);display:flex;align-items:center;justify-content:center;font-size:50px}
-.card-body{padding:.85rem 1.1rem 1.1rem}
-.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;gap:6px}
-.card-cat{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--rust);flex-shrink:0}
+.card-img{width:100%;height:168px;object-fit:cover;display:block}
+.card-ph{width:100%;height:168px;background:var(--parchment2);display:flex;align-items:center;justify-content:center;font-size:48px}
+.card-body{padding:.8rem 1rem 1rem}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;gap:5px}
+.card-cat{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--rust);flex-shrink:0}
 .diet-chips{display:flex;gap:3px;flex-wrap:wrap}
-.diet-tag{font-size:10px;padding:2px 6px;border-radius:10px;font-weight:700}
-.dt-vegan{background:var(--green-pale);color:var(--green)}
-.dt-vegetarian{background:#F0FDF4;color:#166534}
-.dt-glutenfree{background:var(--blue-pale);color:var(--blue)}
-.dt-dairyfree{background:#FEF9C3;color:#854D0E}
-.dt-keto{background:var(--purple-pale);color:var(--purple)}
-.card-title{font-family:'Lora',serif;font-size:16.5px;font-weight:600;line-height:1.3;margin-bottom:6px}
-.card-meta{display:flex;gap:10px;font-size:12px;color:var(--ink3);margin-bottom:7px;flex-wrap:wrap}
+.diet-tag{font-size:10px;padding:2px 5px;border-radius:10px;font-weight:700}
+.dt-vegan{background:var(--green-pale);color:var(--green)}.dt-vegetarian{background:#F0FDF4;color:#166534}
+.dt-glutenfree{background:var(--blue-pale);color:var(--blue)}.dt-dairyfree{background:#FEF9C3;color:#854D0E}.dt-keto{background:var(--purple-pale);color:var(--purple)}
+.card-title{font-family:'Lora',serif;font-size:16px;font-weight:600;line-height:1.3;margin-bottom:5px}
+.card-meta{display:flex;gap:9px;font-size:11.5px;color:var(--ink3);margin-bottom:6px;flex-wrap:wrap}
 .badges{display:flex;gap:4px;flex-wrap:wrap}
-.badge{font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px}
-.b-cal{background:var(--rust-pale);color:#92400E}
-.b-protein{background:var(--blue-pale);color:var(--blue)}
-.b-carbs{background:var(--green-pale);color:var(--green)}
-.b-fat{background:var(--red-pale);color:var(--red)}
-
-/* EMPTY/LOADING */
+.badge{font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:4px}
+.b-cal{background:var(--rust-pale);color:#92400E}.b-protein{background:var(--blue-pale);color:var(--blue)}.b-carbs{background:var(--green-pale);color:var(--green)}.b-fat{background:var(--red-pale);color:var(--red)}
 .empty{text-align:center;padding:60px 20px;grid-column:1/-1;color:var(--ink3)}
-.empty .big{font-size:64px;margin-bottom:12px}
-.empty h3{font-family:'Lora',serif;font-size:21px;color:var(--ink2);margin-bottom:7px}
+.empty .big{font-size:60px;margin-bottom:12px}
+.empty h3{font-family:'Lora',serif;font-size:20px;color:var(--ink2);margin-bottom:6px}
 .loading{text-align:center;padding:70px;grid-column:1/-1}
-.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--rust);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+.spinner{width:30px;height:30px;border:3px solid var(--border2);border-top-color:var(--rust);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* OVERLAY */
-.overlay{display:none;position:fixed;inset:0;background:rgba(44,36,22,.6);z-index:400;overflow-y:auto;padding:1.5rem 1rem;backdrop-filter:blur(2px)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(44,36,22,.6);z-index:400;overflow-y:auto;padding:1.25rem 1rem;backdrop-filter:blur(2px)}
 .overlay.open{display:block}
 .modal{background:var(--warm);border-radius:var(--r);max-width:740px;margin:0 auto;box-shadow:0 24px 60px rgba(0,0,0,.25);animation:modalIn .2s ease}
 @keyframes modalIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
-.modal-head{padding:1.1rem 1.6rem;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--parchment2);border-radius:var(--r) var(--r) 0 0}
-.modal-head h2{font-family:'Lora',serif;font-size:20px;font-weight:600}
-.x-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink3);padding:3px 7px;border-radius:4px;line-height:1}
+.modal-head{padding:1rem 1.5rem;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;background:var(--parchment2);border-radius:var(--r) var(--r) 0 0}
+.modal-head h2{font-family:'Lora',serif;font-size:19px;font-weight:600}
+.x-btn{background:none;border:none;font-size:19px;cursor:pointer;color:var(--ink3);padding:3px 7px;border-radius:4px;line-height:1}
 .x-btn:hover{background:var(--border);color:var(--ink)}
-.modal-body{padding:1.6rem}
-.modal-foot{padding:1rem 1.6rem;border-top:1.5px solid var(--border);display:flex;justify-content:flex-end;gap:7px;background:var(--parchment2);border-radius:0 0 var(--r) var(--r)}
-
-/* FORM */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-body{padding:1.5rem}
+.modal-foot{padding:1rem 1.5rem;border-top:1.5px solid var(--border);display:flex;justify-content:flex-end;gap:7px;background:var(--parchment2);border-radius:0 0 var(--r) var(--r)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fg.full{grid-column:1/-1}
-label{font-size:13px;font-weight:700;color:var(--ink2)}
+label{font-size:12.5px;font-weight:700;color:var(--ink2)}
 input[type=text],input[type=number],input[type=url],select,textarea{font-family:'Nunito',sans-serif;font-size:13.5px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--warm);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--rust2)}
-textarea{resize:vertical;min-height:72px}
-.section-sep{font-family:'Lora',serif;font-size:14.5px;font-weight:600;color:var(--ink);margin:18px 0 8px;padding-bottom:6px;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+textarea{resize:vertical;min-height:70px}
+.section-sep{font-family:'Lora',serif;font-size:14px;font-weight:600;color:var(--ink);margin:16px 0 7px;padding-bottom:6px;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
 .nutri-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .nutri-wrap{display:flex;flex-direction:column;gap:3px}
 .nutri-wrap label{font-size:11.5px}
-.diet-checks{display:flex;gap:8px;flex-wrap:wrap;margin-top:3px}
-.diet-check{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;cursor:pointer;padding:5px 10px;border:1.5px solid var(--border);border-radius:20px;transition:all .15s;user-select:none}
+.diet-checks{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px}
+.diet-check{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;cursor:pointer;padding:4px 9px;border:1.5px solid var(--border);border-radius:20px;transition:all .15s;user-select:none}
 .diet-check input{display:none}
 .diet-check.checked{border-color:var(--green);background:var(--green-pale);color:var(--green)}
 .ing-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
-.step-row{display:grid;grid-template-columns:24px 1fr auto;gap:8px;margin-bottom:6px;align-items:flex-start}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--rust-pale);color:var(--rust);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:9px}
-.icon-btn{width:32px;height:32px;border:1.5px solid var(--border);border-radius:var(--rs);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:13px;flex-shrink:0;transition:all .15s}
+.step-row{display:grid;grid-template-columns:23px 1fr auto;gap:8px;margin-bottom:6px;align-items:flex-start}
+.step-num{width:23px;height:23px;border-radius:50%;background:var(--rust-pale);color:var(--rust);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:8px}
+.icon-btn{width:31px;height:31px;border:1.5px solid var(--border);border-radius:var(--rs);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:13px;flex-shrink:0;transition:all .15s}
 .icon-btn:hover{border-color:var(--red);color:var(--red);background:var(--red-pale)}
-.add-row-btn{font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;padding:4px 11px;border:1.5px dashed var(--border2);border-radius:var(--rs);background:none;cursor:pointer;color:var(--ink3);transition:all .15s}
+.add-row-btn{font-family:'Nunito',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border:1.5px dashed var(--border2);border-radius:var(--rs);background:none;cursor:pointer;color:var(--ink3);transition:all .15s}
 .add-row-btn:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-pale)}
-.img-preview{width:100%;height:130px;object-fit:cover;border-radius:var(--rs);margin-top:6px;display:none}
-
-/* VIEW */
-.view-hero{width:100%;height:260px;object-fit:cover;border-radius:var(--r) var(--r) 0 0;display:block}
-.view-hero-ph{width:100%;height:190px;border-radius:var(--r) var(--r) 0 0;background:var(--parchment2);display:flex;align-items:center;justify-content:center;font-size:72px}
-.view-body{padding:1.6rem}
-.view-meta{display:flex;gap:14px;flex-wrap:wrap;color:var(--ink3);font-size:13.5px;margin-bottom:1rem}
-.nutri-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.2rem}
+.img-preview{width:100%;height:125px;object-fit:cover;border-radius:var(--rs);margin-top:6px;display:none}
+.view-hero{width:100%;height:255px;object-fit:cover;border-radius:var(--r) var(--r) 0 0;display:block}
+.view-hero-ph{width:100%;height:185px;border-radius:var(--r) var(--r) 0 0;background:var(--parchment2);display:flex;align-items:center;justify-content:center;font-size:70px}
+.view-body{padding:1.5rem}
+.view-meta{display:flex;gap:13px;flex-wrap:wrap;color:var(--ink3);font-size:13px;margin-bottom:.9rem}
+.nutri-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.1rem}
 .nc{background:var(--parchment2);border:1.5px solid var(--border);border-radius:var(--rs);padding:10px;text-align:center}
-.nc .val{font-family:'Lora',serif;font-size:20px;font-weight:600;line-height:1;margin-bottom:2px}
+.nc .val{font-family:'Lora',serif;font-size:19px;font-weight:600;line-height:1;margin-bottom:2px}
 .nc .lbl{font-size:10px;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px}
-.ing-list{list-style:none;margin-bottom:1.2rem}
-.ing-list li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:14px}
+.ing-list{list-style:none;margin-bottom:1.1rem}
+.ing-list li{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13.5px}
 .ing-list li:last-child{border-bottom:none}
 .steps-ol{list-style:none}
-.steps-ol li{display:grid;grid-template-columns:30px 1fr;gap:10px;margin-bottom:12px}
-.sc{width:30px;height:30px;border-radius:50%;background:var(--rust);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
-.st{font-size:14px;line-height:1.75;padding-top:5px}
-.view-subhead{font-family:'Lora',serif;font-size:15.5px;font-weight:600;margin-bottom:8px;padding-bottom:7px;border-bottom:1.5px solid var(--border)}
-
-/* SLIDER / UNIT TOGGLE */
-.slider-row{display:flex;align-items:center;gap:12px;background:var(--parchment2);border:1.5px solid var(--border);border-radius:var(--rs);padding:9px 13px;margin-bottom:1rem;flex-wrap:wrap}
-.slider-row label{font-size:13px;font-weight:700;color:var(--ink2);white-space:nowrap}
-input[type=range]{flex:1;min-width:80px;accent-color:var(--rust)}
-.slider-val{font-family:'Lora',serif;font-size:17px;font-weight:600;color:var(--rust);min-width:2rem;text-align:center}
+.steps-ol li{display:grid;grid-template-columns:29px 1fr;gap:10px;margin-bottom:11px}
+.sc{width:29px;height:29px;border-radius:50%;background:var(--rust);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:2px}
+.st{font-size:13.5px;line-height:1.75;padding-top:5px}
+.view-subhead{font-family:'Lora',serif;font-size:15px;font-weight:600;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--border)}
+.slider-row{display:flex;align-items:center;gap:11px;background:var(--parchment2);border:1.5px solid var(--border);border-radius:var(--rs);padding:8px 12px;margin-bottom:.9rem;flex-wrap:wrap}
+.slider-row label{font-size:12.5px;font-weight:700;color:var(--ink2);white-space:nowrap}
+input[type=range]{flex:1;min-width:70px;accent-color:var(--rust)}
+.slider-val{font-family:'Lora',serif;font-size:16px;font-weight:600;color:var(--rust);min-width:2rem;text-align:center}
 .unit-toggle{display:flex;border:1.5px solid var(--border);border-radius:var(--rs);overflow:hidden}
-.unit-btn{padding:4px 11px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--warm);color:var(--ink3);font-family:'Nunito',sans-serif;transition:all .15s}
+.unit-btn{padding:4px 10px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--warm);color:var(--ink3);font-family:'Nunito',sans-serif;transition:all .15s}
 .unit-btn.active{background:var(--rust);color:#fff}
-
-/* COOK MODE */
-.cook-modal{background:var(--ink);color:var(--parchment);border-radius:var(--r);max-width:660px}
-.cook-head{padding:1.3rem 1.75rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center}
-.cook-head h2{font-family:'Lora',serif;font-size:19px}
-.cook-body{padding:1.75rem}
-.cook-prog{height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-bottom:1.3rem;overflow:hidden}
+.pair-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:.5rem}
+.pair-chip{padding:5px 12px;background:var(--parchment2);border:1.5px solid var(--border);border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink2)}
+.pair-chip:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-pale)}
+.cook-modal{background:var(--ink);color:var(--parchment);border-radius:var(--r);max-width:640px}
+.cook-head{padding:1.2rem 1.6rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;justify-content:space-between;align-items:center}
+.cook-head h2{font-family:'Lora',serif;font-size:18px}
+.cook-body{padding:1.6rem}
+.cook-prog{height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-bottom:1.2rem;overflow:hidden}
 .cook-prog-bar{height:100%;background:var(--rust2);border-radius:2px;transition:width .3s}
-.cook-step-num{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.45;margin-bottom:7px}
-.cook-step-text{font-size:19px;line-height:1.7;margin-bottom:1.75rem;font-family:'Lora',serif}
-.cook-ings{background:rgba(255,255,255,.06);border-radius:var(--rs);padding:.9rem;margin-bottom:1.3rem}
-.cook-ings h4{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.45;margin-bottom:.4rem}
+.cook-step-num{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.4;margin-bottom:6px}
+.cook-step-text{font-size:18px;line-height:1.7;margin-bottom:1.6rem;font-family:'Lora',serif}
+.cook-ings{background:rgba(255,255,255,.06);border-radius:var(--rs);padding:.8rem;margin-bottom:1.2rem}
+.cook-ings h4{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;opacity:.4;margin-bottom:.4rem}
 .cook-ings ul{list-style:none}
-.cook-ings ul li{font-size:13.5px;padding:3px 0;opacity:.75;display:flex;align-items:center;gap:7px}
+.cook-ings ul li{font-size:13px;padding:3px 0;opacity:.75;display:flex;align-items:center;gap:6px}
 .cook-ings ul li::before{content:'•';color:var(--rust2)}
 .cook-nav{display:flex;justify-content:space-between;align-items:center}
-
-/* PAIRS */
-.pair-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:.5rem}
-.pair-chip{padding:5px 13px;background:var(--parchment2);border:1.5px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink2)}
-.pair-chip:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-pale)}
-
-/* STATIC PAGES */
-.static-page{padding:1.75rem;max-width:800px;margin:0 auto;width:100%}
-.static-page h1{font-family:'Lora',serif;font-size:28px;font-weight:600;margin-bottom:.4rem}
-.page-sub{color:var(--ink3);font-size:14.5px;margin-bottom:1.75rem;font-style:italic}
-.static-page h2{font-family:'Lora',serif;font-size:18.5px;font-weight:600;margin:1.5rem 0 .65rem}
-.static-page p{color:var(--ink2);line-height:1.8;margin-bottom:.65rem;font-size:14.5px}
-.static-page hr{border:none;border-top:1.5px solid var(--border);margin:1.3rem 0}
-
-/* CONVERSION TABLES */
-.conv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:1.2rem;margin-top:.75rem}
+.static-page{padding:1.6rem;max-width:780px;margin:0 auto;width:100%}
+.static-page h1{font-family:'Lora',serif;font-size:27px;font-weight:600;margin-bottom:.4rem}
+.page-sub{color:var(--ink3);font-size:14px;margin-bottom:1.6rem;font-style:italic}
+.static-page h2{font-family:'Lora',serif;font-size:18px;font-weight:600;margin:1.4rem 0 .6rem}
+.static-page h3{font-family:'Lora',serif;font-size:15px;font-weight:600;margin:.9rem 0 .4rem;color:var(--ink2)}
+.static-page p{color:var(--ink2);line-height:1.8;margin-bottom:.6rem;font-size:14px}
+.static-page hr{border:none;border-top:1.5px solid var(--border);margin:1.2rem 0}
+.static-page ul,.static-page ol{color:var(--ink2);line-height:1.8;margin-bottom:.6rem;font-size:14px;padding-left:1.4rem}
+.static-page li{margin-bottom:.3rem}
+.conv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:1.1rem;margin-top:.7rem}
 .conv-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden}
-.conv-card-head{background:var(--ink);color:var(--parchment);padding:.65rem 1rem;font-family:'Lora',serif;font-size:14.5px;font-weight:600}
+.conv-card-head{background:var(--ink);color:var(--parchment);padding:.6rem .9rem;font-family:'Lora',serif;font-size:14px;font-weight:600}
 .conv-table{width:100%;border-collapse:collapse}
-.conv-table td{padding:6px 11px;font-size:13px;border-bottom:1px solid var(--border)}
+.conv-table td{padding:5px 10px;font-size:12.5px;border-bottom:1px solid var(--border)}
 .conv-table tr:last-child td{border-bottom:none}
 .conv-table td:first-child{font-weight:700;color:var(--ink2)}
+.conv-table td:nth-child(2){color:var(--ink3);text-align:center}
 .conv-table td:last-child{color:var(--ink3);text-align:right}
-
-/* TIPS */
-.tip-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:.65rem;display:flex;gap:11px;align-items:flex-start}
-.tip-icon{font-size:21px;flex-shrink:0;margin-top:1px}
-.tip-text h4{font-weight:700;font-size:13.5px;margin-bottom:2px}
-.tip-text p{font-size:13px;color:var(--ink3);line-height:1.6}
-
-/* SEASONAL */
-.season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem}
-.season-card{border-radius:var(--r);padding:.9rem;text-align:center}
-.season-card h3{font-family:'Lora',serif;font-size:15.5px;font-weight:600;margin:7px 0 5px}
+.tip-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:.6rem;display:flex;gap:10px;align-items:flex-start}
+.tip-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.tip-text h4{font-weight:700;font-size:13px;margin-bottom:2px}
+.tip-text p{font-size:12.5px;color:var(--ink3);line-height:1.6}
+.season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+.season-card{border-radius:var(--r);padding:.8rem;text-align:center}
+.season-card h3{font-family:'Lora',serif;font-size:15px;font-weight:600;margin:6px 0 5px;color:var(--ink)}
 .season-card p{font-size:12px;line-height:1.6;color:var(--ink2)}
-.s-spring{background:#F0FDF4;border:1.5px solid #BBF7D0}
-.s-summer{background:#FFFBEB;border:1.5px solid #FDE68A}
-.s-fall{background:#FEF3C7;border:1.5px solid #FCD34D}
-.s-winter{background:#EFF6FF;border:1.5px solid #BFDBFE}
-
-/* IMPORT */
-.import-area{background:var(--parchment2);border:2px dashed var(--border2);border-radius:var(--r);padding:1.75rem;text-align:center;margin-bottom:.9rem}
-.import-result{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--rs);padding:.9rem;margin-top:.65rem;font-size:13px;color:var(--ink2);display:none}
-
-/* TOAST */
-.toast{position:fixed;bottom:22px;right:22px;z-index:999;background:var(--ink);color:var(--parchment);padding:10px 17px;border-radius:var(--rs);font-size:14px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
+.s-spring{background:#F0FDF4;border:1.5px solid #BBF7D0}.s-summer{background:#FFFBEB;border:1.5px solid #FDE68A}.s-fall{background:#FEF3C7;border:1.5px solid #FCD34D}.s-winter{background:#EFF6FF;border:1.5px solid #BFDBFE}
+.doneness-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;margin:1rem 0}
+.done-card{border-radius:var(--r);padding:1rem;text-align:center;border:2px solid transparent}
+.done-card h4{font-family:'Lora',serif;font-size:13.5px;font-weight:600;margin-bottom:4px}
+.done-card .temp{font-size:17px;font-weight:700;font-family:'Lora',serif}
+.done-card .desc{font-size:11px;margin-top:3px;opacity:.75}
+.done-card.recommended{border-color:var(--rust);box-shadow:0 0 0 3px rgba(192,98,42,.15)}
+.d-rare{background:#FEE2E2;color:#991B1B}.d-medR{background:#FED7AA;color:#9A3412}.d-med{background:#FEF3C7;color:#92400E}.d-medW{background:#D1FAE5;color:#065F46}.d-well{background:#E0F2FE;color:#0C4A6E}
+.safe-temps{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:1rem}
+.safe-card{border-radius:var(--r);padding:1rem 1.2rem;display:flex;align-items:center;gap:12px}
+.safe-card.hl{border:2.5px solid var(--rust)}
+.safe-icon{font-size:28px;flex-shrink:0}
+.safe-info h4{font-weight:700;font-size:14px;margin-bottom:2px}
+.safe-info .safe-temp{font-family:'Lora',serif;font-size:20px;font-weight:700}
+.safe-info p{font-size:12px;color:var(--ink3);line-height:1.5}
+.flavor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;margin-top:.75rem}
+.flavor-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden}
+.flavor-head{padding:.6rem 1rem;font-family:'Lora',serif;font-size:14px;font-weight:600}
+.flavor-body{padding:.75rem 1rem}
+.flavor-body p{font-size:12.5px;color:var(--ink3);margin-bottom:.4rem;line-height:1.5}
+.flavor-body ul{font-size:12.5px;color:var(--ink2);padding-left:1rem;line-height:1.6}
+.app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:1rem;margin-top:.75rem}
+.app-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.3rem}
+.app-card-head{display:flex;align-items:center;gap:10px;margin-bottom:.65rem}
+.app-card-head .icon{font-size:26px}
+.app-card-head h3{font-family:'Lora',serif;font-size:16px;font-weight:600}
+.app-card p{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:.5rem}
+.pro-con{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin-top:.5rem}
+.pro,.con{font-size:12px;padding:.35rem .6rem;border-radius:var(--rs)}
+.pro{background:var(--green-pale);color:var(--green)}.con{background:var(--red-pale);color:var(--red)}
+.pro::before{content:'✓ '}.con::before{content:'✗ '}
+.difficulty{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:.5rem}
+.diff-easy{background:var(--green-pale);color:var(--green)}.diff-medium{background:var(--rust-pale);color:var(--rust)}.diff-hard{background:var(--red-pale);color:var(--red)}
+.import-area{background:var(--parchment2);border:2px dashed var(--border2);border-radius:var(--r);padding:1.6rem;text-align:center;margin-bottom:.8rem}
+.import-result{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--rs);padding:.8rem;margin-top:.6rem;font-size:13px;color:var(--ink2);display:none}
+.toast{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--ink);color:var(--parchment);padding:10px 16px;border-radius:var(--rs);font-size:13.5px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
 .toast.show{transform:none;opacity:1}
-
-@media(max-width:768px){
-  .sidebar{transform:translateX(-100%)}
-  .sidebar.open{transform:none}
-  .main{margin-left:0}
-  .sb-toggle{display:flex}
-  .form-grid{grid-template-columns:1fr}
-  .nutri-grid{grid-template-columns:repeat(2,1fr)}
-  .nutri-cards{grid-template-columns:repeat(2,1fr)}
-  .season-grid{grid-template-columns:repeat(2,1fr)}
-  .ing-row{grid-template-columns:1fr 1fr auto}
-}
+@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.sb-toggle{display:flex}.form-grid{grid-template-columns:1fr}.nutri-grid,.nutri-cards{grid-template-columns:repeat(2,1fr)}.season-grid,.safe-temps{grid-template-columns:repeat(2,1fr)}.ing-row{grid-template-columns:1fr 1fr auto}}
 </style>
 </head>
 <body>
-
-<!-- SIDEBAR -->
 <nav class="sidebar" id="sidebar">
-  <div class="sb-logo">
-    <div class="title">📖 Wortmann<br>Family Cookbook</div>
-    <div class="sub">Shared Recipes</div>
-  </div>
+  <div class="sb-logo"><div class="title">📖 Wortmann<br>Family Cookbook</div><div class="sub">Shared Recipes</div></div>
   <div class="sb-nav">
     <div class="nav-sec">Cookbook</div>
     <div class="nav-item active" id="nav-recipes" onclick="showPage('recipes')"><span class="ic">🍽️</span>All Recipes</div>
     <div class="nav-item" id="nav-preface" onclick="showPage('preface')"><span class="ic">📜</span>Preface</div>
     <div class="nav-sec">Reference</div>
     <div class="nav-item" id="nav-conversions" onclick="showPage('conversions')"><span class="ic">⚖️</span>Unit Conversions</div>
+    <div class="nav-item" id="nav-doneness" onclick="showPage('doneness')"><span class="ic">🥩</span>Meat Doneness</div>
+    <div class="nav-item" id="nav-flavors" onclick="showPage('flavors')"><span class="ic">🧪</span>Flavor Pairings</div>
     <div class="nav-item" id="nav-tips" onclick="showPage('tips')"><span class="ic">💡</span>Cooking Tips</div>
     <div class="nav-item" id="nav-seasonal" onclick="showPage('seasonal')"><span class="ic">🌿</span>Seasonal Guide</div>
     <div class="nav-sec">Tools</div>
     <div class="nav-item" id="nav-import" onclick="showPage('import')"><span class="ic">🔗</span>Import from Web</div>
     <div class="nav-item" onclick="downloadSite()"><span class="ic">💾</span>Download Site</div>
     <div class="nav-item" onclick="exportPDF()"><span class="ic">📄</span>Export as PDF</div>
+    <div class="nav-item" id="nav-apps" onclick="showPage('apps')"><span class="ic">📱</span>Get the App</div>
   </div>
   <div class="sb-foot">
     <div class="sync-row"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Connecting…</span></div>
-    <span style="opacity:.35;font-size:11px">Wortmann Family Cookbook</span>
+    <span style="opacity:.3;font-size:11px">Wortmann Family Cookbook</span>
   </div>
 </nav>
-<button class="sb-toggle" id="sbToggle" onclick="toggleSidebar()">☰</button>
-
-<!-- MAIN -->
+<button class="sb-toggle" onclick="toggleSidebar()">☰</button>
 <div class="main">
+<!-- RECIPES PAGE -->
+<div class="page active" id="page-recipes">
+  <div class="topbar"><div class="topbar-title">🍽️ All Recipes</div><div class="tb-actions"><button class="btn btn-sm" onclick="showPage('import')">🔗 Import</button><button class="btn btn-primary btn-sm" onclick="openAdd()">＋ Add Recipe</button></div></div>
+  <div class="container">
+    <div class="toolbar">
+      <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input class="search-input" id="searchInput" placeholder="Search recipes, ingredients, cuisine…" oninput="renderCards()"></div>
+      <select class="filter-select" id="catFilter" onchange="renderCards()"><option value="">All Categories</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select>
+      <select class="filter-select" id="cuisineFilter" onchange="renderCards()"><option value="">All Cuisines</option><option>American</option><option>Southern</option><option>Italian</option><option>Mexican</option><option>Asian</option><option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option><option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option><option>Middle Eastern</option><option>Other</option></select>
+      <select class="filter-select" id="sortFilter" onchange="renderCards()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="az">Name A–Z</option><option value="cal_asc">Calories ↑</option><option value="cal_desc">Calories ↓</option></select>
+      <span class="recipe-count" id="recipeCount">Loading…</span>
+    </div>
+    <div class="chip-bar"><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
+    <div class="recipe-grid" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
+  </div>
+</div>
 
-  <!-- RECIPES -->
-  <div class="page active" id="page-recipes">
-    <div class="topbar">
-      <div class="topbar-title">🍽️ All Recipes</div>
-      <div class="tb-actions">
-        <button class="btn btn-sm" onclick="showPage('import')">🔗 Import</button>
-        <button class="btn btn-primary btn-sm" onclick="openAdd()">＋ Add Recipe</button>
+<!-- PREFACE -->
+<div class="page" id="page-preface">
+  <div class="topbar"><div class="topbar-title">📜 Preface</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Our Family Cookbook</h1><p class="page-sub">A collection of recipes passed down through generations and created with love.</p><hr>
+    <h2>Welcome</h2><p>This is a placeholder preface — you'll write this! Here you can share the story of your family's cooking traditions, where certain recipes came from, and what food means to the Wortmann family.</p>
+    <p>Consider including: how this cookbook was created, which family members contributed recipes, special memories tied to certain dishes, and any cooking wisdom passed down through generations.</p>
+    <h2>How to Use This Cookbook</h2><p>Browse all recipes on the main page. Search by name, ingredient, or cuisine. Filter by dietary preference. Click any recipe to view it, scale servings with the slider, toggle between metric and imperial, and use Cook Mode to follow step-by-step instructions.</p>
+    <h2>A Note on Measurements</h2><p>Recipes use both imperial and metric. Switch between them in any recipe view. See the Unit Conversions page for a complete reference.</p><hr>
+    <p style="font-style:italic;color:var(--ink3);font-family:'Lora',serif;font-size:16px">"The secret ingredient is always love."</p>
+  </div></div>
+</div>
+
+<!-- CONVERSIONS -->
+<div class="page" id="page-conversions">
+  <div class="topbar"><div class="topbar-title">⚖️ Unit Conversions</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Unit Conversions</h1><p class="page-sub">A complete reference for cooking measurements — volume, weight, temperature, and more.</p>
+    <div class="conv-grid">
+      <div class="conv-card"><div class="conv-card-head">Volume — Spoons &amp; Cups</div><table class="conv-table">
+        <tr><td>1 teaspoon (tsp)</td><td>=</td><td>5 ml</td></tr><tr><td>1 tablespoon (Tb)</td><td>=</td><td>3 tsp / 15 ml / ½ fl oz</td></tr>
+        <tr><td>2 tablespoons</td><td>=</td><td>1 fl oz / 30 ml</td></tr><tr><td>¼ cup</td><td>=</td><td>4 Tb / 2 fl oz / 60 ml</td></tr>
+        <tr><td>⅓ cup</td><td>=</td><td>5 Tb + 1 tsp / 80 ml</td></tr><tr><td>½ cup</td><td>=</td><td>8 Tb / 4 fl oz / 120 ml</td></tr>
+        <tr><td>⅔ cup</td><td>=</td><td>10 Tb + 2 tsp / 160 ml</td></tr><tr><td>¾ cup</td><td>=</td><td>12 Tb / 6 fl oz / 180 ml</td></tr>
+        <tr><td>1 cup</td><td>=</td><td>16 Tb / 8 fl oz / 240 ml</td></tr>
+      </table></div>
+      <div class="conv-card"><div class="conv-card-head">Volume — Larger Measures</div><table class="conv-table">
+        <tr><td>1 fluid ounce</td><td>=</td><td>2 Tb / 30 ml</td></tr><tr><td>8 fluid ounces</td><td>=</td><td>1 cup / 240 ml</td></tr>
+        <tr><td>16 fluid ounces</td><td>=</td><td>1 pint / 2 cups / 480 ml</td></tr><tr><td>32 fluid ounces</td><td>=</td><td>1 quart / 4 cups / 960 ml</td></tr>
+        <tr><td>64 fluid ounces</td><td>=</td><td>½ gallon / 8 cups / 1.9 L</td></tr><tr><td>128 fluid ounces</td><td>=</td><td>1 gallon / 16 cups / 3.8 L</td></tr>
+        <tr><td>1 liter</td><td>=</td><td>4.2 cups / 33.8 fl oz</td></tr>
+      </table></div>
+      <div class="conv-card"><div class="conv-card-head">Weight</div><table class="conv-table">
+        <tr><td>1 ounce (oz)</td><td>=</td><td>28.35 g</td></tr><tr><td>4 oz (¼ lb)</td><td>=</td><td>113 g</td></tr>
+        <tr><td>8 oz (½ lb)</td><td>=</td><td>227 g</td></tr><tr><td>12 oz (¾ lb)</td><td>=</td><td>340 g</td></tr>
+        <tr><td>16 oz (1 lb)</td><td>=</td><td>454 g</td></tr><tr><td>2.2 lbs</td><td>=</td><td>1 kg / 1000 g</td></tr>
+      </table></div>
+      <div class="conv-card"><div class="conv-card-head">Oven Temperature</div><table class="conv-table">
+        <tr><td>250°F</td><td>=</td><td>120°C / Gas ½</td></tr><tr><td>300°F</td><td>=</td><td>150°C / Gas 2</td></tr>
+        <tr><td>325°F</td><td>=</td><td>165°C / Gas 3</td></tr><tr><td>350°F</td><td>=</td><td>175°C / Gas 4</td></tr>
+        <tr><td>375°F</td><td>=</td><td>190°C / Gas 5</td></tr><tr><td>400°F</td><td>=</td><td>200°C / Gas 6</td></tr>
+        <tr><td>425°F</td><td>=</td><td>220°C / Gas 7</td></tr><tr><td>450°F</td><td>=</td><td>230°C / Gas 8</td></tr>
+        <tr><td>475°F</td><td>=</td><td>245°C / Gas 9</td></tr>
+      </table></div>
+      <div class="conv-card"><div class="conv-card-head">Common Ingredients by Cup</div><table class="conv-table">
+        <tr><td>All-purpose flour</td><td>=</td><td>120 g</td></tr><tr><td>Bread flour</td><td>=</td><td>130 g</td></tr>
+        <tr><td>Cake flour</td><td>=</td><td>100 g</td></tr><tr><td>Granulated sugar</td><td>=</td><td>200 g</td></tr>
+        <tr><td>Brown sugar (packed)</td><td>=</td><td>220 g</td></tr><tr><td>Powdered sugar</td><td>=</td><td>120 g</td></tr>
+        <tr><td>Butter</td><td>=</td><td>227 g / 2 sticks</td></tr><tr><td>Rice (dry)</td><td>=</td><td>185 g</td></tr>
+        <tr><td>Rolled oats</td><td>=</td><td>90 g</td></tr><tr><td>Honey / syrup</td><td>=</td><td>340 g</td></tr>
+        <tr><td>Milk / water</td><td>=</td><td>240 g / 240 ml</td></tr><tr><td>Cream</td><td>=</td><td>238 g</td></tr>
+      </table></div>
+      <div class="conv-card"><div class="conv-card-head">Pan Sizes &amp; Quick Ref</div><table class="conv-table">
+        <tr><td>8" round</td><td>=</td><td>20 cm</td></tr><tr><td>9" round</td><td>=</td><td>23 cm</td></tr>
+        <tr><td>9×13" pan</td><td>=</td><td>23×33 cm</td></tr><tr><td>8×8" square</td><td>=</td><td>20×20 cm</td></tr>
+        <tr><td>9×5" loaf</td><td>=</td><td>23×13 cm</td></tr><tr><td>Pinch</td><td>=</td><td>~1/16 tsp</td></tr>
+        <tr><td>Dash</td><td>=</td><td>~1/8 tsp</td></tr><tr><td>Smidge</td><td>=</td><td>~1/32 tsp</td></tr>
+        <tr><td>1 stick butter</td><td>=</td><td>8 Tb / ½ cup / 113 g</td></tr>
+      </table></div>
+    </div>
+  </div></div>
+</div>
+
+<!-- MEAT DONENESS -->
+<div class="page" id="page-doneness">
+  <div class="topbar"><div class="topbar-title">🥩 Meat Doneness Guide</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Meat Doneness Guide</h1><p class="page-sub">Internal temperatures for perfectly cooked meat — and the food safety minimums that must be met.</p>
+    <h2>Beef &amp; Lamb</h2>
+    <div class="doneness-grid">
+      <div class="done-card d-rare"><h4>Rare</h4><div class="temp">125°F</div><div class="desc">51°C · Bright red center, cool to the touch</div></div>
+      <div class="done-card d-medR recommended"><h4>⭐ Medium Rare</h4><div class="temp">130–135°F</div><div class="desc">54–57°C · Warm red-pink center · <strong>Chef Recommended</strong></div></div>
+      <div class="done-card d-med"><h4>Medium</h4><div class="temp">140–145°F</div><div class="desc">60–63°C · Pink center throughout</div></div>
+      <div class="done-card d-medW"><h4>Medium Well</h4><div class="temp">150–155°F</div><div class="desc">65–68°C · Slight pink, mostly gray</div></div>
+      <div class="done-card d-well"><h4>Well Done</h4><div class="temp">160°F+</div><div class="desc">71°C+ · No pink, fully cooked through</div></div>
+    </div>
+    <p style="font-size:13px;color:var(--ink3);font-style:italic;margin-top:.5rem">⭐ Most chefs recommend medium rare for steaks and roasts — it preserves the most moisture, tenderness, and flavor.</p>
+    <hr>
+    <h2>Food Safety — Required Minimums</h2>
+    <p>These temperatures must be reached to ensure food safety. They are not optional.</p>
+    <div class="safe-temps">
+      <div class="safe-card hl" style="background:var(--rust-pale)"><span class="safe-icon">🍗</span><div class="safe-info"><h4>Poultry — Chicken &amp; Turkey</h4><div class="safe-temp" style="color:var(--rust)">165°F / 74°C</div><p>No hold time required at this temp. Check the thickest part of the thigh, away from bone. Kills Salmonella instantly.</p></div></div>
+      <div class="safe-card hl" style="background:#FEF3C7;border-color:#F59E0B"><span class="safe-icon">🐷</span><div class="safe-info"><h4>Pork — Whole Cuts</h4><div class="safe-temp" style="color:#92400E">145°F / 63°C</div><p>Hold at 145°F for <strong>3 minutes</strong> before cutting. A slightly pink center is perfectly safe. Ground pork: 160°F.</p></div></div>
+      <div class="safe-card" style="background:var(--blue-pale)"><span class="safe-icon">🐟</span><div class="safe-info"><h4>Fish &amp; Shellfish</h4><div class="safe-temp" style="color:var(--blue)">145°F / 63°C</div><p>Flesh should be opaque and flake easily. Shrimp: pearly and opaque. Clams/oysters: shells open during cooking.</p></div></div>
+      <div class="safe-card" style="background:var(--green-pale)"><span class="safe-icon">🥩</span><div class="safe-info"><h4>Ground Beef &amp; Pork</h4><div class="safe-temp" style="color:var(--green)">160°F / 71°C</div><p>No hold time. Pathogens on the surface of whole cuts get mixed throughout when ground — higher temp required.</p></div></div>
+    </div>
+    <hr>
+    <h2>How to Use a Meat Thermometer</h2>
+    <div class="tip-card"><span class="tip-icon">🌡️</span><div class="tip-text"><h4>Insert correctly</h4><p>Push the probe into the thickest part of the meat, avoiding bone, fat, and gristle. For thin cuts like chops or burgers, insert from the side horizontally.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">⏱️</span><div class="tip-text"><h4>Account for carryover cooking</h4><p>Meat continues cooking after removed from heat. Pull beef roasts 5°F below target. The rest period raises the final temperature to your goal.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🔁</span><div class="tip-text"><h4>Check multiple spots</h4><p>For whole poultry or large roasts, check several locations. The lowest reading is what matters for food safety.</p></div></div>
+  </div></div>
+</div>
+
+<!-- FLAVOR PAIRINGS -->
+<div class="page" id="page-flavors">
+  <div class="topbar"><div class="topbar-title">🧪 Flavor Pairings</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Flavor Pairing Guide</h1><p class="page-sub">Understanding which flavors work together — the foundation of instinctive, confident cooking.</p>
+    <h2>The Basic Tastes &amp; How They Interact</h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#FEF3C7;color:#92400E">🍯 Sweet</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Salty (enhances sweetness — salted caramel)</li><li>Sour (balance — lemon tart, fruit vinaigrettes)</li><li>Bitter (contrast — dark chocolate &amp; orange)</li><li>Fatty (rounds out sweetness)</li></ul><p><strong>Tames:</strong> Bitterness, excessive heat/spice</p><p><strong>Classic:</strong> Brown sugar on bacon, honey-glazed carrots, sweet &amp; sour sauce</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EFF6FF;color:#1E40AF">🧂 Salty</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Sweet (suppresses bitterness, amplifies sweet)</li><li>Fatty (cuts richness, brightens flavor)</li><li>Sour (amplifies both)</li><li>Umami (deepens savory notes)</li></ul><p><strong>Tames:</strong> Bitterness, flatness in any dish</p><p><strong>Classic:</strong> Parmesan on pasta, miso in soup, anchovies in sauces</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FEF9C3;color:#854D0E">🍋 Sour / Acid</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Fatty (acid cuts fat — lemon on fish, vinegar in mayo)</li><li>Sweet (balance — citrus desserts, fruit tarts)</li><li>Salty (amplifies both)</li><li>Rich dishes (brightens and lifts heaviness)</li></ul><p><strong>Tames:</strong> Richness, heaviness, excessive sweetness</p><p><strong>Classic:</strong> Lemon on chicken, vinegar in braises, lime in tacos</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F0FDF4;color:#166534">🥬 Bitter</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Sweet (contrast — coffee &amp; chocolate, radicchio &amp; balsamic)</li><li>Fatty (richness softens bitterness)</li><li>Salty (reduces perceived bitterness)</li></ul><p><strong>Tames:</strong> Excessive sweetness, richness</p><p><strong>Classic:</strong> Dark chocolate in chili, arugula with rich meats, coffee rubs on pork</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FDF0E8;color:#9A3412">🍖 Umami (Savory)</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Salty (synergistic — both deepen savory)</li><li>Fatty (richness amplifies umami depth)</li><li>Other umami sources (stack them: parmesan + mushrooms + tomato)</li></ul><p><strong>Tames:</strong> Flatness, one-dimensionality</p><p><strong>Classic:</strong> Mushrooms + soy sauce, parmesan rind in soup, fish sauce in Thai dishes</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FDE8F0;color:#9B2626">🧈 Fatty / Rich</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Acid (essential — fat needs brightness to not feel heavy)</li><li>Salty (amplifies richness)</li><li>Bitter (contrast and balance)</li><li>Spicy (fat carries and softens heat)</li></ul><p><strong>Tames:</strong> Sharpness, excessive acid, aggressive spice</p><p><strong>Classic:</strong> Butter + lemon, cream sauce + white wine, brie + apple</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EDE9FE;color:#5B21B6">🌶️ Spicy / Heat</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Fatty (dairy tames capsaicin — yogurt, cream, butter)</li><li>Sweet (honey hot sauce, Thai chili-mango)</li><li>Acid (lime + chili is a classic)</li></ul><p><strong>Tames:</strong> Richness can feel flat without contrast</p><p><strong>Classic:</strong> Chili + chocolate, hot sauce + butter, sriracha + honey</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🌿 Herbal &amp; Aromatic</div><div class="flavor-body"><p><strong>Classic herb pairings:</strong></p><ul><li><strong>Basil</strong> → tomato, garlic, mozzarella</li><li><strong>Tarragon</strong> → chicken, eggs, cream (Julia Child's favorite)</li><li><strong>Thyme</strong> → mushrooms, pork, root vegetables</li><li><strong>Rosemary</strong> → lamb, potatoes, focaccia</li><li><strong>Dill</strong> → fish, cucumbers, sour cream</li><li><strong>Sage</strong> → butter, pork, winter squash</li></ul></div></div>
+    </div>
+    <h2>The "Fix It" Guide — When Something Tastes Off</h2>
+    <div class="tip-card"><span class="tip-icon">😐</span><div class="tip-text"><h4>Too bland / flat</h4><p>Add salt first — always. Then try acid (lemon, vinegar). A touch of umami (soy sauce, Worcestershire, parmesan) can dramatically deepen flavor in seconds.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">😬</span><div class="tip-text"><h4>Too salty</h4><p>Add acid (lemon or vinegar) — it distracts from saltiness. Add more unsalted ingredients to dilute. A pinch of sugar can help balance. A potato simmered in soup absorbs some salt.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">😣</span><div class="tip-text"><h4>Too sour / acidic</h4><p>Add fat (butter, cream, oil) to coat and soften. A pinch of sugar balances. A small amount of salt helps reduce perceived sourness.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🥵</span><div class="tip-text"><h4>Too spicy / hot</h4><p>Add dairy (cream, butter, yogurt, sour cream). Starchy ingredients (potato, rice, bread) absorb capsaicin. Sugar or honey can help. More fat-based ingredients generally.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍫</span><div class="tip-text"><h4>Too bitter</h4><p>Add fat, salt, or a small amount of sugar. Acid actually enhances bitterness — avoid adding more. Cream or butter is often the fastest fix.</p></div></div>
+  </div></div>
+</div>
+
+<!-- COOKING TIPS -->
+<div class="page" id="page-tips">
+  <div class="topbar"><div class="topbar-title">💡 Cooking Tips &amp; Techniques</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Cooking Tips &amp; Techniques</h1><p class="page-sub">Drawn from classical technique and Julia Child's <em>Mastering the Art of French Cooking</em>.</p>
+    <h2>On Heat — The Foundation of Everything</h2>
+    <div class="tip-card"><span class="tip-icon">🔥</span><div class="tip-text"><h4>Master your heat, master your cooking</h4><p>More dishes are ruined by too-high heat than any other single cause. Food that is browned needs high heat briefly; food that is braised needs gentle, patient heat. Knowing which to use is the core of good cooking.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍳</span><div class="tip-text"><h4>The dry, hot pan</h4><p>Before adding butter or oil, heat an empty pan until a drop of water bounces and evaporates instantly. This prevents sticking and ensures a proper sear. Julia Child's rule: a cold pan leads to steamed, gray meat — never a golden crust.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🧈</span><div class="tip-text"><h4>Butter: clarified vs. whole</h4><p>Whole butter burns at 250–300°F due to milk solids. For high-heat sautéing, clarify butter by melting slowly and skimming the foam, leaving pure butterfat that handles 450°F. Or combine butter with neutral oil to raise the smoke point while preserving flavor.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">♨️</span><div class="tip-text"><h4>Do not crowd the pan</h4><p>One of Julia Child's cardinal rules. When food is crowded, steam cannot escape and temperature drops. Instead of browning, food stews in its own liquid and turns gray. Cook in batches — the difference is dramatic.</p></div></div>
+    <h2>On Seasoning — Building Flavor in Layers</h2>
+    <div class="tip-card"><span class="tip-icon">🧂</span><div class="tip-text"><h4>Salt at every stage</h4><p>Salt added early penetrates and seasons from the inside. Salt at the end sits on the surface. Season lightly and repeatedly — a dish properly seasoned throughout needs far less salt at the table.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍋</span><div class="tip-text"><h4>Acid is the cook's secret weapon</h4><p>A squeeze of lemon or splash of white wine vinegar just before serving transforms a flat dish into something vibrant. In small amounts, acid does not make food taste sour — it simply "lifts" all other flavors. Julia Child's most consistent finishing technique.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍷</span><div class="tip-text"><h4>Cook only with wine you would drink</h4><p>"Cooking wine" sold cheaply is salted and often sour — it makes your food taste like it. Use any decent drinking wine. The same rule applies to stock: good stock makes good sauce; weak stock makes weak sauce.</p></div></div>
+    <h2>On Sauces — The Heart of French Cooking</h2>
+    <div class="tip-card"><span class="tip-icon">🥘</span><div class="tip-text"><h4>Deglaze to capture flavor</h4><p>The browned bits on the bottom of your pan after sautéing (<em>fond</em>) are pure concentrated flavor. Add wine, stock, or water and scrape vigorously — this becomes the base of the best sauces. It is what separates home cooking from restaurant cooking.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🫙</span><div class="tip-text"><h4>Reduce for intensity</h4><p>Simmering a liquid down concentrates its flavor dramatically. A cup of wine reduced by half becomes something with real depth. Stock reduced to a syrup (<em>glace de viande</em>) is an intensely flavored spoonful worth more than a whole pot of weak broth.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🌀</span><div class="tip-text"><h4>Mounting a sauce with butter</h4><p>The French technique of finishing sauces — swirling in cold butter cut into pieces just before serving — is called <em>monter au beurre</em>. It gives sauces a glossy sheen, velvety body, and rounded flavor. Remove the pan from heat first; if too hot, the butter will break rather than emulsify.</p></div></div>
+    <h2>On Meat — Patience and Resting</h2>
+    <div class="tip-card"><span class="tip-icon">🥩</span><div class="tip-text"><h4>Bring meat to room temperature</h4><p>Cold meat placed in a hot pan cools the cooking surface, prevents browning, and leads to uneven cooking. Remove steaks, chops, and roasts from the refrigerator 30–45 minutes before cooking.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">⏸️</span><div class="tip-text"><h4>Always rest your meat</h4><p>When meat cooks, juices are pushed toward the center. Resting allows them to redistribute. Cut a steak immediately and the juices run all over the board. Rest it 5–10 minutes (15–20 for a roast), covered loosely with foil — not tightly, which traps steam.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">📐</span><div class="tip-text"><h4>Pat meat dry before cooking</h4><p>Surface moisture is the enemy of browning. The Maillard reaction — the chemical browning that creates flavor — cannot begin until surface water evaporates. Pat meat thoroughly dry with paper towels before it hits any hot pan.</p></div></div>
+    <h2>On Vegetables — Color, Texture, Timing</h2>
+    <div class="tip-card"><span class="tip-icon">🥦</span><div class="tip-text"><h4>Blanch to set color and par-cook</h4><p>Plunging vegetables into rapidly boiling, well-salted water for 1–4 minutes, then immediately into ice water, sets their brilliant color and par-cooks them. This lets you prepare vegetables hours ahead and finish in butter at service time — a technique used in every professional kitchen.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🧅</span><div class="tip-text"><h4>Properly cooked aromatics take time</h4><p>Onions turned truly golden take 25–40 minutes of patient cooking over medium-low heat — not 5 minutes on high, which merely softens them. Low-and-slow cooking converts harsh sulfur compounds into sweet, complex flavors. Julia Child never rushed this step.</p></div></div>
+    <h2>On Baking — Precision Matters</h2>
+    <div class="tip-card"><span class="tip-icon">⚖️</span><div class="tip-text"><h4>Weigh, do not measure, flour</h4><p>A cup of flour can vary by 30–50 grams depending on how it is scooped — a 25% difference that explains why baked goods fail to reproduce. A kitchen scale under $15 makes every baked recipe dramatically more consistent.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🥚</span><div class="tip-text"><h4>Room temperature dairy and eggs</h4><p>Cold butter does not cream with sugar — you get dense, heavy cakes. Cold eggs can curdle warm batters. Pull butter and eggs from the refrigerator at least 30 minutes before baking. Cold cream whips more easily — keep it cold.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🌡️</span><div class="tip-text"><h4>Know your oven</h4><p>Most home ovens run 25–50°F hotter or cooler than their dials indicate. Buy an oven thermometer. Julia Child rotated her dishes halfway through baking because every oven has hot spots — learn where yours are.</p></div></div>
+    <h2>On Eggs — Mastery in Miniature</h2>
+    <div class="tip-card"><span class="tip-icon">🍳</span><div class="tip-text"><h4>The omelette is a cook's true test</h4><p>Julia Child considered the French omelette the truest test of skill. The pan must be very hot, eggs beaten just until combined (not frothy), and the whole operation takes under 60 seconds. The eggs should be creamy and barely set — never browned.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🫧</span><div class="tip-text"><h4>Whipping egg whites</h4><p>Even a trace of yolk or grease prevents egg whites from reaching stiff peaks. Use a clean glass or copper bowl (copper stabilizes the foam), wipe with a cut lemon and dry thoroughly. Cream of tartar (⅛ tsp per white) helps stabilize in stainless steel.</p></div></div>
+  </div></div>
+</div>
+
+<!-- SEASONAL -->
+<div class="page" id="page-seasonal">
+  <div class="topbar"><div class="topbar-title">🌿 Seasonal Guide</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Seasonal Cooking Guide</h1><p class="page-sub">Cook with what's fresh — food tastes better and costs less in season.</p>
+    <div class="season-grid">
+      <div class="season-card s-spring"><div style="font-size:32px">🌸</div><h3>Spring</h3><p>Asparagus, peas, artichokes, spinach, radishes, strawberries, rhubarb, morels, spring onions, fava beans.</p></div>
+      <div class="season-card s-summer"><div style="font-size:32px">☀️</div><h3>Summer</h3><p>Tomatoes, zucchini, corn, peppers, eggplant, cucumbers, peaches, berries, watermelon, basil, green beans.</p></div>
+      <div class="season-card s-fall"><div style="font-size:32px">🍂</div><h3>Fall</h3><p>Pumpkin, squash, apples, pears, Brussels sprouts, sweet potatoes, cranberries, chestnuts, kale, mushrooms.</p></div>
+      <div class="season-card s-winter"><div style="font-size:32px">❄️</div><h3>Winter</h3><p>Root vegetables, citrus, cabbage, leeks, pomegranate, persimmons, turnips, broccoli, cauliflower, endive.</p></div>
+    </div>
+    <h2>Southern Cuisine</h2>
+    <p>Southern cooking is one of America's most distinct regional cuisines — rooted in African, Native American, and European traditions. It is defined by slow cooking, bold seasoning, and making extraordinary food from humble ingredients.</p>
+    <h3>The Southern Pantry</h3>
+    <ul>
+      <li><strong>Cornmeal</strong> — backbone of cornbread, hushpuppies, and grits. Use white stone-ground for authentic flavor</li>
+      <li><strong>Cast iron</strong> — the essential Southern vessel. Seasoned over years, it distributes heat perfectly for frying and baking</li>
+      <li><strong>Buttermilk</strong> — for fried chicken, biscuits, and dressings. The acid tenderizes meat and adds tang</li>
+      <li><strong>Smoked pork</strong> — ham hocks, fatback, and bacon are used to season vegetables, beans, and greens</li>
+      <li><strong>Hot sauce</strong> — Crystal, Tabasco, or homemade pepper vinegar on nearly everything</li>
+      <li><strong>Lard</strong> — traditionally used for frying and biscuits; produces incomparable flakiness and flavor</li>
+    </ul>
+    <h3>Key Southern Techniques</h3>
+    <div class="tip-card"><span class="tip-icon">🍗</span><div class="tip-text"><h4>Fried Chicken</h4><p>Brine or marinate in buttermilk for at least 4 hours (overnight is better). Season the flour generously with salt, black pepper, garlic powder, and cayenne. Fry in 350°F lard or shortening, maintaining temperature throughout. Drain on a wire rack — never paper towels, which trap steam and soften the crust.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🫘</span><div class="tip-text"><h4>Low and Slow Beans &amp; Greens</h4><p>Collard greens and dried beans must cook long and slow with smoked meat. Collards need 45–90 minutes; dried beans 2–3 hours. The "pot likker" — the cooking liquid from greens — is prized on its own, served with cornbread for dipping.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍞</span><div class="tip-text"><h4>Buttermilk Biscuits</h4><p>The secret to flaky biscuits: cold fat and minimal handling. Grate frozen butter into the flour. Mix only until the dough just comes together — overworking develops gluten and makes biscuits tough. Pat, never roll. Fold the dough 2–3 times for distinct layers.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🌽</span><div class="tip-text"><h4>Cornbread</h4><p>True Southern cornbread is made in a screaming-hot cast iron skillet, uses white cornmeal, buttermilk, and is not sweet (that is Northern cornbread). Heat the greased skillet in a 450°F oven until smoking, pour in the batter, and bake. The sizzle creates the coveted crust.</p></div></div>
+    <h3>Iconic Southern Dishes</h3>
+    <ul>
+      <li>Shrimp and Grits · Gumbo · Jambalaya · Crawfish Étouffée</li>
+      <li>Chicken and Dumplings · Country Fried Steak · Chicken Pot Pie</li>
+      <li>Red Beans and Rice · Hoppin' John · Succotash · Brunswick Stew</li>
+      <li>Banana Pudding · Peach Cobbler · Chess Pie · Pecan Pie · Sweet Potato Pie</li>
+      <li>Deviled Eggs · Pimento Cheese · Boiled Peanuts · Hushpuppies</li>
+    </ul>
+    <h2>Idaho Seasonal Highlights</h2>
+    <p>Living in Boise means access to incredible local produce. Idaho is famous for its potatoes year-round. Treasure Valley farmers markets run May–October with exceptional stone fruits, sweet corn, and peppers in summer. Fall brings local apple orchards with dozens of varieties not found in stores.</p>
+    <h2>Preserving the Harvest</h2>
+    <div class="tip-card"><span class="tip-icon">🫙</span><div class="tip-text"><h4>Canning</h4><p>Water-bath canning for high-acid foods (tomatoes, fruit, pickles). Pressure canner for low-acid vegetables and meats. Always process for the full recommended time — cutting it short risks botulism.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🧊</span><div class="tip-text"><h4>Freezing</h4><p>Blanch vegetables 1–3 minutes before freezing to deactivate enzymes causing texture and color loss. Cool in ice water, dry thoroughly, freeze in a single layer before bagging. Most vegetables last 8–12 months frozen.</p></div></div>
+  </div></div>
+</div>
+
+<!-- IMPORT -->
+<div class="page" id="page-import">
+  <div class="topbar"><div class="topbar-title">🔗 Import Recipe from Web</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Import a Recipe</h1><p class="page-sub">Paste a URL and we'll try to extract the recipe. Many sites block automated access — manual entry may be needed.</p>
+    <div class="import-area">
+      <div style="font-size:32px;margin-bottom:.5rem">🔗</div>
+      <input type="url" id="importUrl" placeholder="https://www.allrecipes.com/recipe/..." style="max-width:460px;margin:.6rem auto;display:block">
+      <p style="font-size:12.5px;color:var(--ink3);margin-top:.4rem">Works best with AllRecipes, Food Network, Epicurious, Serious Eats, King Arthur Baking.</p>
+      <button class="btn btn-primary" style="margin-top:.6rem" onclick="importRecipe()">🔍 Import Recipe</button>
+    </div>
+    <div class="import-result" id="importResult"></div>
+    <hr>
+    <h2>Why Import May Not Work</h2>
+    <p>Sites including <strong>NYT Cooking</strong> and some AllRecipes pages actively block automated requests. When import fails, the fastest alternative is to open the recipe in your browser, click <strong>＋ Add Recipe</strong>, and copy/paste the details. It takes about 2–3 minutes.</p>
+    <div class="tip-card"><span class="tip-icon">✅</span><div class="tip-text"><h4>Best supported sites</h4><p>AllRecipes (most), Food Network, Epicurious, Serious Eats, King Arthur Baking, BBC Good Food, Simply Recipes, Taste of Home.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🚫</span><div class="tip-text"><h4>Sites that block automated access</h4><p>NYT Cooking (paywall), Bon Appétit (paywall), personal blogs without JSON-LD schema, any site requiring login. Add these manually.</p></div></div>
+  </div></div>
+</div>
+
+<!-- APPS -->
+<div class="page" id="page-apps">
+  <div class="topbar"><div class="topbar-title">📱 Get the App</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Making This an App</h1><p class="page-sub">Options for turning this family cookbook into a native iOS, Android, or desktop app.</p>
+    <h2>Your Options at a Glance</h2>
+    <div class="app-grid">
+      <div class="app-card"><div class="app-card-head"><span class="icon">📱</span><h3>Progressive Web App (PWA)</h3></div>
+        <span class="difficulty diff-easy">● Easy — No coding needed</span>
+        <p>The fastest option. A PWA turns this website into something that looks and feels like a native app — home screen icon, works offline, no browser bar.</p>
+        <p><strong>iPhone:</strong> Open the cookbook site in Safari → Share button → "Add to Home Screen."<br><strong>Android:</strong> Open in Chrome → 3-dot menu → "Add to Home Screen."</p>
+        <div class="pro-con"><div class="pro">Works right now, free</div><div class="pro">iOS + Android + desktop</div><div class="con">Not in App Store</div><div class="con">Limited device features</div></div>
+        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Verdict: Do this today.</strong> It's already good enough for most family use.</p>
+      </div>
+      <div class="app-card"><div class="app-card-head"><span class="icon">🤖</span><h3>React Native / Expo</h3></div>
+        <span class="difficulty diff-medium">● Medium — JavaScript coding required</span>
+        <p>One JavaScript codebase that compiles into real native iOS and Android apps. The Firebase backend you already have works identically.</p>
+        <p><strong>You need:</strong> A developer to rebuild the UI in React Native. App Store account ($99/yr Apple, $25 one-time Google).</p>
+        <div class="pro-con"><div class="pro">Real native iOS + Android</div><div class="pro">App Store distribution</div><div class="con">Requires developer</div><div class="con">Annual Apple fee</div></div>
+        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Cost estimate:</strong> $500–$2,000 from a freelancer. One build covers both platforms.</p>
+      </div>
+      <div class="app-card"><div class="app-card-head"><span class="icon">🍎</span><h3>Native iOS (Swift)</h3></div>
+        <span class="difficulty diff-hard">● Hard — iOS specialist needed</span>
+        <p>Fully native Swift/SwiftUI app. Best iOS performance, Siri integration, widgets, iCloud. Firebase has a first-class iOS SDK.</p>
+        <p><strong>You need:</strong> An iOS specialist developer. Apple Developer account ($99/yr). App Store review: 1–7 days.</p>
+        <div class="pro-con"><div class="pro">Best iOS performance</div><div class="pro">Siri / Widgets / iCloud</div><div class="con">iOS only — no Android</div><div class="con">Highest cost</div></div>
+        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Cost estimate:</strong> $3,000–$10,000+ for a polished native app.</p>
+      </div>
+      <div class="app-card"><div class="app-card-head"><span class="icon">🖥️</span><h3>Desktop App (Electron)</h3></div>
+        <span class="difficulty diff-medium">● Medium — Web developer needed</span>
+        <p>Wrap this website in Electron to create a real desktop app for Windows and Mac. The existing HTML/CSS/JS is reused almost as-is.</p>
+        <p><strong>How:</strong> A developer wraps the existing index.html with Electron. Distributed as .exe (Windows) or .dmg (Mac).</p>
+        <div class="pro-con"><div class="pro">Reuses existing code</div><div class="pro">Windows + Mac offline</div><div class="con">Large file size</div><div class="con">No mobile</div></div>
+        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Cost estimate:</strong> $300–$1,000 — most work is already done.</p>
       </div>
     </div>
-    <div class="container">
-      <div class="toolbar">
-        <div class="search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          <input class="search-input" id="searchInput" placeholder="Search recipes, ingredients, cuisine…" oninput="renderCards()">
-        </div>
-        <select class="filter-select" id="catFilter" onchange="renderCards()">
-          <option value="">All Categories</option>
-          <option>Breakfast</option><option>Lunch</option><option>Dinner</option>
-          <option>Dessert</option><option>Snack</option><option>Soup</option>
-          <option>Salad</option><option>Baking</option><option>Drink</option>
-          <option>Side Dish</option><option>Appetizer</option><option>Other</option>
-        </select>
-        <select class="filter-select" id="cuisineFilter" onchange="renderCards()">
-          <option value="">All Cuisines</option>
-          <option>American</option><option>Italian</option><option>Mexican</option>
-          <option>Asian</option><option>French</option><option>Mediterranean</option>
-          <option>Indian</option><option>German</option><option>Greek</option>
-          <option>Japanese</option><option>Chinese</option><option>Thai</option>
-          <option>Middle Eastern</option><option>Other</option>
-        </select>
-        <select class="filter-select" id="sortFilter" onchange="renderCards()">
-          <option value="newest">Newest first</option>
-          <option value="oldest">Oldest first</option>
-          <option value="az">Name A–Z</option>
-          <option value="cal_asc">Calories ↑</option>
-          <option value="cal_desc">Calories ↓</option>
-        </select>
-        <span class="recipe-count" id="recipeCount">Loading…</span>
-      </div>
-      <div class="chip-bar">
-        <div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div>
-        <div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div>
-        <div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div>
-        <div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div>
-        <div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div>
-      </div>
-      <div class="recipe-grid" id="grid">
-        <div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PREFACE -->
-  <div class="page" id="page-preface">
-    <div class="topbar"><div class="topbar-title">📜 Preface</div></div>
-    <div class="container"><div class="static-page">
-      <h1>Our Family Cookbook</h1>
-      <p class="page-sub">A collection of recipes passed down through generations and created with love.</p>
-      <hr>
-      <h2>Welcome</h2>
-      <p>This is a placeholder preface — you'll write this! Here you can share the story of your family's cooking traditions, where certain recipes came from, and what food means to the Wortmann family.</p>
-      <p>Consider including: how this cookbook was created, which family members contributed recipes, special memories tied to certain dishes, and any cooking wisdom passed down through the generations.</p>
-      <h2>How to Use This Cookbook</h2>
-      <p>Browse all recipes on the main page. Search by name, ingredient, or cuisine. Filter by dietary preference using the chips at the top. Click any recipe card to view the full recipe, scale servings with the slider, toggle between metric and imperial measurements, and use Cook Mode to follow step-by-step instructions.</p>
-      <h2>A Note on Measurements</h2>
-      <p>Recipes in this book use both imperial and metric measurements. You can switch between them in any recipe view. See the Unit Conversions page for a handy reference guide.</p>
-      <hr>
-      <p style="font-style:italic;color:var(--ink3);font-family:'Lora',serif;font-size:16px">"The secret ingredient is always love."</p>
-    </div></div>
-  </div>
-
-  <!-- CONVERSIONS -->
-  <div class="page" id="page-conversions">
-    <div class="topbar"><div class="topbar-title">⚖️ Unit Conversions</div></div>
-    <div class="container"><div class="static-page">
-      <h1>Unit Conversions</h1>
-      <p class="page-sub">A handy reference for common cooking measurements.</p>
-      <div class="conv-grid">
-        <div class="conv-card"><div class="conv-card-head">Volume (US)</div><table class="conv-table">
-          <tr><td>1 teaspoon</td><td>5 ml</td></tr><tr><td>1 tablespoon</td><td>15 ml / 3 tsp</td></tr>
-          <tr><td>¼ cup</td><td>60 ml</td></tr><tr><td>⅓ cup</td><td>80 ml</td></tr>
-          <tr><td>½ cup</td><td>120 ml</td></tr><tr><td>1 cup</td><td>240 ml</td></tr>
-          <tr><td>1 pint</td><td>480 ml</td></tr><tr><td>1 quart</td><td>960 ml</td></tr>
-          <tr><td>1 gallon</td><td>3.8 L</td></tr>
-        </table></div>
-        <div class="conv-card"><div class="conv-card-head">Weight</div><table class="conv-table">
-          <tr><td>1 oz</td><td>28 g</td></tr><tr><td>4 oz (¼ lb)</td><td>113 g</td></tr>
-          <tr><td>8 oz (½ lb)</td><td>227 g</td></tr><tr><td>12 oz (¾ lb)</td><td>340 g</td></tr>
-          <tr><td>1 lb</td><td>454 g</td></tr><tr><td>2.2 lbs</td><td>1 kg</td></tr>
-        </table></div>
-        <div class="conv-card"><div class="conv-card-head">Oven Temperature</div><table class="conv-table">
-          <tr><td>250°F</td><td>120°C</td></tr><tr><td>300°F</td><td>150°C</td></tr>
-          <tr><td>325°F</td><td>165°C</td></tr><tr><td>350°F</td><td>175°C</td></tr>
-          <tr><td>375°F</td><td>190°C</td></tr><tr><td>400°F</td><td>200°C</td></tr>
-          <tr><td>425°F</td><td>220°C</td></tr><tr><td>450°F</td><td>230°C</td></tr>
-        </table></div>
-        <div class="conv-card"><div class="conv-card-head">Common Ingredients</div><table class="conv-table">
-          <tr><td>1 cup flour</td><td>120 g</td></tr><tr><td>1 cup sugar</td><td>200 g</td></tr>
-          <tr><td>1 cup brown sugar</td><td>220 g</td></tr><tr><td>1 cup butter</td><td>227 g</td></tr>
-          <tr><td>1 cup rice (dry)</td><td>185 g</td></tr><tr><td>1 cup oats</td><td>90 g</td></tr>
-          <tr><td>1 cup milk</td><td>245 g</td></tr><tr><td>1 cup honey</td><td>340 g</td></tr>
-        </table></div>
-        <div class="conv-card"><div class="conv-card-head">Pan Sizes</div><table class="conv-table">
-          <tr><td>8" round</td><td>20 cm</td></tr><tr><td>9" round</td><td>23 cm</td></tr>
-          <tr><td>9×13" pan</td><td>23×33 cm</td></tr><tr><td>8×8" square</td><td>20×20 cm</td></tr>
-          <tr><td>9×5" loaf</td><td>23×13 cm</td></tr><tr><td>12-cup muffin</td><td>Standard</td></tr>
-        </table></div>
-        <div class="conv-card"><div class="conv-card-head">Quick Reference</div><table class="conv-table">
-          <tr><td>½ tbsp</td><td>1½ tsp</td></tr><tr><td>¾ cup</td><td>12 tbsp</td></tr>
-          <tr><td>⅔ cup</td><td>10 tbsp + 2 tsp</td></tr><tr><td>Pinch</td><td>~1/16 tsp</td></tr>
-          <tr><td>Dash</td><td>~1/8 tsp</td></tr><tr><td>Smidge</td><td>~1/32 tsp</td></tr>
-        </table></div>
-      </div>
-    </div></div>
-  </div>
-
-  <!-- TIPS -->
-  <div class="page" id="page-tips">
-    <div class="topbar"><div class="topbar-title">💡 Cooking Tips</div></div>
-    <div class="container"><div class="static-page">
-      <h1>Cooking Tips & Techniques</h1>
-      <p class="page-sub">Essential knowledge every home cook should have.</p>
-      <h2>Knife Skills</h2>
-      <div class="tip-card"><span class="tip-icon">🔪</span><div class="tip-text"><h4>Keep your knife sharp</h4><p>A sharp knife is safer than a dull one. Sharpen monthly and hone before each use.</p></div></div>
-      <div class="tip-card"><span class="tip-icon">🖐️</span><div class="tip-text"><h4>Use the claw grip</h4><p>Curl your fingertips under when chopping, using knuckles as a guide for the blade.</p></div></div>
-      <h2>Heat & Cooking</h2>
-      <div class="tip-card"><span class="tip-icon">🍳</span><div class="tip-text"><h4>Preheat your pan</h4><p>Always preheat before adding oil or food. A hot pan prevents sticking and creates better browning.</p></div></div>
-      <div class="tip-card"><span class="tip-icon">🌡️</span><div class="tip-text"><h4>Use a meat thermometer</h4><p>Chicken: 165°F · Pork: 145°F · Beef (medium): 135°F · Fish: 145°F</p></div></div>
-      <div class="tip-card"><span class="tip-icon">⏱️</span><div class="tip-text"><h4>Let meat rest</h4><p>Rest steaks and roasts 5–10 min after cooking. Juices redistribute throughout the meat.</p></div></div>
-      <h2>Baking</h2>
-      <div class="tip-card"><span class="tip-icon">⚖️</span><div class="tip-text"><h4>Weigh your ingredients</h4><p>Baking is a science. Weighing flour is far more accurate than volume measures.</p></div></div>
-      <div class="tip-card"><span class="tip-icon">🥚</span><div class="tip-text"><h4>Room temperature ingredients</h4><p>Pull butter and eggs out 30–60 minutes before baking for lighter, more even results.</p></div></div>
-      <h2>Flavor Building</h2>
-      <div class="tip-card"><span class="tip-icon">🧂</span><div class="tip-text"><h4>Season in layers</h4><p>Add salt at each stage of cooking for deeper, more rounded flavor throughout.</p></div></div>
-      <div class="tip-card"><span class="tip-icon">🍋</span><div class="tip-text"><h4>Acid brightens everything</h4><p>A squeeze of lemon or splash of vinegar at the end lifts and brightens any dish.</p></div></div>
-    </div></div>
-  </div>
-
-  <!-- SEASONAL -->
-  <div class="page" id="page-seasonal">
-    <div class="topbar"><div class="topbar-title">🌿 Seasonal Guide</div></div>
-    <div class="container"><div class="static-page">
-      <h1>Seasonal Cooking Guide</h1>
-      <p class="page-sub">Cook with what's fresh — food tastes better and costs less in season.</p>
-      <div class="season-grid">
-        <div class="season-card s-spring"><div style="font-size:34px">🌸</div><h3>Spring</h3><p>Asparagus, peas, artichokes, spinach, radishes, strawberries, rhubarb, spring onions.</p></div>
-        <div class="season-card s-summer"><div style="font-size:34px">☀️</div><h3>Summer</h3><p>Tomatoes, zucchini, corn, peppers, eggplant, peaches, berries, watermelon, basil.</p></div>
-        <div class="season-card s-fall"><div style="font-size:34px">🍂</div><h3>Fall</h3><p>Pumpkin, squash, apples, pears, Brussels sprouts, sweet potatoes, cranberries, kale.</p></div>
-        <div class="season-card s-winter"><div style="font-size:34px">❄️</div><h3>Winter</h3><p>Root vegetables, citrus, cabbage, leeks, pomegranate, broccoli, cauliflower, endive.</p></div>
-      </div>
-      <h2>Idaho Seasonal Highlights</h2>
-      <p>Living in Boise, Idaho means access to incredible local produce. Idaho is famous for its potatoes year-round. Treasure Valley farmers markets run May–October with exceptional stone fruits, sweet corn, and peppers in summer. Fall brings local apple orchards with dozens of varieties not found in stores.</p>
-      <h2>Preserving the Harvest</h2>
-      <div class="tip-card"><span class="tip-icon">🫙</span><div class="tip-text"><h4>Canning</h4><p>Water-bath canning for high-acid foods (tomatoes, fruit, pickles). Pressure canner for low-acid vegetables.</p></div></div>
-      <div class="tip-card"><span class="tip-icon">🧊</span><div class="tip-text"><h4>Freezing</h4><p>Blanch vegetables before freezing. Most vegetables last 8–12 months frozen.</p></div></div>
-    </div></div>
-  </div>
-
-  <!-- IMPORT -->
-  <div class="page" id="page-import">
-    <div class="topbar"><div class="topbar-title">🔗 Import Recipe from Web</div></div>
-    <div class="container"><div class="static-page">
-      <h1>Import a Recipe</h1>
-      <p class="page-sub">Paste a URL from a recipe website and we'll extract the recipe details.</p>
-      <div class="import-area">
-        <div style="font-size:34px;margin-bottom:.5rem">🔗</div>
-        <input type="url" id="importUrl" placeholder="https://www.allrecipes.com/recipe/..." style="max-width:480px;margin:.65rem auto;display:block">
-        <p style="font-size:13px;color:var(--ink3);margin-top:.4rem">Works best with AllRecipes, Food Network, Epicurious, and most major recipe sites.</p>
-        <button class="btn btn-primary" style="margin-top:.65rem" onclick="importRecipe()">🔍 Import Recipe</button>
-      </div>
-      <div class="import-result" id="importResult"></div>
-      <hr>
-      <h2>How It Works</h2>
-      <p>We read structured recipe data (JSON-LD schema) embedded in most modern recipe websites. After importing, recipe fields are pre-filled in the Add Recipe form for you to review and save.</p>
-      <div class="tip-card"><span class="tip-icon">✅</span><div class="tip-text"><h4>Works well with</h4><p>AllRecipes, Food Network, Epicurious, Serious Eats, NYT Cooking, Bon Appétit, King Arthur Baking.</p></div></div>
-      <div class="tip-card"><span class="tip-icon">⚠️</span><div class="tip-text"><h4>May not work with</h4><p>Personal blogs without structured data, sites behind paywalls, or PDFs. Add those manually.</p></div></div>
-    </div></div>
-  </div>
-
-</div><!-- .main -->
-
+    <h2>Recommendation</h2>
+    <div class="tip-card"><span class="tip-icon">⭐</span><div class="tip-text"><h4>Start with the PWA today</h4><p>Open the cookbook site on each family member's phone and add it to their home screens. It looks and behaves like an app, syncs via Firebase, and costs nothing. If you later want something in the App Store, React Native is the most practical path — one codebase for both iOS and Android.</p></div></div>
+  </div></div>
+</div>
 <!-- ADD / EDIT MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="modal">
@@ -499,28 +540,15 @@ input[type=range]{flex:1;min-width:80px;accent-color:var(--rust)}
     <div class="modal-body">
       <div class="form-grid">
         <div class="fg full"><label>Recipe Name *</label><input type="text" id="f_name" placeholder="e.g. Grandma's Apple Pie"></div>
-        <div class="fg"><label>Category</label><select id="f_cat">
-          <option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option>
-          <option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option>
-          <option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option>
-        </select></div>
-        <div class="fg"><label>Cuisine</label><select id="f_cuisine">
-          <option value="">— Select —</option>
-          <option>American</option><option>Italian</option><option>Mexican</option><option>Asian</option>
-          <option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option>
-          <option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option>
-          <option>Middle Eastern</option><option>Other</option>
-        </select></div>
-        <div class="fg"><label>Added by</label><input type="text" id="f_author" placeholder="e.g. Mom, Grandpa…"></div>
+        <div class="fg"><label>Category</label><select id="f_cat"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select></div>
+        <div class="fg"><label>Cuisine</label><select id="f_cuisine"><option value="">— Select —</option><option>American</option><option>Southern</option><option>Italian</option><option>Mexican</option><option>Asian</option><option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option><option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option><option>Middle Eastern</option><option>Other</option></select></div>
+        <div class="fg"><label>Added by</label><input type="text" id="f_author" placeholder="Mom, Grandpa…"></div>
         <div class="fg"><label>Servings</label><input type="number" id="f_servings" placeholder="4" min="1"></div>
-        <div class="fg"><label>Active time (mins) <span style="font-weight:400;color:var(--ink3)">hands-on cooking</span></label><input type="number" id="f_active" placeholder="20" min="0"></div>
-        <div class="fg"><label>Passive time (mins) <span style="font-weight:400;color:var(--ink3)">baking, marinating…</span></label><input type="number" id="f_passive" placeholder="45" min="0"></div>
-        <div class="fg full"><label>Photo URL</label>
-          <input type="url" id="f_photo" placeholder="https://example.com/photo.jpg" oninput="previewPhoto()">
-          <img class="img-preview" id="photoPreview" alt=""></div>
+        <div class="fg"><label>Active time (mins) — hands-on cooking</label><input type="number" id="f_active" placeholder="20" min="0"></div>
+        <div class="fg"><label>Passive time (mins) — baking, marinating…</label><input type="number" id="f_passive" placeholder="45" min="0"></div>
+        <div class="fg full"><label>Photo URL</label><input type="url" id="f_photo" placeholder="https://example.com/photo.jpg" oninput="previewPhoto()"><img class="img-preview" id="photoPreview" alt=""></div>
         <div class="fg full"><label>Description / Story behind the dish</label><textarea id="f_desc" placeholder="A memory, tip, or note about this recipe…"></textarea></div>
-        <div class="fg full"><label>Serves well with <span style="font-weight:400;color:var(--ink3)">(recipe names, comma-separated)</span></label>
-          <input type="text" id="f_pairings" placeholder="e.g. Caesar Salad, Garlic Bread"></div>
+        <div class="fg full"><label>Serves well with <span style="font-weight:400;color:var(--ink3)">(recipe names, comma-separated)</span></label><input type="text" id="f_pairings" placeholder="e.g. Caesar Salad, Garlic Bread"></div>
       </div>
       <div class="section-sep">Dietary Labels</div>
       <div class="diet-checks">
@@ -530,7 +558,7 @@ input[type=range]{flex:1;min-width:80px;accent-color:var(--rust)}
         <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="dairyfree">🥛 Dairy-Free</label>
         <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="keto">🥑 Keto</label>
       </div>
-      <div class="section-sep">Nutrition <small style="font-size:11.5px;font-weight:400;color:var(--ink3)">(per serving)</small></div>
+      <div class="section-sep">Nutrition <small style="font-size:11px;font-weight:400;color:var(--ink3)">(per serving)</small></div>
       <div class="nutri-grid">
         <div class="nutri-wrap"><label>Calories (kcal)</label><input type="number" id="f_cal" placeholder="350" min="0"></div>
         <div class="nutri-wrap"><label>Protein (g)</label><input type="number" id="f_protein" placeholder="25" min="0"></div>
@@ -552,16 +580,13 @@ input[type=range]{flex:1;min-width:80px;accent-color:var(--rust)}
 
 <!-- VIEW MODAL -->
 <div class="overlay" id="viewOverlay">
-  <div class="modal" style="max-width:710px"><div id="viewContent"></div></div>
+  <div class="modal" style="max-width:700px"><div id="viewContent"></div></div>
 </div>
 
 <!-- COOK MODE -->
 <div class="overlay" id="cookOverlay">
   <div class="modal cook-modal">
-    <div class="cook-head">
-      <h2 id="cookTitle">Cook Mode</h2>
-      <button class="x-btn" style="color:rgba(255,255,255,.55)" onclick="closeOverlay('cookOverlay')">✕</button>
-    </div>
+    <div class="cook-head"><h2 id="cookTitle">Cook Mode</h2><button class="x-btn" style="color:rgba(255,255,255,.5)" onclick="closeOverlay('cookOverlay')">✕</button></div>
     <div class="cook-body">
       <div class="cook-prog"><div class="cook-prog-bar" id="cookProgBar"></div></div>
       <div class="cook-step-num" id="cookStepNum"></div>
@@ -569,7 +594,7 @@ input[type=range]{flex:1;min-width:80px;accent-color:var(--rust)}
       <div class="cook-ings" id="cookIngs"></div>
       <div class="cook-nav">
         <button class="btn btn-sm" onclick="cookPrev()" id="cookPrevBtn">← Back</button>
-        <span id="cookCounter" style="font-size:12px;opacity:.45"></span>
+        <span id="cookCounter" style="font-size:12px;opacity:.4"></span>
         <button class="btn btn-primary btn-sm" onclick="cookNext()" id="cookNextBtn">Next →</button>
       </div>
     </div>
@@ -579,360 +604,398 @@ input[type=range]{flex:1;min-width:80px;accent-color:var(--rust)}
 <div class="toast" id="toast"></div>
 
 <script>
-let recipes=[], editingId=null, dbReady=false;
-let activeDiets=new Set();
-let cookSteps=[], cookIngs=[], cookIdx=0;
-let viewScale=1, viewMetric=false, viewingId=null;
+var recipes=[],editingId=null,dbReady=false,activeDiets=new Set();
+var cookSteps=[],cookIngs=[],cookIdx=0;
+var viewScale=1,viewMetric=false,viewingId=null;
+var EMOJIS={Breakfast:"🍳",Lunch:"🥗",Dinner:"🍽️",Dessert:"🍰",Snack:"🧆",Soup:"🍲",Salad:"🥙",Baking:"🍞",Drink:"🥤","Side Dish":"🥦",Appetizer:"🫕",Other:"🍴"};
+var DLABELS={vegan:"🌱 Vegan",vegetarian:"🥦 Veg",glutenfree:"🌾 GF",dairyfree:"🥛 DF",keto:"🥑 Keto"};
+var DCLS={vegan:"dt-vegan",vegetarian:"dt-vegetarian",glutenfree:"dt-glutenfree",dairyfree:"dt-dairyfree",keto:"dt-keto"};
 
-const EMOJIS={Breakfast:"🍳",Lunch:"🥗",Dinner:"🍽️",Dessert:"🍰",Snack:"🧆",Soup:"🍲",Salad:"🥙",Baking:"🍞",Drink:"🥤","Side Dish":"🥦",Appetizer:"🫕",Other:"🍴"};
-const DIET_LABELS={vegan:"🌱 Vegan",vegetarian:"🥦 Veg",glutenfree:"🌾 GF",dairyfree:"🥛 DF",keto:"🥑 Keto"};
-const DIET_CLS={vegan:"dt-vegan",vegetarian:"dt-vegetarian",glutenfree:"dt-glutenfree",dairyfree:"dt-dairyfree",keto:"dt-keto"};
-
-// NAV
 function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
-  const nav=document.getElementById('nav-'+name);
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
+  var pg=document.getElementById('page-'+name);
+  if(pg)pg.classList.add('active');
+  var nav=document.getElementById('nav-'+name);
   if(nav)nav.classList.add('active');
   if(window.innerWidth<768)document.getElementById('sidebar').classList.remove('open');
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
 
-// SYNC
 function setSyncStatus(s){
-  const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
+  var dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
   dot.className='sync-dot'+(s==='syncing'?' syncing':s==='error'?' error':'');
   lbl.textContent=s==='live'?'Live sync':s==='syncing'?'Syncing…':'Offline';
 }
 
-// FIREBASE
 function initFirebase(){
-  const {onSnapshot,query,orderBy}=window._fns;
+  var fns=window._fns;
   setSyncStatus('syncing');
-  onSnapshot(query(window._col,orderBy('createdAt','desc')),
-    snap=>{recipes=snap.docs.map(d=>({id:d.id,...d.data()}));setSyncStatus('live');renderCards();},
-    err=>{console.error(err);setSyncStatus('error');showToast('⚠️ Could not connect');}
+  var q=fns.query(window._col,fns.orderBy('createdAt','desc'));
+  fns.onSnapshot(q,
+    function(snap){recipes=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});setSyncStatus('live');renderCards();},
+    function(err){console.error(err);setSyncStatus('error');showToast('⚠️ Could not connect to database');}
   );
 }
-document.addEventListener('firebase-ready',()=>{dbReady=true;try{initFirebase();}catch(e){setSyncStatus('error');renderCards();}});
+document.addEventListener('firebase-ready',function(){dbReady=true;try{initFirebase();}catch(e){setSyncStatus('error');renderCards();}});
 
-// DIET FILTER
 function toggleDiet(el){
-  const d=el.dataset.diet;
+  var d=el.dataset.diet;
   if(activeDiets.has(d)){activeDiets.delete(d);el.classList.remove('active');}
   else{activeDiets.add(d);el.classList.add('active');}
   renderCards();
 }
 
-// RENDER
 function renderCards(){
-  const q=document.getElementById('searchInput').value.toLowerCase();
-  const cat=document.getElementById('catFilter').value;
-  const cui=document.getElementById('cuisineFilter').value;
-  const srt=document.getElementById('sortFilter').value;
-  let list=recipes.filter(r=>{
-    if(q&&![(r.name||''),(r.description||''),(r.cuisine||''),(r.author||''),...(r.ingredients||[]).map(i=>i.name||'')].some(s=>s.toLowerCase().includes(q)))return false;
+  var q=document.getElementById('searchInput').value.toLowerCase();
+  var cat=document.getElementById('catFilter').value;
+  var cui=document.getElementById('cuisineFilter').value;
+  var srt=document.getElementById('sortFilter').value;
+  var list=recipes.filter(function(r){
+    var terms=[(r.name||''),(r.description||''),(r.cuisine||''),(r.author||'')].concat((r.ingredients||[]).map(function(i){return i.name||'';}));
+    if(q&&!terms.some(function(s){return s.toLowerCase().indexOf(q)>=0;}))return false;
     if(cat&&r.category!==cat)return false;
     if(cui&&r.cuisine!==cui)return false;
-    if(activeDiets.size){const rd=new Set(r.diets||[]);for(const d of activeDiets)if(!rd.has(d))return false;}
+    if(activeDiets.size>0){var rd=new Set(r.diets||[]);for(var d of activeDiets)if(!rd.has(d))return false;}
     return true;
   });
-  list.sort((a,b)=>{
-    if(srt==='newest')return(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
-    if(srt==='oldest')return(a.createdAt?.seconds||0)-(b.createdAt?.seconds||0);
+  list.sort(function(a,b){
+    if(srt==='newest')return(b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0);
+    if(srt==='oldest')return(a.createdAt&&a.createdAt.seconds||0)-(b.createdAt&&b.createdAt.seconds||0);
     if(srt==='az')return(a.name||'').localeCompare(b.name||'');
     if(srt==='cal_asc')return(+a.cal||0)-(+b.cal||0);
     if(srt==='cal_desc')return(+b.cal||0)-(+a.cal||0);
     return 0;
   });
-  const total=recipes.length;
-  document.getElementById('recipeCount').textContent=`${list.length}${list.length!==total?' of '+total:''} recipe${total!==1?'s':''}`;
-  const grid=document.getElementById('grid');
-  if(!dbReady){grid.innerHTML=`<div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Connecting…</p></div>`;return;}
+  var total=recipes.length;
+  document.getElementById('recipeCount').textContent=list.length+(list.length!==total?' of '+total:'')+' recipe'+(total!==1?'s':'');
+  var grid=document.getElementById('grid');
+  if(!dbReady){grid.innerHTML='<div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Connecting…</p></div>';return;}
   if(!list.length){
-    grid.innerHTML=`<div class="empty"><div class="big">📖</div><h3>${total===0?'Your cookbook is empty':'No recipes found'}</h3><p style="margin-bottom:18px">${total===0?'Add your first family recipe!':'Try a different search or filter.'}</p>${total===0?'<button class="btn btn-primary" onclick="openAdd()">＋ Add First Recipe</button>':''}</div>`;
+    grid.innerHTML='<div class="empty"><div class="big">📖</div><h3>'+(total===0?'Your cookbook is empty':'No recipes found')+'</h3><p style="margin-bottom:15px">'+(total===0?'Add your first family recipe!':'Try a different search or filter.')+'</p>'+(total===0?'<button class="btn btn-primary" onclick="openAdd()">＋ Add First Recipe</button>':'')+'</div>';
     return;
   }
-  grid.innerHTML=list.map((r,i)=>{
-    const diets=(r.diets||[]).map(d=>`<span class="diet-tag ${DIET_CLS[d]||''}">${DIET_LABELS[d]||d}</span>`).join('');
-    return`<div class="recipe-card" style="animation-delay:${i*.04}s" onclick="viewRecipe('${r.id}')">
-      ${r.photo?`<img class="card-img" src="${h(r.photo)}" alt="${h(r.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`:``}
-      <div class="card-ph" style="${r.photo?'display:none':''}">${EMOJIS[r.category]||'🍴'}</div>
-      <div class="card-body">
-        <div class="card-top">
-          <div class="card-cat">${h(r.category||'')}${r.cuisine?' · '+h(r.cuisine):''}${r.author?' · '+h(r.author):''}</div>
-          <div class="diet-chips">${diets}</div>
-        </div>
-        <div class="card-title">${h(r.name)}</div>
-        <div class="card-meta">
-          ${r.servings?`<span>👤 ${r.servings}</span>`:''}
-          ${r.active?`<span>👐 ${r.active}m</span>`:''}
-          ${r.passive?`<span>⏳ ${r.passive}m</span>`:''}
-          ${(r.ingredients||[]).length?`<span>🧂 ${r.ingredients.length}</span>`:''}
-        </div>
-        <div class="badges">
-          ${r.cal?`<span class="badge b-cal">${r.cal} kcal</span>`:''}
-          ${r.protein?`<span class="badge b-protein">${r.protein}g P</span>`:''}
-          ${r.carbs?`<span class="badge b-carbs">${r.carbs}g C</span>`:''}
-          ${r.fat?`<span class="badge b-fat">${r.fat}g F</span>`:''}
-        </div>
-      </div>
-    </div>`;
+  grid.innerHTML=list.map(function(r,i){
+    var diets=(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
+    return '<div class="recipe-card" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
+      (r.photo?'<img class="card-img" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
+      '<div class="card-ph" style="'+(r.photo?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
+      '<div class="card-body"><div class="card-top"><div class="card-cat">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(r.author?' · '+h(r.author):'')+'</div><div class="diet-chips">'+diets+'</div></div>'+
+      '<div class="card-title">'+h(r.name)+'</div>'+
+      '<div class="card-meta">'+(r.servings?'<span>👤 '+r.servings+'</span>':'')+(r.active?'<span>👐 '+r.active+'m</span>':'')+(r.passive?'<span>⏳ '+r.passive+'m</span>':'')+(r.ingredients&&r.ingredients.length?'<span>🧂 '+r.ingredients.length+'</span>':'')+'</div>'+
+      '<div class="badges">'+(r.cal?'<span class="badge b-cal">'+r.cal+' kcal</span>':'')+(r.protein?'<span class="badge b-protein">'+r.protein+'g P</span>':'')+(r.carbs?'<span class="badge b-carbs">'+r.carbs+'g C</span>':'')+(r.fat?'<span class="badge b-fat">'+r.fat+'g F</span>':'')+'</div></div></div>';
   }).join('');
 }
 
-// VIEW
 function viewRecipe(id,scale,metric){
-  const r=recipes.find(x=>x.id===id);
+  var r=recipes.find(function(x){return x.id===id;});
   if(!r)return;
   viewingId=id;
-  const base=+(r.servings||1);
-  const s=scale||1;
-  const m=metric||false;
-  viewScale=s; viewMetric=m;
+  var base=+(r.servings||1);
+  var s=scale||1;
+  var m=metric||false;
+  viewScale=s;viewMetric=m;
 
   function scaleIng(ing){
-    const bq=parseFloat(ing.qty);
+    var bq=parseFloat(ing.qty);
     if(isNaN(bq))return{name:ing.name,qty:ing.qty,unit:ing.unit||''};
-    let qty=bq*s, unit=ing.unit||'';
+    var qty=bq*s,unit=ing.unit||'';
     if(m){
-      const cv={cup:240,cups:240,tbsp:15,tablespoon:15,tablespoons:15,tsp:5,teaspoon:5,teaspoons:5,oz:28.35,lb:454,lbs:454,'fl oz':29.57};
-      const nUnit={cup:'ml',cups:'ml',tbsp:'ml',tablespoon:'ml',tablespoons:'ml',tsp:'ml',teaspoon:'ml',teaspoons:'ml',oz:'g',lb:'g',lbs:'g','fl oz':'ml'};
-      if(cv[unit.toLowerCase()]){qty*=cv[unit.toLowerCase()];unit=nUnit[unit.toLowerCase()];}
+      var cv={cup:240,cups:240,tbsp:15,tablespoon:15,tablespoons:15,tsp:5,teaspoon:5,teaspoons:5,oz:28.35,lb:454,lbs:454,'fl oz':29.57};
+      var nu={cup:'ml',cups:'ml',tbsp:'ml',tablespoon:'ml',tablespoons:'ml',tsp:'ml',teaspoon:'ml',teaspoons:'ml',oz:'g',lb:'g',lbs:'g','fl oz':'ml'};
+      var ul=unit.toLowerCase();
+      if(cv[ul]){qty*=cv[ul];unit=nu[ul];}
     }
     qty=Math.round(qty*10)/10;
-    return{name:ing.name,qty:qty%1===0?String(qty):qty.toFixed(1),unit};
+    return{name:ing.name,qty:qty%1===0?String(qty):qty.toFixed(1),unit:unit};
   }
 
-  const diets=(r.diets||[]).map(d=>`<span class="diet-tag ${DIET_CLS[d]||''}" style="font-size:12px;padding:3px 9px">${DIET_LABELS[d]||d}</span>`).join('');
-  const pairs=(r.pairings||'').split(',').map(p=>p.trim()).filter(Boolean);
-  const scaledServings=Math.round(base*s*4)/4;
+  var diets=(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:11.5px;padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
+  var pairs=(r.pairings||'').split(',').map(function(p){return p.trim();}).filter(Boolean);
+  var scaledServings=Math.round(base*s*4)/4;
 
-  document.getElementById('viewContent').innerHTML=`
-    ${r.photo?`<img class="view-hero" src="${h(r.photo)}" alt="${h(r.name)}" onerror="this.style.display='none'">`:
-              `<div class="view-hero-ph">${EMOJIS[r.category]||'🍴'}</div>`}
-    <div style="padding:0 1.6rem">
-      <div class="modal-head" style="border-radius:0;padding:1rem 0;background:transparent">
-        <div style="flex:1">
-          <div style="font-size:11px;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">${h(r.category||'')}${r.cuisine?' · '+h(r.cuisine):''}${r.author?' · '+h(r.author):''}</div>
-          <h2 style="font-family:'Lora',serif;font-size:23px">${h(r.name)}</h2>
-          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">${diets}</div>
-        </div>
-        <div style="display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end">
-          <button class="btn btn-sm" onclick="openEdit('${r.id}');closeOverlay('viewOverlay')">✏️ Edit</button>
-          <button class="btn btn-green btn-sm" onclick="startCook('${r.id}')">▶ Cook Mode</button>
-          <button class="x-btn" onclick="closeOverlay('viewOverlay')">✕</button>
-        </div>
-      </div>
-    </div>
-    <div class="view-body">
-      ${r.description?`<p style="color:var(--ink2);font-style:italic;margin-bottom:.9rem;line-height:1.8;border-left:3px solid var(--rust2);padding-left:11px">"${h(r.description)}"</p>`:''}
-      <div class="slider-row">
-        <label>Servings</label>
-        <input type="range" min="0.25" max="10" step="0.25" value="${s}" oninput="viewRecipe('${r.id}',+this.value,${m})">
-        <span class="slider-val">${scaledServings}</span>
-        <div class="unit-toggle">
-          <button class="unit-btn ${!m?'active':''}" onclick="viewRecipe('${r.id}',${s},false)">Imperial</button>
-          <button class="unit-btn ${m?'active':''}" onclick="viewRecipe('${r.id}',${s},true)">Metric</button>
-        </div>
-      </div>
-      <div class="view-meta">
-        ${r.servings?`<span>👤 ${scaledServings} servings</span>`:''}
-        ${r.active?`<span>👐 Active: ${r.active} min</span>`:''}
-        ${r.passive?`<span>⏳ Passive: ${r.passive} min</span>`:''}
-        ${(+r.active||0)+(+r.passive||0)?`<span>⏱ Total: ${(+r.active||0)+(+r.passive||0)} min</span>`:''}
-      </div>
-      ${(r.cal||r.protein||r.carbs||r.fat)?`<div class="nutri-cards">
-        ${r.cal?`<div class="nc"><div class="val" style="color:var(--rust)">${r.cal}</div><div class="lbl">kcal</div></div>`:''}
-        ${r.protein?`<div class="nc"><div class="val" style="color:var(--blue)">${r.protein}g</div><div class="lbl">Protein</div></div>`:''}
-        ${r.carbs?`<div class="nc"><div class="val" style="color:var(--green)">${r.carbs}g</div><div class="lbl">Carbs</div></div>`:''}
-        ${r.fat?`<div class="nc"><div class="val" style="color:var(--red)">${r.fat}g</div><div class="lbl">Fat</div></div>`:''}
-      </div>`:''}
-      ${(r.ingredients||[]).length?`<div class="view-subhead">Ingredients</div>
-        <ul class="ing-list">${r.ingredients.map(i=>{const si=scaleIng(i);return`<li><span>${h(si.name)}</span><span style="color:var(--ink3)">${h(si.qty)}${si.unit?' '+h(si.unit):''}</span></li>`;}).join('')}</ul>`:''}
-      ${(r.steps||[]).length?`<div class="view-subhead">Instructions</div>
-        <ol class="steps-ol">${r.steps.map((st,i)=>`<li><div class="sc">${i+1}</div><div class="st">${h(st)}</div></li>`).join('')}</ol>`:''}
-      ${pairs.length?`<div class="view-subhead" style="margin-top:1.2rem">Serves Well With</div>
-        <div class="pair-chips">${pairs.map(p=>{const m2=recipes.find(rx=>rx.name.toLowerCase()===p.toLowerCase());return`<div class="pair-chip" onclick="${m2?`closeOverlay('viewOverlay');viewRecipe('${m2.id}')`:`showToast('Recipe not in cookbook yet')`}">${h(p)}${m2?' 👀':''}</div>`;}).join('')}</div>`:''}
-    </div>`;
+  var html=(r.photo?'<img class="view-hero" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\'">':'<div class="view-hero-ph">'+(EMOJIS[r.category]||'🍴')+'</div>')+
+    '<div style="padding:0 1.5rem"><div class="modal-head" style="border-radius:0;padding:.9rem 0;background:transparent">'+
+    '<div style="flex:1"><div style="font-size:11px;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(r.author?' · '+h(r.author):'')+'</div>'+
+    '<h2 style="font-family:\'Lora\',serif;font-size:22px">'+h(r.name)+'</h2>'+
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+diets+'</div></div>'+
+    '<div style="display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end">'+
+    '<button class="btn btn-sm" onclick="openEdit(\''+r.id+'\');closeOverlay(\'viewOverlay\')">✏️ Edit</button>'+
+    '<button class="btn btn-green btn-sm" onclick="startCook(\''+r.id+'\')">▶ Cook</button>'+
+    '<button class="x-btn" onclick="closeOverlay(\'viewOverlay\')">✕</button></div></div></div>'+
+    '<div class="view-body">'+
+    (r.description?'<p style="color:var(--ink2);font-style:italic;margin-bottom:.85rem;line-height:1.8;border-left:3px solid var(--rust2);padding-left:10px">"'+h(r.description)+'"</p>':'')+
+    '<div class="slider-row"><label>Servings</label>'+
+    '<input type="range" min="0.25" max="10" step="0.25" value="'+s+'" oninput="viewRecipe(\''+r.id+'\',+this.value,'+m+')">'+
+    '<span class="slider-val">'+scaledServings+'</span>'+
+    '<div class="unit-toggle">'+
+    '<button class="unit-btn '+((!m)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',false)">Imperial</button>'+
+    '<button class="unit-btn '+((m)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',true)">Metric</button>'+
+    '</div></div>'+
+    '<div class="view-meta">'+(r.servings?'<span>👤 '+scaledServings+' servings</span>':'')+(r.active?'<span>👐 Active: '+r.active+' min</span>':'')+(r.passive?'<span>⏳ Passive: '+r.passive+' min</span>':'')+((+r.active||0)+(+r.passive||0)?'<span>⏱ Total: '+((+r.active||0)+(+r.passive||0))+' min</span>':'')+'</div>'+
+    ((r.cal||r.protein||r.carbs||r.fat)?'<div class="nutri-cards">'+(r.cal?'<div class="nc"><div class="val" style="color:var(--rust)">'+r.cal+'</div><div class="lbl">kcal</div></div>':'')+(r.protein?'<div class="nc"><div class="val" style="color:var(--blue)">'+r.protein+'g</div><div class="lbl">Protein</div></div>':'')+(r.carbs?'<div class="nc"><div class="val" style="color:var(--green)">'+r.carbs+'g</div><div class="lbl">Carbs</div></div>':'')+(r.fat?'<div class="nc"><div class="val" style="color:var(--red)">'+r.fat+'g</div><div class="lbl">Fat</div></div>':'')+'</div>':'')+
+    ((r.ingredients||[]).length?'<div class="view-subhead">Ingredients</div><ul class="ing-list">'+r.ingredients.map(function(ing){var si=scaleIng(ing);return'<li><span>'+h(si.name)+'</span><span style="color:var(--ink3)">'+h(si.qty)+(si.unit?' '+h(si.unit):'')+'</span></li>';}).join('')+'</ul>':'')+
+    ((r.steps||[]).length?'<div class="view-subhead">Instructions</div><ol class="steps-ol">'+r.steps.map(function(st,i){return'<li><div class="sc">'+(i+1)+'</div><div class="st">'+h(st)+'</div></li>';}).join('')+'</ol>':'')+
+    (pairs.length?'<div class="view-subhead" style="margin-top:1.1rem">Serves Well With</div><div class="pair-chips">'+pairs.map(function(p){var m2=recipes.find(function(rx){return rx.name.toLowerCase()===p.toLowerCase();});return'<div class="pair-chip" onclick="'+(m2?'closeOverlay(\'viewOverlay\');viewRecipe(\''+m2.id+'\')':'showToast(\'Recipe not in cookbook yet\')')+'">'+h(p)+(m2?' 👀':'')+'</div>';}).join('')+'</div>':'')+
+    '</div>';
+
+  document.getElementById('viewContent').innerHTML=html;
   openOverlay('viewOverlay');
 }
 
-// COOK MODE
 function startCook(id){
-  const r=recipes.find(x=>x.id===id);
+  var r=recipes.find(function(x){return x.id===id;});
   if(!r||(r.steps||[]).length===0){showToast('No steps to cook!');return;}
-  cookSteps=r.steps; cookIngs=r.ingredients||[]; cookIdx=0;
+  cookSteps=r.steps;cookIngs=r.ingredients||[];cookIdx=0;
   document.getElementById('cookTitle').textContent=r.name;
-  renderCookStep();
-  closeOverlay('viewOverlay');
-  openOverlay('cookOverlay');
+  renderCookStep();closeOverlay('viewOverlay');openOverlay('cookOverlay');
 }
 function renderCookStep(){
-  const total=cookSteps.length, pct=((cookIdx+1)/total)*100;
+  var total=cookSteps.length,pct=((cookIdx+1)/total)*100;
   document.getElementById('cookProgBar').style.width=pct+'%';
-  document.getElementById('cookStepNum').textContent=`Step ${cookIdx+1} of ${total}`;
+  document.getElementById('cookStepNum').textContent='Step '+(cookIdx+1)+' of '+total;
   document.getElementById('cookStepText').textContent=cookSteps[cookIdx];
-  document.getElementById('cookCounter').textContent=`${cookIdx+1} / ${total}`;
+  document.getElementById('cookCounter').textContent=(cookIdx+1)+' / '+total;
   document.getElementById('cookPrevBtn').disabled=cookIdx===0;
   document.getElementById('cookNextBtn').textContent=cookIdx===total-1?'✅ Done!':'Next →';
-  const show=cookIngs.slice(0,5);
-  document.getElementById('cookIngs').innerHTML=show.length?`<h4>Ingredients</h4><ul>${show.map(i=>`<li>${h((i.qty||'')+' '+(i.unit||'')+' '+i.name)}</li>`).join('')}${cookIngs.length>5?`<li style="opacity:.4">…and ${cookIngs.length-5} more</li>`:''}</ul>`:'';
+  var show=cookIngs.slice(0,5);
+  document.getElementById('cookIngs').innerHTML=show.length?'<h4>Ingredients</h4><ul>'+show.map(function(i){return'<li>'+h(((i.qty||'')+' '+(i.unit||'')+' '+i.name).trim())+'</li>';}).join('')+(cookIngs.length>5?'<li style="opacity:.4">…and '+(cookIngs.length-5)+' more</li>':'')+'</ul>':'';
 }
 function cookNext(){if(cookIdx<cookSteps.length-1){cookIdx++;renderCookStep();}else closeOverlay('cookOverlay');}
 function cookPrev(){if(cookIdx>0){cookIdx--;renderCookStep();}}
 
-// ADD/EDIT
 function openAdd(prefill){
   editingId=null;
   document.getElementById('modalTitle').textContent='New Recipe';
   document.getElementById('deleteBtn').style.display='none';
   clearForm();
   if(prefill){
-    Object.entries(prefill).forEach(([k,v])=>{const el=document.getElementById('f_'+k);if(el&&typeof v==='string')el.value=v;});
-    (prefill.ingredients||[]).forEach(i=>addIng(i.name,i.qty,i.unit));
-    (prefill.steps||[]).forEach(s=>addStep(s));
+    Object.keys(prefill).forEach(function(k){if(typeof prefill[k]==='string'){var el=document.getElementById('f_'+k);if(el)el.value=prefill[k];}});
+    (prefill.ingredients||[]).forEach(function(i){addIng(i.name,i.qty||'',i.unit||'');});
+    (prefill.steps||[]).forEach(function(s){addStep(s);});
   }
   if(!document.querySelectorAll('.ing-row').length){addIng();addIng();addIng();}
   if(!document.querySelectorAll('.step-row').length){addStep();addStep();}
   openOverlay('addOverlay');
 }
 function openEdit(id){
-  const r=recipes.find(x=>x.id===id);if(!r)return;
+  var r=recipes.find(function(x){return x.id===id;});if(!r)return;
   editingId=id;
   document.getElementById('modalTitle').textContent='Edit Recipe';
   document.getElementById('deleteBtn').style.display='';
   clearForm();
-  ['name','author','servings','active','passive','photo','desc','cal','protein','carbs','fat','pairings'].forEach(k=>setValue('f_'+k,r[k]));
-  setValue('f_cat',r.category);setValue('f_cuisine',r.cuisine);
-  previewPhoto();
-  (r.diets||[]).forEach(d=>{const el=document.querySelector(`.diet-check input[value="${d}"]`);if(el){el.closest('.diet-check').classList.add('checked');el.checked=true;}});
-  (r.ingredients||[]).forEach(i=>addIng(i.name,i.qty,i.unit));
+  ['name','author','servings','active','passive','photo','desc','cal','protein','carbs','fat','pairings'].forEach(function(k){setValue('f_'+k,r[k]);});
+  setValue('f_cat',r.category);setValue('f_cuisine',r.cuisine);previewPhoto();
+  (r.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.closest('.diet-check').classList.add('checked');el.checked=true;}});
+  (r.ingredients||[]).forEach(function(i){addIng(i.name,i.qty,i.unit);});
   if(!(r.ingredients||[]).length)addIng();
-  (r.steps||[]).forEach(s=>addStep(s));
+  (r.steps||[]).forEach(function(s){addStep(s);});
   if(!(r.steps||[]).length)addStep();
   openOverlay('addOverlay');
 }
 function clearForm(){
-  ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['f_cat','f_cuisine'].forEach(id=>{const el=document.getElementById(id);if(el)el.selectedIndex=0;});
+  ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['f_cat','f_cuisine'].forEach(function(id){var el=document.getElementById(id);if(el)el.selectedIndex=0;});
   document.getElementById('ingList').innerHTML='';
   document.getElementById('stepList').innerHTML='';
   document.getElementById('photoPreview').style.display='none';
-  document.querySelectorAll('.diet-check').forEach(el=>{el.classList.remove('checked');el.querySelector('input').checked=false;});
+  document.querySelectorAll('.diet-check').forEach(function(el){el.classList.remove('checked');el.querySelector('input').checked=false;});
 }
-function addIng(name='',qty='',unit=''){
-  const d=document.createElement('div');d.className='ing-row';
-  d.innerHTML=`<input type="text" placeholder="Ingredient" value="${h(name)}" class="ing-name"><input type="text" placeholder="Amount" value="${h(qty)}" class="ing-qty"><input type="text" placeholder="Unit" value="${h(unit)}" class="ing-unit"><button class="icon-btn" onclick="this.closest('.ing-row').remove()">✕</button>`;
+function addIng(name,qty,unit){
+  name=name||'';qty=qty||'';unit=unit||'';
+  var d=document.createElement('div');d.className='ing-row';
+  d.innerHTML='<input type="text" placeholder="Ingredient" value="'+h(name)+'" class="ing-name"><input type="text" placeholder="Amount" value="'+h(qty)+'" class="ing-qty"><input type="text" placeholder="Unit" value="'+h(unit)+'" class="ing-unit"><button class="icon-btn" onclick="this.closest(\'.ing-row\').remove()">✕</button>';
   document.getElementById('ingList').appendChild(d);
 }
-function addStep(text=''){
-  const list=document.getElementById('stepList');const n=list.children.length+1;
-  const d=document.createElement('div');d.className='step-row';
-  d.innerHTML=`<div class="step-num">${n}</div><textarea placeholder="Step ${n}…" rows="2">${h(text)}</textarea><button class="icon-btn" onclick="removeStep(this)">✕</button>`;
+function addStep(text){
+  text=text||'';
+  var list=document.getElementById('stepList');var n=list.children.length+1;
+  var d=document.createElement('div');d.className='step-row';
+  d.innerHTML='<div class="step-num">'+n+'</div><textarea placeholder="Step '+n+'…" rows="2">'+h(text)+'</textarea><button class="icon-btn" onclick="removeStep(this)">✕</button>';
   list.appendChild(d);
 }
-function removeStep(btn){btn.closest('.step-row').remove();document.querySelectorAll('.step-num').forEach((el,i)=>el.textContent=i+1);}
-function toggleCheck(label){setTimeout(()=>label.classList.toggle('checked',label.querySelector('input').checked),0);}
-function previewPhoto(){const url=document.getElementById('f_photo').value.trim();const img=document.getElementById('photoPreview');img.src=url;img.style.display=url?'block':'none';}
+function removeStep(btn){btn.closest('.step-row').remove();document.querySelectorAll('.step-num').forEach(function(el,i){el.textContent=i+1;});}
+function toggleCheck(label){setTimeout(function(){label.classList.toggle('checked',label.querySelector('input').checked);},0);}
+function previewPhoto(){var url=document.getElementById('f_photo').value.trim();var img=document.getElementById('photoPreview');img.src=url;img.style.display=url?'block':'none';}
 
 async function saveRecipe(){
-  const name=document.getElementById('f_name').value.trim();
+  var name=document.getElementById('f_name').value.trim();
   if(!name){document.getElementById('f_name').focus();showToast('⚠️ Please enter a recipe name');return;}
   if(!dbReady){showToast('⚠️ Database not connected');return;}
-  const ingredients=[...document.querySelectorAll('.ing-row')].map(r=>({name:r.querySelector('.ing-name').value.trim(),qty:r.querySelector('.ing-qty').value.trim(),unit:r.querySelector('.ing-unit').value.trim()})).filter(i=>i.name);
-  const steps=[...document.querySelectorAll('#stepList textarea')].map(t=>t.value.trim()).filter(Boolean);
-  const diets=[...document.querySelectorAll('.diet-check input:checked')].map(el=>el.value);
-  const data={name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),diets,ingredients,steps};
+  var ingredients=Array.from(document.querySelectorAll('.ing-row')).map(function(r){return{name:r.querySelector('.ing-name').value.trim(),qty:r.querySelector('.ing-qty').value.trim(),unit:r.querySelector('.ing-unit').value.trim()};}).filter(function(i){return i.name;});
+  var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
+  var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
+  var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
   setSyncStatus('syncing');
   try{
-    const{addDoc,updateDoc,doc,serverTimestamp}=window._fns;
-    if(editingId){await updateDoc(doc(window._db,'recipes',editingId),data);showToast('✅ Recipe updated!');}
-    else{data.createdAt=serverTimestamp();await addDoc(window._col,data);showToast('✅ Recipe saved for the whole family!');}
+    var fns=window._fns;
+    if(editingId){await fns.updateDoc(fns.doc(window._db,'recipes',editingId),data);showToast('✅ Recipe updated!');}
+    else{data.createdAt=fns.serverTimestamp();await fns.addDoc(window._col,data);showToast('✅ Recipe saved for the whole family!');}
     closeOverlay('addOverlay');
-  }catch(e){console.error(e);showToast('❌ Save failed');setSyncStatus('error');}
+  }catch(e){console.error(e);showToast('❌ Save failed — check your connection');setSyncStatus('error');}
 }
 async function deleteRecipe(){
-  if(!editingId||!confirm('Delete this recipe?'))return;
-  try{const{deleteDoc,doc}=window._fns;await deleteDoc(doc(window._db,'recipes',editingId));showToast('🗑 Deleted');closeOverlay('addOverlay');}
+  if(!editingId||!confirm('Delete this recipe? This cannot be undone.'))return;
+  try{var fns=window._fns;await fns.deleteDoc(fns.doc(window._db,'recipes',editingId));showToast('🗑 Recipe deleted');closeOverlay('addOverlay');}
   catch(e){showToast('❌ Delete failed');}
 }
 
-// IMPORT
 async function importRecipe(){
-  const url=document.getElementById('importUrl').value.trim();
+  var url=document.getElementById('importUrl').value.trim();
   if(!url){showToast('⚠️ Please enter a URL');return;}
-  const result=document.getElementById('importResult');
-  result.style.display='block';result.textContent='⏳ Fetching recipe…';
+  var result=document.getElementById('importResult');
+  result.style.display='block';result.innerHTML='⏳ Fetching recipe… (may take 10–15 seconds)';
+  var proxies=['https://api.allorigins.win/get?url='+encodeURIComponent(url),'https://corsproxy.io/?'+encodeURIComponent(url)];
+  var html=null;
+  for(var i=0;i<proxies.length;i++){
+    try{
+      var res=await fetch(proxies[i],{signal:AbortSignal.timeout(12000)});
+      if(!res.ok)continue;
+      var ct=res.headers.get('content-type')||'';
+      if(ct.indexOf('json')>=0){var d=await res.json();html=d.contents||d;}
+      else{html=await res.text();}
+      if(html&&String(html).length>500)break;
+    }catch(e){continue;}
+  }
+  if(!html){result.innerHTML='❌ Could not fetch the page. This site likely blocks automated access (NYT Cooking, paywalled sites). Please add the recipe manually using ＋ Add Recipe.';return;}
   try{
-    const res=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-    const data=await res.json();
-    const doc2=new DOMParser().parseFromString(data.contents,'text/html');
-    let recipe=null;
-    doc2.querySelectorAll('script[type="application/ld+json"]').forEach(s=>{
-      try{const j=JSON.parse(s.textContent);const r=Array.isArray(j)?j.find(x=>x['@type']==='Recipe'):(j['@type']==='Recipe'?j:(j['@graph']||[]).find(x=>x['@type']==='Recipe'));if(r)recipe=r;}catch(e){}
+    var doc2=new DOMParser().parseFromString(String(html),'text/html');
+    var recipe=null;
+    doc2.querySelectorAll('script[type="application/ld+json"]').forEach(function(s){
+      if(recipe)return;
+      try{
+        var j=JSON.parse(s.textContent.trim());
+        var arr=Array.isArray(j)?j:[j].concat(j['@graph']||[]);
+        var found=arr.find(function(x){return x&&(x['@type']==='Recipe'||(Array.isArray(x['@type'])&&x['@type'].indexOf('Recipe')>=0));});
+        if(found)recipe=found;
+      }catch(e){}
     });
-    if(!recipe){result.textContent='❌ Could not find recipe data on this page. Try another site or add manually.';return;}
-    const prefill={
-      name:recipe.name||'',desc:recipe.description||'',
-      photo:Array.isArray(recipe.image)?recipe.image[0]:(recipe.image?.url||recipe.image||''),
-      servings:String(recipe.recipeYield||''),
-      cal:(recipe.nutrition?.calories||'').replace(/\D/g,''),
-      protein:(recipe.nutrition?.proteinContent||'').replace(/[^\d.]/g,''),
-      carbs:(recipe.nutrition?.carbohydrateContent||'').replace(/[^\d.]/g,''),
-      fat:(recipe.nutrition?.fatContent||'').replace(/[^\d.]/g,''),
-      ingredients:(recipe.recipeIngredient||[]).map(s=>({name:s,qty:'',unit:''})),
-      steps:(recipe.recipeInstructions||[]).map(s=>typeof s==='string'?s:(s.text||'')).filter(Boolean),
+    if(!recipe){
+      var titleEl=doc2.querySelector('h1');
+      result.innerHTML='⚠️ Found page but no structured recipe data.'+(titleEl?(' <a href="#" onclick="showPage(\'recipes\');openAdd({name:\''+h(titleEl.textContent.trim())+'\'});return false" style="color:var(--rust);font-weight:700">Open with title pre-filled →</a>'):'')+'<br><small style="color:var(--ink3)">Add ingredients and steps manually.</small>';
+      return;
+    }
+    function getImg(i){return Array.isArray(i)?(typeof i[0]==='string'?i[0]:(i[0]&&(i[0].url||i[0].contentUrl)||'')):(i&&(i.url||i.contentUrl)||String(i||''));}
+    var prefill={
+      name:recipe.name||'',
+      desc:(recipe.description||'').replace(/<[^>]*>/g,'').slice(0,500),
+      photo:getImg(recipe.image),
+      servings:String(Array.isArray(recipe.recipeYield)?recipe.recipeYield[0]:recipe.recipeYield||''),
+      cal:String(recipe.nutrition&&recipe.nutrition.calories||'').replace(/[^\d]/g,''),
+      protein:String(recipe.nutrition&&recipe.nutrition.proteinContent||'').replace(/[^\d.]/g,''),
+      carbs:String(recipe.nutrition&&recipe.nutrition.carbohydrateContent||'').replace(/[^\d.]/g,''),
+      fat:String(recipe.nutrition&&recipe.nutrition.fatContent||'').replace(/[^\d.]/g,''),
+      ingredients:(recipe.recipeIngredient||[]).map(function(s){return{name:String(s),qty:'',unit:''};;}),
+      steps:(recipe.recipeInstructions||[]).map(function(s){return typeof s==='string'?s.replace(/<[^>]*>/g,''):(s.text||'');}).filter(Boolean)
     };
     window._importPrefill=prefill;
-    result.innerHTML=`✅ Found: <strong>${h(prefill.name)}</strong> — <a href="#" onclick="showPage('recipes');openAdd(window._importPrefill);return false" style="color:var(--rust);font-weight:700">Open in Add Recipe form →</a>`;
-  }catch(e){console.error(e);result.textContent='❌ Fetch failed. The site may block external requests. Try adding manually.';}
+    result.innerHTML='✅ Found: <strong>'+h(prefill.name)+'</strong> ('+prefill.ingredients.length+' ingredients, '+prefill.steps.length+' steps) — <a href="#" onclick="showPage(\'recipes\');openAdd(window._importPrefill);return false" style="color:var(--rust);font-weight:700">Open in Add Recipe form →</a>';
+  }catch(e){console.error(e);result.innerHTML='❌ Parse error. Try another URL or add the recipe manually.';}
 }
 
-// DOWNLOAD / PDF
 function downloadSite(){
-  const blob=new Blob([document.documentElement.outerHTML],{type:'text/html'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wortmann-family-cookbook.html';a.click();
-  showToast('💾 Site downloaded!');
+  // Clone the page and embed current recipes as JSON so they show offline
+  var clone=document.documentElement.cloneNode(true);
+  var script=document.createElement('script');
+  script.textContent='window._preloadedRecipes='+JSON.stringify(recipes)+';';
+  clone.querySelector('head').appendChild(script);
+  var patch=document.createElement('script');
+  patch.textContent='document.addEventListener("DOMContentLoaded",function(){if(window._preloadedRecipes&&window._preloadedRecipes.length&&!window._dbReady){recipes=window._preloadedRecipes;dbReady=true;renderCards();showToast("📖 Showing "+recipes.length+" saved recipes (offline mode)");}});';
+  clone.querySelector('head').appendChild(patch);
+  var blob=new Blob(['<!DOCTYPE html>\n'+clone.outerHTML],{type:'text/html'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wortmann-family-cookbook.html';a.click();
+  showToast('💾 Downloaded with '+recipes.length+' recipes embedded!');
 }
+
 function exportPDF(){
   if(!recipes.length){showToast('⚠️ No recipes to export');return;}
-  showToast('📄 Building PDF…');
-  const el=document.createElement('div');
-  el.style.cssText='font-family:Georgia,serif;padding:40px;max-width:780px;margin:0 auto;color:#2C2416';
-  el.innerHTML=`
-    <div style="text-align:center;padding:55px 0;border-bottom:3px double #C8BAA0;margin-bottom:38px">
-      <div style="font-size:58px;margin-bottom:14px">📖</div>
-      <h1 style="font-size:34px;font-weight:700;margin-bottom:7px">Wortmann Family Cookbook</h1>
-      <p style="font-size:15px;color:#9C8B6E;font-style:italic">A collection of family recipes</p>
-      <p style="font-size:12px;color:#9C8B6E;margin-top:10px">${recipes.length} recipes · ${new Date().getFullYear()}</p>
-    </div>
-    ${recipes.map(r=>`
-      <div style="page-break-inside:avoid;margin-bottom:44px;padding-bottom:30px;border-bottom:1px solid #E0D5C0">
-        <h2 style="font-size:22px;font-weight:700;color:#2C2416;margin-bottom:3px">${h(r.name)}</h2>
-        <p style="font-size:12px;color:#9C8B6E;margin-bottom:10px">${[r.category,r.cuisine,r.author?'By '+r.author:''].filter(Boolean).join(' · ')}${r.servings?' · '+r.servings+' servings':''}${r.active?' · '+r.active+'m active':''}${r.passive?' / '+r.passive+'m passive':''}</p>
-        ${r.description?`<p style="font-style:italic;color:#5C4F38;margin-bottom:10px;padding-left:11px;border-left:3px solid #E8946A">${h(r.description)}</p>`:''}
-        ${(r.cal||r.protein||r.carbs||r.fat)?`<p style="font-size:12px;color:#5C4F38;margin-bottom:10px"><strong>Nutrition:</strong> ${[r.cal&&r.cal+' kcal',r.protein&&r.protein+'g protein',r.carbs&&r.carbs+'g carbs',r.fat&&r.fat+'g fat'].filter(Boolean).join(' · ')}</p>`:''}
-        ${(r.ingredients||[]).length?`<h3 style="font-size:15px;font-weight:700;margin-bottom:7px;color:#C0622A">Ingredients</h3><ul style="margin-bottom:14px;padding-left:18px">${r.ingredients.map(i=>`<li style="margin-bottom:3px;font-size:13px">${h((i.qty||'')+' '+(i.unit||'')+' '+i.name)}</li>`).join('')}</ul>`:''}
-        ${(r.steps||[]).length?`<h3 style="font-size:15px;font-weight:700;margin-bottom:7px;color:#C0622A">Instructions</h3><ol style="padding-left:18px">${r.steps.map(s=>`<li style="margin-bottom:7px;font-size:13px;line-height:1.7">${h(s)}</li>`).join('')}</ol>`:''}
-      </div>`).join('')}`;
-  html2pdf().set({margin:[14,10],filename:'wortmann-family-cookbook.pdf',image:{type:'jpeg',quality:.92},html2canvas:{scale:1.5},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save().then(()=>showToast('✅ PDF saved!'));
+  showToast('📄 Building PDF — this may take a moment…');
+  var sorted=recipes.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
+  var el=document.createElement('div');
+  el.style.cssText='font-family:Georgia,serif;padding:48px;max-width:760px;margin:0 auto;color:#2C2416;background:#FFFDF8';
+
+  // Cover
+  var out='<div style="text-align:center;padding:80px 0;border-bottom:3px double #C8BAA0;margin-bottom:50px;page-break-after:always">'+
+    '<div style="font-size:64px;margin-bottom:18px">📖</div>'+
+    '<h1 style="font-size:38px;font-weight:700;letter-spacing:-1px;margin-bottom:8px;font-family:Georgia,serif">Wortmann Family Cookbook</h1>'+
+    '<p style="font-size:16px;color:#9C8B6E;font-style:italic;margin-bottom:16px">A collection of recipes passed down through generations</p>'+
+    '<p style="font-size:13px;color:#9C8B6E">'+recipes.length+' recipes · '+new Date().getFullYear()+'</p></div>';
+
+  // Preface
+  out+='<div style="page-break-after:always;margin-bottom:50px">'+
+    '<h2 style="font-size:26px;font-weight:700;text-align:center;margin-bottom:24px;font-family:Georgia,serif">Preface</h2>'+
+    '<p style="line-height:1.9;color:#5C4F38;margin-bottom:12px">This cookbook is a living document — a collection of recipes that have nourished and brought joy to the Wortmann family. Some were passed down through generations, others discovered along the way. All were made with love.</p>'+
+    '<p style="line-height:1.9;color:#5C4F38;font-style:italic">"The secret ingredient is always love."</p></div>';
+
+  // Table of Contents
+  out+='<div style="page-break-after:always;margin-bottom:50px"><h2 style="font-size:26px;font-weight:700;margin-bottom:20px;font-family:Georgia,serif;border-bottom:2px solid #C8BAA0;padding-bottom:10px">Table of Contents</h2>';
+  var bycat={};
+  sorted.forEach(function(r){var c=r.category||'Other';if(!bycat[c])bycat[c]=[];bycat[c].push(r);});
+  Object.keys(bycat).sort().forEach(function(cat){
+    out+='<div style="margin-bottom:14px"><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9C8B6E;margin-bottom:6px">'+cat+'</div>';
+    bycat[cat].forEach(function(r){out+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:14px;border-bottom:1px dotted #E0D5C0"><span>'+r.name+'</span>'+(r.author?'<span style="color:#9C8B6E;font-style:italic">'+r.author+'</span>':'')+'</div>';});
+    out+='</div>';
+  });
+  out+='</div>';
+
+  // Recipes — Julia Child two-column style
+  sorted.forEach(function(r){
+    out+='<div style="page-break-inside:avoid;margin-bottom:52px;padding-bottom:36px;border-bottom:2px solid #C8BAA0">';
+    out+='<div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #E0D5C0">'+
+      '<h2 style="font-family:Georgia,serif;font-size:22px;font-weight:700;font-style:italic;margin-bottom:4px">'+h(r.name)+'</h2>'+
+      (r.description?'<p style="font-size:13px;color:#9C8B6E;font-style:italic;margin-bottom:6px">'+h(r.description.slice(0,150))+'</p>':'')+
+      '<p style="font-size:12px;color:#9C8B6E">'+([r.cuisine,r.category,r.servings?'For '+r.servings+' people':'',r.author?'By '+r.author:''].filter(Boolean).join(' · '))+'</p>'+
+      ((r.active||r.passive)?'<p style="font-size:12px;color:#9C8B6E;margin-top:2px">'+(r.active?'Active: '+r.active+' min':'')+(r.active&&r.passive?' · ':'')+(r.passive?'Passive: '+r.passive+' min':'')+'</p>':'')+
+      ((r.cal||r.protein||r.carbs||r.fat)?'<p style="font-size:11px;color:#9C8B6E;margin-top:2px">Per serving: '+([r.cal&&r.cal+' kcal',r.protein&&r.protein+'g protein',r.carbs&&r.carbs+'g carbs',r.fat&&r.fat+'g fat'].filter(Boolean).join(' · '))+'</p>':'')+
+      '</div>';
+    // Julia Child two-column: bold ingredients left, instructions right
+    var ings=r.ingredients||[];var steps=r.steps||[];
+    if(ings.length||steps.length){
+      out+='<table style="width:100%;border-collapse:collapse;margin-bottom:8px">';
+      var maxR=Math.max(ings.length,steps.length);
+      for(var i=0;i<maxR;i++){
+        var ing=ings[i];var step=steps[i];
+        var isLast=i===maxR-1;
+        var border=isLast?'none':'1px solid #E0D5C0';
+        out+='<tr style="vertical-align:top">'+
+          '<td style="width:36%;padding:7px 14px 7px 0;font-size:13px;border-bottom:'+border+';line-height:1.6">'+(ing?'<strong>'+h((ing.qty?ing.qty+' ':'')+(ing.unit?ing.unit+' ':'')+ing.name)+'</strong>':'')+'</td>'+
+          '<td style="width:64%;padding:7px 0;font-size:13px;border-bottom:'+border+';line-height:1.75;color:#5C4F38">'+(step?h(step):'')+'</td></tr>';
+      }
+      out+='</table>';
+    }
+    out+='</div>';
+  });
+
+  // Alphabetical index
+  out+='<div style="page-break-before:always;margin-top:50px"><h2 style="font-size:26px;font-weight:700;margin-bottom:20px;font-family:Georgia,serif;border-bottom:2px solid #C8BAA0;padding-bottom:10px">Recipe Index (A–Z)</h2>';
+  var letters={};
+  sorted.forEach(function(r){var l=(r.name||'?')[0].toUpperCase();if(!letters[l])letters[l]=[];letters[l].push(r.name+(r.author?' ('+r.author+')':''));});
+  Object.keys(letters).sort().forEach(function(l){
+    out+='<div style="margin-bottom:12px"><strong style="font-size:15px;color:#C0622A">'+l+'</strong><ul style="list-style:none;padding-left:12px;margin-top:4px">';
+    letters[l].forEach(function(name){out+='<li style="font-size:13px;padding:2px 0;border-bottom:1px dotted #E0D5C0">'+h(name)+'</li>';});
+    out+='</ul></div>';
+  });
+  out+='</div>';
+
+  el.innerHTML=out;
+  html2pdf().set({
+    margin:[12,10],filename:'wortmann-family-cookbook.pdf',
+    image:{type:'jpeg',quality:.92},
+    html2canvas:{scale:1.5,useCORS:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+  }).from(el).save().then(function(){showToast('✅ PDF exported — '+recipes.length+' recipes!');});
 }
 
-// OVERLAYS
 function openOverlay(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
 function closeOverlay(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-document.querySelectorAll('.overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)closeOverlay(el.id);}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')['viewOverlay','addOverlay','cookOverlay'].forEach(closeOverlay);});
+document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)closeOverlay(el.id);});});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')['viewOverlay','addOverlay','cookOverlay'].forEach(closeOverlay);});
 
-// TOAST
-let toastTimer;
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200);}
-
-// UTILS
+var toastTimer;
+function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},3500);}
 function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function setValue(id,val){const el=document.getElementById(id);if(el&&val!=null)el.value=val;}
+function setValue(id,val){var el=document.getElementById(id);if(el&&val!=null)el.value=val;}
 </script>
+</div><!-- .main -->
 </body>
 </html>
