@@ -78,6 +78,11 @@ Click **Publish**. This caps uploads at 8MB and requires them to actually be ima
 - **Trash** — deleting now moves a recipe to Trash instead of erasing it; restore anytime
 - **Backup Recipes (JSON)** — one-click download of every recipe as a JSON file, for extra peace of mind
 - **Installable app** — "Add to Home Screen" now actually installs a real, icon-bearing, offline-capable app
+- **Recipe Clipper (new)** — a bookmarklet that pulls a recipe straight from NYT Cooking, justtherecipe.com, or almost any recipe site into your Add Recipe form. No Firebase setup needed — see below.
+
+## Using the Recipe Clipper (NYT Cooking, justtherecipe.com, etc.)
+
+Go to **Import from Web** in your cookbook's sidebar. There's a **📖 Clip Recipe** button — drag it to your browser's bookmarks bar. Then, on any recipe page (signed into NYT Cooking, or on a justtherecipe.com result), click that bookmark. It reads the recipe right out of the page you're already viewing — since it runs in your own signed-in browser tab rather than fetching from a server, paywalls and bot-blocking don't apply — and opens your cookbook with everything filled in for you to review and save. Full instructions, including a mobile workaround and a copy-paste fallback, are on that page.
 
 ## Trade-offs worth knowing
 
