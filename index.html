@@ -283,6 +283,22 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .trash-card .tc-name{font-family:'Lora',serif;font-weight:600;font-size:15px}
 .trash-card .tc-meta{font-size:11.5px;color:var(--ink3)}
 .trash-card .tc-actions{display:flex;gap:6px;margin-top:auto}
+.nav-sec-row{display:flex;align-items:center;justify-content:space-between;padding:.65rem 1.3rem .2rem;cursor:pointer;user-select:none}
+.nav-sec-row:hover .nav-sec{color:rgba(255,255,255,.5)}
+.nav-sec-row .nav-sec{padding:0}
+.nav-sec-row .chev{font-size:9px;color:rgba(255,255,255,.28);transition:transform .18s}
+.nav-sec-row .chev.collapsed{transform:rotate(-90deg)}
+.nav-group{overflow:hidden;max-height:600px;transition:max-height .2s ease}
+.nav-group.collapsed{max-height:0}
+.nav-item.nav-action{opacity:.68}
+.nav-item.nav-action:hover{opacity:1}
+.nav-divider{height:1px;background:rgba(255,255,255,.08);margin:.4rem 1.3rem}
+.profile-row{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;padding:.3rem 0;margin-bottom:.5rem;cursor:pointer;color:rgba(255,255,255,.75);transition:color .15s}
+.profile-row:hover{color:#fff}
+.profile-row .ic{font-size:14px}
+.lock-note{background:var(--rust-pale);border:1.5px solid #F0D2BC;border-radius:var(--rs);padding:.75rem .9rem;font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:1rem}
+.lock-note code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:11.5px}
+.mine-tag{background:var(--rust-pale);color:var(--rust)}
 @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.sb-toggle{display:flex}.form-grid{grid-template-columns:1fr}.nutri-grid,.nutri-cards{grid-template-columns:repeat(2,1fr)}.season-grid,.safe-temps{grid-template-columns:repeat(2,1fr)}.ing-row{grid-template-columns:1fr 1fr auto}}
 </style>
 </head>
@@ -293,7 +309,8 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
     <div class="nav-sec">Cookbook</div>
     <div class="nav-item active" id="nav-recipes" onclick="showPage('recipes')"><span class="ic">🍽️</span>All Recipes</div>
     <div class="nav-item" id="nav-preface" onclick="showPage('preface')"><span class="ic">📜</span>Preface</div>
-    <div class="nav-sec">Reference</div>
+    <div class="nav-sec-row" onclick="toggleRefNav()"><div class="nav-sec">Reference</div><span class="chev" id="refChev">▾</span></div>
+    <div class="nav-group" id="refNavItems">
     <div class="nav-item" id="nav-conversions" onclick="showPage('conversions')"><span class="ic">⚖️</span>Unit Conversions</div>
     <div class="nav-item" id="nav-doneness" onclick="showPage('doneness')"><span class="ic">🥩</span>Meat Doneness</div>
     <div class="nav-item" id="nav-flavors" onclick="showPage('flavors')"><span class="ic">🧪</span>Flavor Pairings</div>
@@ -303,16 +320,19 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
     <div class="nav-item" id="nav-glossary" onclick="showPage('glossary')"><span class="ic">📖</span>Cooking Definitions</div>
     <div class="nav-item" id="nav-cutting" onclick="showPage('cutting')"><span class="ic">🔪</span>Cutting Techniques</div>
     <div class="nav-item" id="nav-winepairing" onclick="showPage('winepairing')"><span class="ic">🍷</span>Wine Pairing</div>
+    </div>
     <div class="nav-sec">Tools</div>
     <div class="nav-item" id="nav-import" onclick="showPage('import')"><span class="ic">🔗</span>Import from Web</div>
     <div class="nav-item" id="nav-shopping" onclick="showPage('shopping')"><span class="ic">🛒</span>Shopping List<span class="nav-badge" id="shopBadge" style="display:none"></span></div>
     <div class="nav-item" id="nav-trash" onclick="showPage('trash')"><span class="ic">🗑</span>Trash</div>
-    <div class="nav-item" onclick="downloadSite()"><span class="ic">💾</span>Download Site</div>
-    <div class="nav-item" onclick="exportPDF()"><span class="ic">📄</span>Export as PDF</div>
-    <div class="nav-item" onclick="backupJSON()"><span class="ic">🧰</span>Backup Recipes (JSON)</div>
     <div class="nav-item" id="nav-apps" onclick="showPage('apps')"><span class="ic">📱</span>Get the App</div>
+    <div class="nav-divider"></div>
+    <div class="nav-item nav-action" onclick="downloadSite()"><span class="ic">💾</span>Download Site</div>
+    <div class="nav-item nav-action" onclick="exportPDF()"><span class="ic">📄</span>Export as PDF</div>
+    <div class="nav-item nav-action" onclick="backupJSON()"><span class="ic">🧰</span>Backup Recipes (JSON)</div>
   </div>
   <div class="sb-foot">
+    <div class="profile-row" id="profileRow" onclick="openProfileModal()"><span class="ic">👤</span><span id="profileLabel">Set your name</span></div>
     <div class="sync-row"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Connecting…</span></div>
     <span style="opacity:.3;font-size:11px">Wortmann Family Cookbook</span>
   </div>
@@ -330,7 +350,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
       <select class="filter-select" id="sortFilter" onchange="renderCards()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="az">Name A–Z</option><option value="cal_asc">Calories ↑</option><option value="cal_desc">Calories ↓</option></select>
       <span class="recipe-count" id="recipeCount">Loading…</span>
     </div>
-    <div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
+    <div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
     <div class="recipe-grid" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
   </div>
 </div>
@@ -625,9 +645,10 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 
 <!-- TRASH -->
 <div class="page" id="page-trash">
-  <div class="topbar"><div class="topbar-title">🗑 Trash</div></div>
+  <div class="topbar"><div class="topbar-title">🗑 Trash</div><div class="tb-actions"><button class="btn btn-sm btn-danger" onclick="emptyTrash()">🗑 Empty Trash</button></div></div>
   <div class="container">
-    <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Deleted recipes stay here until someone restores or permanently removes them, so an accidental delete never loses a recipe for good.</p>
+    <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Deleted recipes stay here until someone restores or permanently removes them, so an accidental delete never loses a recipe for good. Permanently deleting asks for the family PIN first.</p>
+    <div class="lock-note"><strong>⚠️ If "Delete Forever" or "Empty Trash" fails:</strong> your Firestore Security Rules are blocking deletes from this app. In the Firebase console → Firestore Database → Rules, allow deletes on the <code>recipes</code> collection for signed-in users, e.g. <code>allow delete: if request.auth != null;</code> — then publish the rules and try again.</div>
     <div class="recipe-grid" id="trashGrid"></div>
   </div>
 </div>
@@ -722,7 +743,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
         <div class="fg full"><label>Recipe Name *</label><input type="text" id="f_name" placeholder="e.g. Grandma's Apple Pie"></div>
         <div class="fg"><label>Category</label><select id="f_cat"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select></div>
         <div class="fg"><label>Cuisine</label><select id="f_cuisine"><option value="">— Select —</option><option>American</option><option>Southern</option><option>Italian</option><option>Mexican</option><option>Asian</option><option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option><option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option><option>Middle Eastern</option><option>Other</option></select></div>
-        <div class="fg"><label>Added by</label><input type="text" id="f_author" placeholder="Mom, Grandpa…"></div>
+        <div class="fg"><label>Added by</label><input type="text" id="f_author" placeholder="Mom, Grandpa…"><small style="color:var(--ink3);font-size:11px">Filled in from your name below — change it if you're adding this for someone else.</small></div>
         <div class="fg"><label>Servings</label><input type="number" id="f_servings" placeholder="4" min="1"></div>
         <div class="fg"><label>Active time (mins) — hands-on cooking</label><input type="number" id="f_active" placeholder="20" min="0"></div>
         <div class="fg"><label>Passive time (mins) — baking, marinating…</label><input type="number" id="f_passive" placeholder="45" min="0"></div>
@@ -788,10 +809,79 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
   </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div class="overlay" id="profileOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><h2>👤 Who's Cooking?</h2><button class="x-btn" onclick="closeOverlay('profileOverlay')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:.8rem">Set your name once on this device. Recipes you add will be filled in with it, and you can filter to just the ones you've added.</p>
+      <div class="fg"><label>Your name</label><input type="text" id="profileNameInput" placeholder="e.g. Mom, Grandpa, Owen…" onkeydown="if(event.key==='Enter')saveProfileName()"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeOverlay('profileOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfileName()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN / CONFIRM MODAL -->
+<div class="overlay" id="pinOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><h2>🔒 Confirm</h2><button class="x-btn" onclick="closeOverlay('pinOverlay')">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--ink2);margin-bottom:.8rem" id="pinPromptText">This action can't be undone. Enter the family PIN to confirm.</p>
+      <div class="fg"><label>Family PIN</label><input type="password" id="pinInput" placeholder="••••" onkeydown="if(event.key==='Enter')submitPin()"></div>
+      <label class="diet-check" id="trustLabel" style="margin-top:.7rem;display:inline-flex" onclick="toggleCheck(this)"><input type="checkbox" id="trustDeviceCheck">Trust this device for 30 days</label>
+      <p id="pinError" style="color:var(--red);font-size:12.5px;margin-top:.6rem;display:none">Incorrect PIN — try again.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeOverlay('pinOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitPin()">🗑 Confirm</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-var recipes=[],trashedRecipes=[],editingId=null,dbReady=false,activeDiets=new Set(),favOnly=false;
+var recipes=[],trashedRecipes=[],editingId=null,dbReady=false,activeDiets=new Set(),favOnly=false,mineOnly=false;
+var FAMILY_PIN='1234'; // Site owner: change this to your own family PIN.
+var _pendingUnlockAction=null;
+function uuid4(){return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16);});}
+function getLocalUid(){var id;try{id=localStorage.getItem('wfc_uid');}catch(e){}if(!id){id=uuid4();try{localStorage.setItem('wfc_uid',id);}catch(e){}}return id;}
+function getProfileName(){try{return localStorage.getItem('wfc_name')||'';}catch(e){return'';}}
+function setProfileName(n){try{localStorage.setItem('wfc_name',n);}catch(e){}}
+function renderProfileRow(){var n=getProfileName();var lbl=document.getElementById('profileLabel');if(lbl)lbl.textContent=n?('👋 '+n):'Set your name';}
+function openProfileModal(){var el=document.getElementById('profileNameInput');if(el)el.value=getProfileName();openOverlay('profileOverlay');setTimeout(function(){if(el)el.focus();},50);}
+function saveProfileName(){var v=document.getElementById('profileNameInput').value.trim();setProfileName(v);renderProfileRow();closeOverlay('profileOverlay');showToast(v?'👋 Hi, '+v+'!':'Name cleared');}
+function isTrustedDevice(){var until=0;try{until=+(localStorage.getItem('wfc_trust_until')||0);}catch(e){}return until>Date.now();}
+function requireUnlock(promptText,action){
+  if(isTrustedDevice()){action();return;}
+  _pendingUnlockAction=action;
+  document.getElementById('pinPromptText').textContent=promptText||"This action can't be undone. Enter the family PIN to confirm.";
+  document.getElementById('pinInput').value='';
+  document.getElementById('pinError').style.display='none';
+  document.getElementById('trustDeviceCheck').checked=false;
+  document.getElementById('trustLabel').classList.remove('checked');
+  openOverlay('pinOverlay');
+  setTimeout(function(){document.getElementById('pinInput').focus();},50);
+}
+function submitPin(){
+  var val=document.getElementById('pinInput').value;
+  if(val!==FAMILY_PIN){document.getElementById('pinError').style.display='block';return;}
+  if(document.getElementById('trustDeviceCheck').checked){try{localStorage.setItem('wfc_trust_until',String(Date.now()+30*86400000));}catch(e){}}
+  closeOverlay('pinOverlay');
+  var action=_pendingUnlockAction;_pendingUnlockAction=null;
+  if(action)action();
+}
+function toggleRefNav(){
+  var box=document.getElementById('refNavItems'),chev=document.getElementById('refChev');
+  var collapsed=box.classList.toggle('collapsed');
+  chev.classList.toggle('collapsed',collapsed);
+  try{localStorage.setItem('wfc_ref_collapsed',collapsed?'1':'0');}catch(e){}
+}
+function toggleMineOnly(el){mineOnly=!mineOnly;el.classList.toggle('active',mineOnly);renderCards();}
+function isMine(r){return r.addedByUid&&r.addedByUid===getLocalUid();}
 var cookSteps=[],cookIngs=[],cookIdx=0,cookTimer=null,cookTimerSecs=0,cookTimerTotal=0;
 var viewScale=1,viewMetric=false,viewingId=null;
 var shoppingList=[];
@@ -822,6 +912,10 @@ function showPage(name){
   if(name==='shopping')renderShoppingList();
   if(name==='trash')renderTrash();
   if(window.innerWidth<768)document.getElementById('sidebar').classList.remove('open');
+  window.scrollTo(0,0);
+  document.documentElement.scrollTop=0;
+  document.body.scrollTop=0;
+  if(pg)pg.scrollTop=0;
 }
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
 function toggleFavOnly(el){favOnly=!favOnly;el.classList.toggle('fav-on',favOnly);renderCards();}
@@ -879,6 +973,7 @@ function renderCards(){
     if(cui&&r.cuisine!==cui)return false;
     if(activeDiets.size>0){var rd=new Set(r.diets||[]);for(var d of activeDiets)if(!rd.has(d))return false;}
     if(favOnly&&!isFav(r))return false;
+    if(mineOnly&&!isMine(r))return false;
     return true;
   });
   list.sort(function(a,b){
@@ -898,7 +993,7 @@ function renderCards(){
     return;
   }
   grid.innerHTML=list.map(function(r,i){
-    var diets=(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
+    var diets=(isMine(r)?'<span class="diet-tag mine-tag">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
     return '<div class="recipe-card" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
       (r.photo?'<img class="card-img" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
       '<div class="card-ph" style="'+(r.photo?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
@@ -933,7 +1028,7 @@ function viewRecipe(id,scale,metric){
     return{name:ing.name,qty:qty%1===0?String(qty):qty.toFixed(1),unit:unit};
   }
 
-  var diets=(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:11.5px;padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
+  var diets=(isMine(r)?'<span class="diet-tag mine-tag" style="font-size:11.5px;padding:2px 8px">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:11.5px;padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
   var pairs=(r.pairings||'').split(',').map(function(p){return p.trim();}).filter(Boolean);
   var scaledServings=Math.round(base*s*4)/4;
 
@@ -974,6 +1069,7 @@ function viewRecipe(id,scale,metric){
 
   document.getElementById('viewContent').innerHTML=html;
   openOverlay('viewOverlay');
+  document.getElementById('viewOverlay').scrollTop=0;
 }
 
 function startCook(id){
@@ -1080,10 +1176,29 @@ async function restoreRecipe(id){
   try{await window._fns.updateDoc(window._fns.doc(window._db,'recipes',id),{deleted:false});showToast('↺ Recipe restored');}
   catch(e){console.error(e);showToast('❌ Could not restore');}
 }
-async function permanentlyDelete(id){
-  if(!confirm('Permanently delete this recipe? This cannot be undone.'))return;
+function permanentlyDelete(id){
+  var r=trashedRecipes.find(function(x){return x.id===id;});
+  requireUnlock('Permanently delete "'+((r&&r.name)||'this recipe')+'"? This cannot be undone.',function(){
+    doPermanentDelete(id);
+  });
+}
+async function doPermanentDelete(id){
   try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',id));showToast('🗑 Permanently deleted');}
-  catch(e){console.error(e);showToast('❌ This site\'s security rules block permanent deletes from here — remove it directly in the Firebase console instead.');}
+  catch(e){console.error(e);showToast('❌ Blocked by Firestore security rules — see the note on the Trash page.');}
+}
+function emptyTrash(){
+  if(!trashedRecipes.length){showToast('Trash is already empty');return;}
+  var n=trashedRecipes.length;
+  requireUnlock('Permanently delete all '+n+' recipe'+(n!==1?'s':'')+' in Trash? This cannot be undone.',async function(){
+    var ids=trashedRecipes.map(function(r){return r.id;});
+    var ok=0,fail=0;
+    for(var i=0;i<ids.length;i++){
+      try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',ids[i]));ok++;}
+      catch(e){console.error(e);fail++;}
+    }
+    if(fail)showToast('🗑 Deleted '+ok+' — '+fail+' blocked by security rules');
+    else showToast('🗑 Trash emptied');
+  });
 }
 function backupJSON(){
   if(!recipes.length){showToast('⚠️ No recipes to back up');return;}
@@ -1107,6 +1222,8 @@ function openAdd(prefill){
   document.getElementById('modalTitle').textContent='New Recipe';
   document.getElementById('deleteBtn').style.display='none';
   clearForm();
+  var pname=getProfileName();
+  if(pname)document.getElementById('f_author').value=pname;
   if(prefill){
     Object.keys(prefill).forEach(function(k){if(typeof prefill[k]==='string'){var el=document.getElementById('f_'+k);if(el)el.value=prefill[k];}});
     (prefill.ingredients||[]).forEach(function(i){addIng(i.name,i.qty||'',i.unit||'');});
@@ -1115,6 +1232,7 @@ function openAdd(prefill){
   if(!document.querySelectorAll('.ing-row').length){addIng();addIng();addIng();}
   if(!document.querySelectorAll('.step-row').length){addStep();addStep();}
   openOverlay('addOverlay');
+  document.getElementById('addOverlay').scrollTop=0;
 }
 function openEdit(id){
   var r=recipes.find(function(x){return x.id===id;});if(!r)return;
@@ -1131,6 +1249,7 @@ function openEdit(id){
   (r.steps||[]).forEach(function(s){addStep(s);});
   if(!(r.steps||[]).length)addStep();
   openOverlay('addOverlay');
+  document.getElementById('addOverlay').scrollTop=0;
 }
 function clearForm(){
   ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings','f_sourceUrl'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -1167,6 +1286,7 @@ async function saveRecipe(){
   var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
   var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
   var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),sourceUrl:document.getElementById('f_sourceUrl').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
+  if(!editingId)data.addedByUid=getLocalUid();
   setSyncStatus('syncing');
   try{
     var fns=window._fns;
@@ -1628,6 +1748,13 @@ function checkForClippedRecipe(){
 }
 initBookmarklet();
 checkForClippedRecipe();
+renderProfileRow();
+try{
+  if(localStorage.getItem('wfc_ref_collapsed')==='1'){
+    document.getElementById('refNavItems').classList.add('collapsed');
+    document.getElementById('refChev').classList.add('collapsed');
+  }
+}catch(e){}
 
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
