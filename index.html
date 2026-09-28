@@ -18,9 +18,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   const firebaseConfig = {
     apiKey:"AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
     authDomain:"wortmann-family-recipes.firebaseapp.com",
@@ -32,15 +32,20 @@
   const app=initializeApp(firebaseConfig);
   const db=getFirestore(app);
   const col=collection(db,"recipes");
+  const usersCol=collection(db,"users");
   const storage=getStorage(app);
   const auth=getAuth(app);
-  window._db=db;window._col=col;window._storage=storage;window._auth=auth;
+  window._db=db;window._col=col;window._usersCol=usersCol;window._storage=storage;window._auth=auth;
   // NOTE: query is fetched WITHOUT orderBy on purpose — Firestore silently excludes any
   // document missing the sorted field (e.g. one added by hand in the console), which
   // caused recipes to vanish. Sorting now happens client-side in renderCards() instead.
-  window._fns={addDoc,updateDoc,deleteDoc,doc,serverTimestamp,query,orderBy,onSnapshot,ref,uploadBytes,getDownloadURL,signInAnonymously,arrayUnion,arrayRemove};
-  signInAnonymously(auth).catch(function(e){console.error('anon auth failed',e);});
-  onAuthStateChanged(auth,function(user){window._authReady=!!user;window._myUid=user?user.uid:null;document.dispatchEvent(new Event("firebase-ready"));});
+  window._fns={addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,onSnapshot,ref,uploadBytes,getDownloadURL,signInAnonymously,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
+  onAuthStateChanged(auth,function(user){
+    if(!user){signInAnonymously(auth).catch(function(e){console.error('anon auth failed',e);});return;}
+    window._authReady=true;window._myUid=user.uid;window._isGuest=user.isAnonymous;window._myDisplayName=user.displayName||'';
+    document.dispatchEvent(new Event("firebase-ready"));
+    document.dispatchEvent(new Event("wfc-auth-changed"));
+  });
 </script>
 <style>
 :root{--parchment:#F9F4EC;--parchment2:#F2EAD8;--warm:#FFFDF8;--ink:#2C2416;--ink2:#5C4F38;--ink3:#9C8B6E;--rust:#C0622A;--rust2:#E8946A;--rust-pale:#FDF0E8;--green:#3A6B4A;--green-pale:#E8F4EC;--blue:#2C5282;--blue-pale:#EBF2FB;--red:#9B2626;--red-pale:#FDEAEA;--purple:#5B21B6;--purple-pale:#EDE9FE;--border:#E0D5C0;--border2:#C8BAA0;--sidebar:255px;--r:12px;--rs:8px}
@@ -299,6 +304,11 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .lock-note{background:var(--rust-pale);border:1.5px solid #F0D2BC;border-radius:var(--rs);padding:.75rem .9rem;font-size:12.5px;color:var(--ink2);line-height:1.6;margin-bottom:1rem}
 .lock-note code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-size:11.5px}
 .mine-tag{background:var(--rust-pale);color:var(--rust)}
+.acct-tabs{display:flex;border-bottom:1.5px solid var(--border);gap:4px}
+.acct-tab{flex:1;background:none;border:none;padding:8px 6px;font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px}
+.acct-tab.active{color:var(--rust);border-bottom-color:var(--rust)}
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,15,5,.4);z-index:190}
+@media(max-width:768px){.sidebar-backdrop.show{display:block}}
 @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.sb-toggle{display:flex}.form-grid{grid-template-columns:1fr}.nutri-grid,.nutri-cards{grid-template-columns:repeat(2,1fr)}.season-grid,.safe-temps{grid-template-columns:repeat(2,1fr)}.ing-row{grid-template-columns:1fr 1fr auto}}
 </style>
 </head>
@@ -332,12 +342,13 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
     <div class="nav-item nav-action" onclick="backupJSON()"><span class="ic">🧰</span>Backup Recipes (JSON)</div>
   </div>
   <div class="sb-foot">
-    <div class="profile-row" id="profileRow" onclick="openProfileModal()"><span class="ic">👤</span><span id="profileLabel">Set your name</span></div>
+    <div class="profile-row" id="profileRow" onclick="onProfileRowClick()"><span class="ic">👤</span><span id="profileLabel">Sign In</span></div>
     <div class="sync-row"><div class="sync-dot" id="syncDot"></div><span id="syncLabel">Connecting…</span></div>
     <span style="opacity:.3;font-size:11px">Wortmann Family Cookbook</span>
   </div>
 </nav>
 <button class="sb-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
 <div class="main">
 <!-- RECIPES PAGE -->
 <div class="page active" id="page-recipes">
@@ -648,7 +659,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
   <div class="topbar"><div class="topbar-title">🗑 Trash</div><div class="tb-actions"><button class="btn btn-sm btn-danger" onclick="emptyTrash()">🗑 Empty Trash</button></div></div>
   <div class="container">
     <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Deleted recipes stay here until someone restores or permanently removes them, so an accidental delete never loses a recipe for good. Permanently deleting asks for the family PIN first.</p>
-    <div class="lock-note"><strong>⚠️ If "Delete Forever" or "Empty Trash" fails:</strong> your Firestore Security Rules are blocking deletes from this app. In the Firebase console → Firestore Database → Rules, allow deletes on the <code>recipes</code> collection for signed-in users, e.g. <code>allow delete: if request.auth != null;</code> — then publish the rules and try again.</div>
+    <div class="lock-note"><strong>⚠️ If "Delete Forever" or "Empty Trash" fails:</strong> your Firestore Security Rules are blocking deletes. In the Firebase console → Firestore Database → Rules, allow deletes on the <code>recipes</code> collection for signed-in users (accounts or guests), e.g. <code>allow delete: if request.auth != null;</code> — then publish the rules and try again.</div>
     <div class="recipe-grid" id="trashGrid"></div>
   </div>
 </div>
@@ -743,7 +754,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
         <div class="fg full"><label>Recipe Name *</label><input type="text" id="f_name" placeholder="e.g. Grandma's Apple Pie"></div>
         <div class="fg"><label>Category</label><select id="f_cat"><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select></div>
         <div class="fg"><label>Cuisine</label><select id="f_cuisine"><option value="">— Select —</option><option>American</option><option>Southern</option><option>Italian</option><option>Mexican</option><option>Asian</option><option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option><option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option><option>Middle Eastern</option><option>Other</option></select></div>
-        <div class="fg"><label>Added by</label><input type="text" id="f_author" placeholder="Mom, Grandpa…"><small style="color:var(--ink3);font-size:11px">Filled in from your name below — change it if you're adding this for someone else.</small></div>
+        <div class="fg"><label>Added by</label><input type="text" id="f_author" placeholder="Mom, Grandpa…"><small style="color:var(--ink3);font-size:11px">Filled in from your account name if you're signed in — change it if you're adding this for someone else.</small></div>
         <div class="fg"><label>Servings</label><input type="number" id="f_servings" placeholder="4" min="1"></div>
         <div class="fg"><label>Active time (mins) — hands-on cooking</label><input type="number" id="f_active" placeholder="20" min="0"></div>
         <div class="fg"><label>Passive time (mins) — baking, marinating…</label><input type="number" id="f_passive" placeholder="45" min="0"></div>
@@ -809,17 +820,40 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
   </div>
 </div>
 
-<!-- PROFILE MODAL -->
-<div class="overlay" id="profileOverlay">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-head"><h2>👤 Who's Cooking?</h2><button class="x-btn" onclick="closeOverlay('profileOverlay')">✕</button></div>
+<!-- ACCOUNT MODAL (signed out: sign in / create account) -->
+<div class="overlay" id="acctOverlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h2 id="acctTitle">Sign In</h2><button class="x-btn" onclick="closeOverlay('acctOverlay')">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--ink3);margin-bottom:.8rem">Set your name once on this device. Recipes you add will be filled in with it, and you can filter to just the ones you've added.</p>
-      <div class="fg"><label>Your name</label><input type="text" id="profileNameInput" placeholder="e.g. Mom, Grandpa, Owen…" onkeydown="if(event.key==='Enter')saveProfileName()"></div>
+      <div class="acct-tabs">
+        <button class="acct-tab active" id="tabSignin" onclick="setAcctMode('signin')">Sign In</button>
+        <button class="acct-tab" id="tabSignup" onclick="setAcctMode('signup')">Create Account</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink3);margin:.7rem 0 .9rem">A real account keeps your favorites and the recipes you add tied to <em>you</em>, across any phone or computer you sign into.</p>
+      <div class="fg full" id="acctNameField" style="display:none;margin-bottom:9px"><label>Your name</label><input type="text" id="acctName" placeholder="e.g. Owen"></div>
+      <div class="fg full" style="margin-bottom:9px"><label>Email</label><input type="text" id="acctEmail" placeholder="you@example.com" autocomplete="username"></div>
+      <div class="fg full"><label>Password</label><input type="password" id="acctPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAcctForm()"></div>
+      <p id="acctError" style="color:var(--red);font-size:12.5px;margin-top:.7rem;display:none"></p>
+      <p id="acctForgot" style="margin-top:.7rem"><a href="#" onclick="forgotPassword();return false" style="color:var(--rust);font-size:12.5px;font-weight:600">Forgot your password?</a></p>
     </div>
     <div class="modal-foot">
-      <button class="btn" onclick="closeOverlay('profileOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProfileName()">💾 Save</button>
+      <button class="btn" onclick="closeOverlay('acctOverlay')">Cancel</button>
+      <button class="btn btn-primary" id="acctSubmitBtn" onclick="submitAcctForm()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT MODAL (signed in: profile + log out) -->
+<div class="overlay" id="acctMenuOverlay">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-head"><h2>👤 Your Account</h2><button class="x-btn" onclick="closeOverlay('acctMenuOverlay')">✕</button></div>
+    <div class="modal-body" style="text-align:center;padding-top:.5rem">
+      <div style="width:56px;height:56px;border-radius:50%;background:var(--rust-pale);color:var(--rust);font-family:'Lora',serif;font-size:22px;font-weight:600;display:flex;align-items:center;justify-content:center;margin:0 auto .7rem" id="acctAvatar">?</div>
+      <div style="font-family:'Lora',serif;font-size:17px;font-weight:600" id="acctMenuName">—</div>
+      <div style="font-size:12.5px;color:var(--ink3);margin-bottom:1.1rem" id="acctMenuEmail">—</div>
+    </div>
+    <div class="modal-foot" style="justify-content:center">
+      <button class="btn btn-danger" onclick="logOut()">🚪 Log Out</button>
     </div>
   </div>
 </div>
@@ -847,13 +881,107 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 var recipes=[],trashedRecipes=[],editingId=null,dbReady=false,activeDiets=new Set(),favOnly=false,mineOnly=false;
 var FAMILY_PIN='1234'; // Site owner: change this to your own family PIN.
 var _pendingUnlockAction=null;
-function uuid4(){return'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,function(c){var r=Math.random()*16|0,v=c==='x'?r:(r&0x3|0x8);return v.toString(16);});}
-function getLocalUid(){var id;try{id=localStorage.getItem('wfc_uid');}catch(e){}if(!id){id=uuid4();try{localStorage.setItem('wfc_uid',id);}catch(e){}}return id;}
-function getProfileName(){try{return localStorage.getItem('wfc_name')||'';}catch(e){return'';}}
-function setProfileName(n){try{localStorage.setItem('wfc_name',n);}catch(e){}}
-function renderProfileRow(){var n=getProfileName();var lbl=document.getElementById('profileLabel');if(lbl)lbl.textContent=n?('👋 '+n):'Set your name';}
-function openProfileModal(){var el=document.getElementById('profileNameInput');if(el)el.value=getProfileName();openOverlay('profileOverlay');setTimeout(function(){if(el)el.focus();},50);}
-function saveProfileName(){var v=document.getElementById('profileNameInput').value.trim();setProfileName(v);renderProfileRow();closeOverlay('profileOverlay');showToast(v?'👋 Hi, '+v+'!':'Name cleared');}
+var USERS={}; // uid -> {name, email} — public directory so everyone can see who added/wrote what
+function isLoggedIn(){return!!(window._authReady&&window._myUid&&!window._isGuest);}
+function myName(){
+  if(isLoggedIn())return window._myDisplayName||(USERS[window._myUid]&&USERS[window._myUid].name)||'';
+  return'';
+}
+function initUsersSync(){
+  window._fns.onSnapshot(window._usersCol,function(snap){
+    USERS={};
+    snap.docs.forEach(function(d){USERS[d.id]=d.data();});
+    renderAcctUI();renderCards();if(viewingId)viewRecipe(viewingId,viewScale,viewMetric);
+  },function(e){console.warn('users sync failed (check Firestore rules for the users collection)',e);});
+}
+function renderAcctUI(){
+  var lbl=document.getElementById('profileLabel');
+  if(!lbl)return;
+  if(isLoggedIn()){
+    lbl.textContent='👋 '+(myName()||'Account');
+  }else{
+    lbl.textContent='Sign In';
+  }
+}
+function onProfileRowClick(){
+  if(isLoggedIn()){
+    var n=myName()||'?';
+    document.getElementById('acctAvatar').textContent=n.charAt(0).toUpperCase();
+    document.getElementById('acctMenuName').textContent=n;
+    document.getElementById('acctMenuEmail').textContent=(window._auth.currentUser&&window._auth.currentUser.email)||'';
+    openOverlay('acctMenuOverlay');
+  }else{
+    openAcctModal();
+  }
+}
+var acctMode='signin';
+function openAcctModal(){
+  acctMode='signin';
+  setAcctMode('signin');
+  document.getElementById('acctEmail').value='';
+  document.getElementById('acctPassword').value='';
+  document.getElementById('acctName').value='';
+  document.getElementById('acctError').style.display='none';
+  openOverlay('acctOverlay');
+}
+function setAcctMode(mode){
+  acctMode=mode;
+  document.getElementById('tabSignin').classList.toggle('active',mode==='signin');
+  document.getElementById('tabSignup').classList.toggle('active',mode==='signup');
+  document.getElementById('acctNameField').style.display=mode==='signup'?'flex':'none';
+  document.getElementById('acctTitle').textContent=mode==='signin'?'Sign In':'Create Account';
+  document.getElementById('acctSubmitBtn').textContent=mode==='signin'?'Sign In':'Create Account';
+  document.getElementById('acctForgot').style.display=mode==='signin'?'block':'none';
+  document.getElementById('acctError').style.display='none';
+}
+function friendlyAuthError(e){
+  var c=e&&e.code||'';
+  if(c.indexOf('wrong-password')>=0||c.indexOf('invalid-credential')>=0)return'That email and password don\'t match.';
+  if(c.indexOf('user-not-found')>=0)return'No account with that email — try Create Account instead.';
+  if(c.indexOf('email-already-in-use')>=0)return'That email already has an account — try Sign In instead.';
+  if(c.indexOf('weak-password')>=0)return'Password should be at least 6 characters.';
+  if(c.indexOf('invalid-email')>=0)return'That doesn\'t look like a valid email address.';
+  if(c.indexOf('too-many-requests')>=0)return'Too many attempts — wait a bit and try again.';
+  return e&&e.message||'Something went wrong — try again.';
+}
+async function submitAcctForm(){
+  var email=document.getElementById('acctEmail').value.trim();
+  var pass=document.getElementById('acctPassword').value;
+  var name=document.getElementById('acctName').value.trim();
+  var errEl=document.getElementById('acctError');
+  errEl.style.display='none';
+  if(!email||!pass){errEl.textContent='Please fill in email and password.';errEl.style.display='block';return;}
+  if(acctMode==='signup'&&!name){errEl.textContent='Please enter your name.';errEl.style.display='block';return;}
+  var fns=window._fns;
+  try{
+    if(acctMode==='signup'){
+      var cred=await fns.createUserWithEmailAndPassword(window._auth,email,pass);
+      await fns.updateProfile(cred.user,{displayName:name});
+      await fns.setDoc(fns.doc(window._db,'users',cred.user.uid),{name:name,email:email,createdAt:new Date().toISOString()},{merge:true});
+      window._myDisplayName=name;
+      showToast('👋 Welcome, '+name+'!');
+    }else{
+      await fns.signInWithEmailAndPassword(window._auth,email,pass);
+      showToast('👋 Welcome back!');
+    }
+    closeOverlay('acctOverlay');
+    renderAcctUI();renderCards();
+  }catch(e){console.error(e);errEl.textContent=friendlyAuthError(e);errEl.style.display='block';}
+}
+async function forgotPassword(){
+  var email=document.getElementById('acctEmail').value.trim();
+  if(!email){document.getElementById('acctError').textContent='Enter your email above first, then click this again.';document.getElementById('acctError').style.display='block';return;}
+  try{await window._fns.sendPasswordResetEmail(window._auth,email);showToast('📧 Password reset email sent');}
+  catch(e){console.error(e);document.getElementById('acctError').textContent=friendlyAuthError(e);document.getElementById('acctError').style.display='block';}
+}
+async function logOut(){
+  try{await window._fns.signOut(window._auth);}catch(e){console.error(e);}
+  window._myDisplayName='';
+  closeOverlay('acctMenuOverlay');
+  showToast('👋 Signed out');
+  renderAcctUI();renderCards();
+}
+document.addEventListener('wfc-auth-changed',function(){renderAcctUI();renderCards();});
 function isTrustedDevice(){var until=0;try{until=+(localStorage.getItem('wfc_trust_until')||0);}catch(e){}return until>Date.now();}
 function requireUnlock(promptText,action){
   if(isTrustedDevice()){action();return;}
@@ -880,8 +1008,17 @@ function toggleRefNav(){
   chev.classList.toggle('collapsed',collapsed);
   try{localStorage.setItem('wfc_ref_collapsed',collapsed?'1':'0');}catch(e){}
 }
-function toggleMineOnly(el){mineOnly=!mineOnly;el.classList.toggle('active',mineOnly);renderCards();}
-function isMine(r){return r.addedByUid&&r.addedByUid===getLocalUid();}
+function toggleMineOnly(el){
+  if(!isLoggedIn()){showToast('⚠️ Sign in to filter to your own recipes');openAcctModal();return;}
+  mineOnly=!mineOnly;el.classList.toggle('active',mineOnly);renderCards();
+}
+function isMine(r){return!!(r.addedByUid&&window._myUid&&r.addedByUid===window._myUid);}
+function attribution(r){
+  // Prefer the live account name of whoever added it; fall back to the free-text field
+  // (used for guest additions, or recipes added before accounts existed).
+  var u=r.addedByUid&&USERS[r.addedByUid];
+  return(u&&u.name)||r.author||'';
+}
 var cookSteps=[],cookIngs=[],cookIdx=0,cookTimer=null,cookTimerSecs=0,cookTimerTotal=0;
 var viewScale=1,viewMetric=false,viewingId=null;
 var shoppingList=[];
@@ -911,13 +1048,20 @@ function showPage(name){
   if(nav)nav.classList.add('active');
   if(name==='shopping')renderShoppingList();
   if(name==='trash')renderTrash();
-  if(window.innerWidth<768)document.getElementById('sidebar').classList.remove('open');
+  if(window.innerWidth<768)closeSidebarMobile();
   window.scrollTo(0,0);
   document.documentElement.scrollTop=0;
   document.body.scrollTop=0;
   if(pg)pg.scrollTop=0;
 }
-function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');}
+function toggleSidebar(){
+  var open=document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarBackdrop').classList.toggle('show',open);
+}
+function closeSidebarMobile(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarBackdrop').classList.remove('show');
+}
 function toggleFavOnly(el){favOnly=!favOnly;el.classList.toggle('fav-on',favOnly);renderCards();}
 function isFav(r){return!!(r.favoritedBy&&window._myUid&&r.favoritedBy.indexOf(window._myUid)>=0);}
 async function toggleFavorite(id,ev){
@@ -952,7 +1096,13 @@ function initFirebase(){
     function(err){console.error(err);setSyncStatus('error');showToast('⚠️ Could not connect to database');}
   );
 }
-document.addEventListener('firebase-ready',function(){dbReady=true;try{initFirebase();}catch(e){setSyncStatus('error');renderCards();}});
+var _usersSyncStarted=false;
+document.addEventListener('firebase-ready',function(){
+  dbReady=true;
+  try{initFirebase();}catch(e){setSyncStatus('error');renderCards();}
+  if(!_usersSyncStarted){_usersSyncStarted=true;try{initUsersSync();}catch(e){console.warn(e);}}
+  renderAcctUI();
+});
 
 function toggleDiet(el){
   var d=el.dataset.diet;
@@ -997,7 +1147,7 @@ function renderCards(){
     return '<div class="recipe-card" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
       (r.photo?'<img class="card-img" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
       '<div class="card-ph" style="'+(r.photo?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
-      '<div class="card-body"><div class="card-top"><div class="card-cat">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(r.author?' · '+h(r.author):'')+'</div><div class="card-top-right"><div class="diet-chips">'+diets+'</div><button class="heart-btn'+(isFav(r)?' on':'')+'" onclick="toggleFavorite(\''+r.id+'\',event)" title="Favorite">❤</button></div></div>'+
+      '<div class="card-body"><div class="card-top"><div class="card-cat">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div><div class="card-top-right"><div class="diet-chips">'+diets+'</div><button class="heart-btn'+(isFav(r)?' on':'')+'" onclick="toggleFavorite(\''+r.id+'\',event)" title="Favorite">❤</button></div></div>'+
       '<div class="card-title">'+h(r.name)+'</div>'+
       '<div class="card-meta">'+(r.servings?'<span>👤 '+r.servings+'</span>':'')+(r.active?'<span>👐 '+r.active+'m</span>':'')+(r.passive?'<span>⏳ '+r.passive+'m</span>':'')+(r.ingredients&&r.ingredients.length?'<span>🧂 '+r.ingredients.length+'</span>':'')+'</div>'+
       (r.lastCooked?'<div class="last-cooked">🍳 Last cooked '+formatLastCooked(r.lastCooked)+'</div>':'')+
@@ -1034,7 +1184,7 @@ function viewRecipe(id,scale,metric){
 
   var html=(r.photo?'<img class="view-hero" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\'">':'<div class="view-hero-ph">'+(EMOJIS[r.category]||'🍴')+'</div>')+
     '<div style="padding:0 1.5rem"><div class="modal-head" style="border-radius:0;padding:.9rem 0;background:transparent">'+
-    '<div style="flex:1"><div style="font-size:11px;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(r.author?' · '+h(r.author):'')+'</div>'+
+    '<div style="flex:1"><div style="font-size:11px;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div>'+
     '<h2 style="font-family:\'Lora\',serif;font-size:22px">'+h(r.name)+'</h2>'+
     '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+diets+'</div></div>'+
     '<div style="display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end">'+
@@ -1064,7 +1214,7 @@ function viewRecipe(id,scale,metric){
     (pairs.length?'<div class="view-subhead" style="margin-top:1.1rem">Serves Well With</div><div class="pair-chips">'+pairs.map(function(p){var m2=recipes.find(function(rx){return rx.name.toLowerCase()===p.toLowerCase();});return'<div class="pair-chip" onclick="'+(m2?'closeOverlay(\'viewOverlay\');viewRecipe(\''+m2.id+'\')':'showToast(\'Recipe not in cookbook yet\')')+'">'+h(p)+(m2?' 👀':'')+'</div>';}).join('')+'</div>':'')+
     '<div class="view-subhead" style="margin-top:1.1rem">Family Notes</div>'+
     '<div class="notes-list">'+((r.notes||[]).length?r.notes.map(function(n){return'<div class="note-item"><div class="note-meta">'+h(n.author||'Someone')+' · '+formatLastCooked(n.ts)+'</div><div class="note-text">'+h(n.text)+'</div></div>';}).join(''):'<p style="font-size:12.5px;color:var(--ink3)">No notes yet — add a tip or a memory below.</p>')+'</div>'+
-    '<div class="note-form"><input type="text" id="noteAuthor" placeholder="Your name"><textarea id="noteText" placeholder="A tip, tweak, or memory about this recipe…"></textarea><button class="btn btn-primary btn-sm" onclick="addNote(\''+r.id+'\')">💬 Add Note</button></div>'+
+    '<div class="note-form"><input type="text" id="noteAuthor" placeholder="Your name" value="'+h(myName())+'"><textarea id="noteText" placeholder="A tip, tweak, or memory about this recipe…"></textarea><button class="btn btn-primary btn-sm" onclick="addNote(\''+r.id+'\')">💬 Add Note</button></div>'+
     '</div>';
 
   document.getElementById('viewContent').innerHTML=html;
@@ -1222,7 +1372,7 @@ function openAdd(prefill){
   document.getElementById('modalTitle').textContent='New Recipe';
   document.getElementById('deleteBtn').style.display='none';
   clearForm();
-  var pname=getProfileName();
+  var pname=myName();
   if(pname)document.getElementById('f_author').value=pname;
   if(prefill){
     Object.keys(prefill).forEach(function(k){if(typeof prefill[k]==='string'){var el=document.getElementById('f_'+k);if(el)el.value=prefill[k];}});
@@ -1286,7 +1436,7 @@ async function saveRecipe(){
   var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
   var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
   var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),sourceUrl:document.getElementById('f_sourceUrl').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
-  if(!editingId)data.addedByUid=getLocalUid();
+  if(!editingId&&window._myUid)data.addedByUid=window._myUid;
   setSyncStatus('syncing');
   try{
     var fns=window._fns;
@@ -1748,7 +1898,9 @@ function checkForClippedRecipe(){
 }
 initBookmarklet();
 checkForClippedRecipe();
-renderProfileRow();
+document.querySelector('.main').addEventListener('click',function(){
+  if(window.innerWidth<768)closeSidebarMobile();
+});
 try{
   if(localStorage.getItem('wfc_ref_collapsed')==='1'){
     document.getElementById('refNavItems').classList.add('collapsed');
