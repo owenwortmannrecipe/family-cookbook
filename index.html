@@ -16,6 +16,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="recipe-parser.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -647,7 +648,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 </div>
 
 <div class="page" id="page-shopping">
-  <div class="topbar"><div class="topbar-title">🛒 Shopping List</div><div class="tb-actions"><button class="btn btn-sm" onclick="clearShoppingList()">🗑 Clear All</button><button class="btn btn-sm" onclick="printShoppingList()">🖨 Print</button></div></div>
+  <div class="topbar"><div class="topbar-title">🛒 Shopping List</div><div class="tb-actions"><button class="btn btn-sm" onclick="clearCheckedShopping()">✓ Clear Checked</button><button class="btn btn-sm" onclick="clearShoppingList()">🗑 Clear All</button><button class="btn btn-sm" onclick="printShoppingList()">🖨 Print</button></div></div>
   <div class="container">
     <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Open a recipe and tap <strong>🛒 Add to Shopping List</strong> to send its ingredients here. This list lives only on this device.</p>
     <div id="shoppingListBody"></div>
@@ -695,13 +696,25 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
     <textarea id="bookmarkletCode" readonly onclick="this.select()" style="width:100%;min-height:70px;font-family:monospace;font-size:11px;color:var(--ink3);background:var(--parchment2)"></textarea>
 
     <hr>
-    <h2>Alternative: Fetch by URL</h2>
-    <p style="font-size:13px;color:var(--ink3)">This older method fetches a page from our side rather than yours — it works on some recipe blogs but never on NYT Cooking or other paywalled/bot-blocked sites, since it isn't running in your logged-in browser.</p>
-    <div class="import-area">
-      <input type="url" id="importUrl" placeholder="https://www.allrecipes.com/recipe/..." style="max-width:460px;margin:.6rem auto;display:block">
-      <button class="btn btn-sm" style="margin-top:.4rem" onclick="importRecipe()">🔍 Try Fetching</button>
-    </div>
-    <div class="import-result" id="importResult"></div>
+    <h2>Other ways to import</h2>
+<div class="acct-tabs" style="margin-bottom:.9rem">
+<button class="acct-tab active" id="impTabUrl" onclick="setImportTab('url')">Fetch by link</button>
+<button class="acct-tab" id="impTabPaste" onclick="setImportTab('paste')">Paste page source</button>
+</div>
+<div id="impPaneUrl">
+<p style="font-size:13px;color:var(--ink3)">Fetches the page through a public relay and reads the same recipe data the clipper does. Works on most recipe blogs; blocked by NYT Cooking and other paywalled or bot-protected sites — use the clipper or paste option for those.</p>
+<div class="import-area">
+<input type="url" id="importUrl" placeholder="https://www.allrecipes.com/recipe/..." style="max-width:460px;margin:.6rem auto;display:block">
+<button class="btn btn-sm" style="margin-top:.4rem" onclick="importRecipe()">🔍 Fetch Recipe</button>
+</div>
+</div>
+<div id="impPanePaste" style="display:none">
+<p style="font-size:13px;color:var(--ink3)">Works everywhere, paywalls included. Open the recipe, press <kbd>Ctrl/Cmd+U</kbd> (view source), select all, copy, and paste below. You can also paste just the recipe's JSON-LD block.</p>
+<textarea id="importPaste" placeholder="Paste the page source or JSON-LD here…" style="width:100%;min-height:110px;font-family:monospace;font-size:11px"></textarea>
+<input type="url" id="importPasteUrl" placeholder="Original link (optional — saved as the recipe's source)" style="margin-top:.5rem">
+<button class="btn btn-sm" style="margin-top:.5rem" onclick="importFromPaste()">🔍 Read Recipe</button>
+</div>
+<div class="import-result" id="importResult"></div>
   </div></div>
 </div>
 
@@ -879,6 +892,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 
 <script>
 var recipes=[],trashedRecipes=[],editingId=null,dbReady=false,activeDiets=new Set(),favOnly=false,mineOnly=false;
+var WFC=wfcParserLib(); // shared recipe parser / quantity helpers (recipe-parser.js)
 var FAMILY_PIN='1234'; // Site owner: change this to your own family PIN.
 var _pendingUnlockAction=null;
 var USERS={}; // uid -> {name, email} — public directory so everyone can see who added/wrote what
@@ -1165,17 +1179,12 @@ function viewRecipe(id,scale,metric){
   viewScale=s;viewMetric=m;
 
   function scaleIng(ing){
-    var bq=parseFloat(ing.qty);
-    if(isNaN(bq))return{name:ing.name,qty:ing.qty,unit:ing.unit||''};
-    var qty=bq*s,unit=ing.unit||'';
-    if(m){
-      var cv={cup:240,cups:240,tbsp:15,tablespoon:15,tablespoons:15,tsp:5,teaspoon:5,teaspoons:5,oz:28.35,lb:454,lbs:454,'fl oz':29.57};
-      var nu={cup:'ml',cups:'ml',tbsp:'ml',tablespoon:'ml',tablespoons:'ml',tsp:'ml',teaspoon:'ml',teaspoons:'ml',oz:'g',lb:'g',lbs:'g','fl oz':'ml'};
-      var ul=unit.toLowerCase();
-      if(cv[ul]){qty*=cv[ul];unit=nu[ul];}
-    }
-    qty=Math.round(qty*10)/10;
-    return{name:ing.name,qty:qty%1===0?String(qty):qty.toFixed(1),unit:unit};
+    var q=WFC.parseQty(ing.qty),unit=ing.unit||'';
+    if(!q)return{name:ing.name,qty:ing.qty||'',unit:unit};
+    var f=s,mode='pretty',mc=null;
+    if(m){mc=WFC.metric(unit);if(mc){f*=mc.f;unit=mc.u;mode='decimal';}}
+    var qs=WFC.scaleQty(ing.qty,f,mode);
+    return{name:ing.name,qty:qs,unit:mc?unit:WFC.displayUnit(unit,qs)};
   }
 
   var diets=(isMine(r)?'<span class="diet-tag mine-tag" style="font-size:11.5px;padding:2px 8px">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:11.5px;padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
@@ -1289,30 +1298,61 @@ async function addNote(id){
 function addToShoppingList(id){
   var r=recipes.find(function(x){return x.id===id;});
   if(!r)return;
+  var factor=(viewingId===id&&viewScale)?viewScale:1;
+  var n=0;
   (r.ingredients||[]).forEach(function(ing){
     if(!ing.name)return;
-    var existing=shoppingList.find(function(i){return i.name.toLowerCase()===ing.name.toLowerCase()&&(i.unit||'')===(ing.unit||'');});
-    if(existing){var q=parseFloat(existing.qty),nq=parseFloat(ing.qty);existing.qty=(!isNaN(q)&&!isNaN(nq))?String(q+nq):(existing.qty||ing.qty||'');}
-    else shoppingList.push({name:ing.name,qty:ing.qty||'',unit:ing.unit||'',checked:false,from:r.name});
+    var qty=ing.qty?WFC.scaleQty(ing.qty,factor,'ascii'):'';
+    var key=WFC.normalizeKey(ing.name),merged=false;
+    for(var i=0;i<shoppingList.length&&!merged;i++){
+      var it=shoppingList[i];
+      if(WFC.normalizeKey(it.name)!==key)continue;
+      var sum=WFC.addQuantities({qty:it.qty,unit:it.unit},{qty:qty,unit:ing.unit||''});
+      if(!sum)continue;
+      it.qty=sum.qty;it.unit=sum.unit;it.checked=false;
+      var srcs=(it.from||'').split(', ').filter(Boolean);
+      if(srcs.indexOf(r.name)<0)srcs.push(r.name);
+      it.from=srcs.join(', ');
+      merged=true;
+    }
+    if(!merged)shoppingList.push({name:ing.name,qty:qty,unit:WFC.canonUnit(ing.unit||''),checked:false,from:r.name});
+    n++;
   });
   saveShoppingList();
-  showToast('🛒 Added '+(r.ingredients||[]).length+' ingredients to your shopping list');
+  showToast('🛒 Added '+n+' ingredients'+(factor!==1?' (scaled to your servings)':'')+' to your shopping list');
+}
+function shoppingLine(item){
+  var q=WFC.parseQty(item.qty),qs=q?WFC.formatQty(q,'pretty'):(item.qty||'');
+  return((qs||'')+' '+WFC.displayUnit(item.unit,item.qty)+' '+item.name).replace(/\s+/g,' ').trim();
+}
+function groupedShopping(){
+  var groups={};
+  shoppingList.forEach(function(item,i){
+    var a=WFC.aisleFor(item.name);
+    (groups[a]=groups[a]||[]).push({item:item,i:i});
+  });
+  return WFC.aisleOrder.filter(function(a){return groups[a];}).map(function(a){return{aisle:a,items:groups[a]};});
 }
 function renderShoppingList(){
   var body=document.getElementById('shoppingListBody');
-  if(!shoppingList.length){body.innerHTML='<div class="empty"><div class="big">🛒</div><h3>Your shopping list is empty</h3><p>Open a recipe and add its ingredients here.</p></div>';return;}
-  body.innerHTML=shoppingList.map(function(item,i){
-    return '<div class="shop-item'+(item.checked?' checked':'')+'"><input type="checkbox" '+(item.checked?'checked':'')+' onchange="toggleShoppingItem('+i+')"><span>'+h(((item.qty||'')+' '+(item.unit||'')+' '+item.name).trim())+(item.from?' <small style="color:var(--ink3)">— '+h(item.from)+'</small>':'')+'</span><button onclick="removeShoppingItem('+i+')">✕</button></div>';
+  if(!shoppingList.length){body.innerHTML='<div class="empty"><div class="big">🛒</div><h3>Your shopping list is empty</h3><p>Open a recipe and add its ingredients here.</p></div>';updateShopBadge();return;}
+  body.innerHTML=groupedShopping().map(function(g){
+    return '<div class="shop-group"><h3>'+h(g.aisle)+'</h3>'+g.items.map(function(e){
+      var item=e.item;
+      return '<div class="shop-item'+(item.checked?' checked':'')+'"><input type="checkbox" '+(item.checked?'checked':'')+' onchange="toggleShoppingItem('+e.i+')"><span>'+h(shoppingLine(item))+(item.from?' <small style="color:var(--ink3)">— '+h(item.from)+'</small>':'')+'</span><button onclick="removeShoppingItem('+e.i+')">✕</button></div>';
+    }).join('')+'</div>';
   }).join('');
   updateShopBadge();
 }
 function toggleShoppingItem(i){shoppingList[i].checked=!shoppingList[i].checked;saveShoppingList();renderShoppingList();}
 function removeShoppingItem(i){shoppingList.splice(i,1);saveShoppingList();renderShoppingList();}
+function clearCheckedShopping(){var n=shoppingList.filter(function(i){return i.checked;}).length;if(!n){showToast('Nothing checked off yet');return;}shoppingList=shoppingList.filter(function(i){return !i.checked;});saveShoppingList();renderShoppingList();}
 function clearShoppingList(){if(!shoppingList.length)return;if(!confirm('Clear the whole shopping list?'))return;shoppingList=[];saveShoppingList();renderShoppingList();}
 function printShoppingList(){
   if(!shoppingList.length){showToast('⚠️ List is empty');return;}
   var w=window.open('','_blank');
-  w.document.write('<html><head><title>Shopping List</title><style>body{font-family:Georgia,serif;padding:30px}li{margin-bottom:6px;font-size:15px}</style></head><body><h1>🛒 Shopping List</h1><ul>'+shoppingList.map(function(i){return'<li>'+h(((i.qty||'')+' '+(i.unit||'')+' '+i.name).trim())+'</li>';}).join('')+'</ul></body></html>');
+  var body=groupedShopping().map(function(g){return'<h2>'+h(g.aisle)+'</h2><ul>'+g.items.map(function(e){return'<li>☐ '+h(shoppingLine(e.item))+'</li>';}).join('')+'</ul>';}).join('');
+  w.document.write('<html><head><title>Shopping List</title><style>body{font-family:Georgia,serif;padding:30px}h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ccc}ul{list-style:none;padding:0}li{margin-bottom:6px;font-size:15px}</style></head><body><h1>🛒 Shopping List</h1>'+body+'</body></html>');
   w.document.close();w.print();
 }
 function renderTrash(){
@@ -1378,6 +1418,7 @@ function openAdd(prefill){
     Object.keys(prefill).forEach(function(k){if(typeof prefill[k]==='string'){var el=document.getElementById('f_'+k);if(el)el.value=prefill[k];}});
     (prefill.ingredients||[]).forEach(function(i){addIng(i.name,i.qty||'',i.unit||'');});
     (prefill.steps||[]).forEach(function(s){addStep(s);});
+    (prefill.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.checked=true;el.closest('.diet-check').classList.add('checked');}});
   }
   if(!document.querySelectorAll('.ing-row').length){addIng();addIng();addIng();}
   if(!document.querySelectorAll('.step-row').length){addStep();addStep();}
@@ -1436,6 +1477,10 @@ async function saveRecipe(){
   var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
   var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
   var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),sourceUrl:document.getElementById('f_sourceUrl').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
+  if(!editingId){
+    var dup=findDuplicate(data);
+    if(dup&&!confirm('"'+dup.name+'" looks like it is already in the cookbook. Save this as a separate recipe anyway?'))return;
+  }
   if(!editingId&&window._myUid)data.addedByUid=window._myUid;
   setSyncStatus('syncing');
   try{
@@ -1459,68 +1504,74 @@ async function deleteRecipe(){
   catch(e){console.error(e);showToast('❌ Delete failed');}
 }
 
-async function importRecipe(){
-  var url=document.getElementById('importUrl').value.trim();
-  if(!url){showToast('⚠️ Please enter a URL');return;}
-  var result=document.getElementById('importResult');
-  result.style.display='block';result.innerHTML='⏳ Fetching recipe… (may take 10–15 seconds)';
+function setImportTab(t){
+  var u=t==='url';
+  document.getElementById('impPaneUrl').style.display=u?'':'none';
+  document.getElementById('impPanePaste').style.display=u?'none':'';
+  document.getElementById('impTabUrl').classList.toggle('active',u);
+  document.getElementById('impTabPaste').classList.toggle('active',!u);
+}
+function findDuplicate(r){
+  var uk=r.sourceUrl?WFC.urlKey(r.sourceUrl):'',nk=WFC.nameKey(r.name);
+  return recipes.find(function(x){
+    if(editingId&&x.id===editingId)return false;
+    if(uk&&x.sourceUrl&&WFC.urlKey(x.sourceUrl)===uk)return true;
+    return !!nk&&WFC.nameKey(x.name)===nk;
+  })||null;
+}
+async function fetchPageHtml(url){
   var proxies=['https://api.allorigins.win/get?url='+encodeURIComponent(url),'https://corsproxy.io/?'+encodeURIComponent(url)];
-  var html=null;
   for(var i=0;i<proxies.length;i++){
     try{
       var res=await fetch(proxies[i],{signal:AbortSignal.timeout(12000)});
       if(!res.ok)continue;
       var ct=res.headers.get('content-type')||'';
+      var html;
       if(ct.indexOf('json')>=0){var d=await res.json();html=d.contents||d;}
       else{html=await res.text();}
-      if(html&&String(html).length>500)break;
+      if(html&&String(html).length>500)return String(html);
     }catch(e){continue;}
   }
-  if(!html){result.innerHTML='❌ Could not fetch the page. This site likely blocks automated access (NYT Cooking, paywalled sites). Please add the recipe manually using ＋ Add Recipe.';return;}
+  return null;
+}
+function importFromHtml(html,url){
+  var result=document.getElementById('importResult');
+  result.style.display='block';
   try{
-    var doc2=new DOMParser().parseFromString(String(html),'text/html');
-    var recipe=null;
-    doc2.querySelectorAll('script[type="application/ld+json"]').forEach(function(s){
-      if(recipe)return;
-      try{
-        var j=JSON.parse(s.textContent.trim());
-        var arr=Array.isArray(j)?j:[j].concat(j['@graph']||[]);
-        var found=arr.find(function(x){return x&&(x['@type']==='Recipe'||(Array.isArray(x['@type'])&&x['@type'].indexOf('Recipe')>=0));});
-        if(found)recipe=found;
-      }catch(e){}
-    });
-    if(!recipe){
-      var titleEl=doc2.querySelector('h1');
-      result.innerHTML='⚠️ Found page but no structured recipe data.'+(titleEl?(' <a href="#" onclick="showPage(\'recipes\');openAdd({name:\''+h(titleEl.textContent.trim())+'\'});return false" style="color:var(--rust);font-weight:700">Open with title pre-filled →</a>'):'')+'<br><small style="color:var(--ink3)">Add ingredients and steps manually.</small>';
+    var doc=new DOMParser().parseFromString(String(html),'text/html');
+    var out=WFC.extract(doc,url||'');
+    var rc=out.recipe;
+    window._importPrefill=rc;
+    if(!rc.ingredients.length&&!rc.steps.length){
+      result.innerHTML='⚠️ Found the page'+(rc.name?' (<strong>'+h(rc.name)+'</strong>)':'')+' but no recipe data.'+
+        ' <a href="#" onclick="showPage(\'recipes\');openAdd(window._importPrefill);return false" style="color:var(--rust);font-weight:700">Open with title/photo pre-filled →</a>'+
+        '<br><small style="color:var(--ink3)">Try the Clip Recipe bookmarklet or the Paste page source tab on this one.</small>';
       return;
     }
-    function getImg(i){return Array.isArray(i)?(typeof i[0]==='string'?i[0]:(i[0]&&(i[0].url||i[0].contentUrl)||'')):(i&&(i.url||i.contentUrl)||String(i||''));}
-    function parseIngLine(s){
-      s=String(s).trim();
-      var fracMap={'½':'.5','¼':'.25','¾':'.75','⅓':'.33','⅔':'.67','⅛':'.125'};
-      s=s.replace(/[½¼¾⅓⅔⅛]/g,function(c){return fracMap[c]||c;});
-      var m=s.match(/^([\d.\/\-\s]+)\s*(cups?|tbsp\.?|tablespoons?|tsp\.?|teaspoons?|ounces?|oz\.?|pounds?|lbs?\.?|lb\.?|grams?|g\.?|kilograms?|kg\.?|ml|milliliters?|liters?|l\.?|cloves?|slices?|pinch(?:es)?|dash(?:es)?|cans?|packages?|stalks?|sprigs?|bunche?s?)\b\.?\s*(.*)$/i);
-      if(m)return{name:m[3].trim()||s,qty:m[1].trim(),unit:m[2].replace(/\.$/,'')};
-      var m2=s.match(/^([\d.\/\-\s]+)\s+(.+)$/);
-      if(m2)return{name:m2[2].trim(),qty:m2[1].trim(),unit:''};
-      return{name:s,qty:'',unit:''};
-    }
-    var prefill={
-      name:recipe.name||'',
-      desc:((recipe.description||'').replace(/<[^>]*>/g,'').trim()+' Imported from '+(new URL(url)).hostname.replace(/^www\./,'')+'.').slice(0,600),
-      photo:getImg(recipe.image),
-      servings:String(Array.isArray(recipe.recipeYield)?recipe.recipeYield[0]:recipe.recipeYield||''),
-      cal:String(recipe.nutrition&&recipe.nutrition.calories||'').replace(/[^\d]/g,''),
-      protein:String(recipe.nutrition&&recipe.nutrition.proteinContent||'').replace(/[^\d.]/g,''),
-      carbs:String(recipe.nutrition&&recipe.nutrition.carbohydrateContent||'').replace(/[^\d.]/g,''),
-      fat:String(recipe.nutrition&&recipe.nutrition.fatContent||'').replace(/[^\d.]/g,''),
-      sourceUrl:url,
-      ingredients:(recipe.recipeIngredient||[]).map(parseIngLine),
-      steps:(recipe.recipeInstructions||[]).map(function(s){return typeof s==='string'?s.replace(/<[^>]*>/g,''):(s.text||'');}).filter(Boolean)
-    };
-    window._importPrefill=prefill;
-    result.innerHTML='✅ Found: <strong>'+h(prefill.name)+'</strong> ('+prefill.ingredients.length+' ingredients, '+prefill.steps.length+' steps) — <a href="#" onclick="showPage(\'recipes\');openAdd(window._importPrefill);return false" style="color:var(--rust);font-weight:700">Open in Add Recipe form →</a>';
-  }catch(e){console.error(e);result.innerHTML='❌ Parse error. Try another URL or add the recipe manually.';}
+    var dup=findDuplicate(rc);
+    result.innerHTML='✅ Found: <strong>'+h(rc.name)+'</strong> ('+rc.ingredients.length+' ingredients, '+rc.steps.length+' steps)'+
+      (out.warnings.length?'<br><small style="color:var(--rust)">⚠️ '+h(out.warnings.join(' · '))+' — you can add them by hand.</small>':'')+
+      (dup?'<br><small>📚 You may already have this: <a href="#" onclick="showPage(\'recipes\');viewRecipe(\''+dup.id+'\');return false" style="color:var(--rust);font-weight:700">'+h(dup.name)+'</a></small>':'')+
+      ' — <a href="#" onclick="showPage(\'recipes\');openAdd(window._importPrefill);return false" style="color:var(--rust);font-weight:700">Open in Add Recipe form →</a>';
+  }catch(e){console.error(e);result.innerHTML='❌ Parse error. Try another link or the Paste page source tab.';}
+}
+async function importRecipe(){
+  var url=document.getElementById('importUrl').value.trim();
+  if(!url){showToast('⚠️ Please enter a URL');return;}
+  var result=document.getElementById('importResult');
+  result.style.display='block';result.innerHTML='⏳ Fetching recipe… (may take 10–15 seconds)';
+  var html=await fetchPageHtml(url);
+  if(!html){result.innerHTML='❌ Could not fetch the page. This site likely blocks automated access (NYT Cooking, paywalled sites). Use the Clip Recipe bookmarklet or the <a href="#" onclick="setImportTab(\'paste\');return false" style="color:var(--rust);font-weight:700">Paste page source</a> tab instead.';return;}
+  importFromHtml(html,url);
+}
+function importFromPaste(){
+  var txt=document.getElementById('importPaste').value.trim();
+  var url=document.getElementById('importPasteUrl').value.trim();
+  var result=document.getElementById('importResult');
+  if(!txt){showToast('⚠️ Paste the page source or JSON-LD first');return;}
+  result.style.display='block';
+  if(/^[\[{]/.test(txt))txt='<script type="application/ld+json">'+txt+'<\/script>';
+  importFromHtml(txt,url);
 }
 
 function downloadSite(){
@@ -1756,115 +1807,12 @@ function setValue(id,val){var el=document.getElementById(id);if(el&&val!=null)el
 // bot-blocking never come into play. It reads the same schema.org Recipe data
 // search engines use, falls back to scanning the page's headings/lists if a
 // site doesn't publish that, then opens this cookbook with the result filled in.
-function _wfcBookmarkletPayload(cookbookUrl){
+function _wfcClipperMain(parserFactory,cookbookUrl){
   try{
-    function flattenInstructions(ri){
-      var out=[];
-      function walk(x){
-        if(!x)return;
-        if(typeof x==='string'){out.push(x.replace(/<[^>]*>/g,'').trim());return;}
-        if(Array.isArray(x)){x.forEach(walk);return;}
-        if(x.itemListElement){walk(x.itemListElement);return;}
-        if(x.text){out.push(String(x.text).replace(/<[^>]*>/g,'').trim());return;}
-        if(x.name){out.push(String(x.name).replace(/<[^>]*>/g,'').trim());return;}
-      }
-      walk(ri);
-      return out.filter(Boolean);
-    }
-    function isoDurToMin(d){
-      if(!d)return'';
-      var m=/PT(?:(\d+)H)?(?:(\d+)M)?/.exec(d);
-      if(!m)return'';
-      var total=(+(m[1]||0))*60+(+(m[2]||0));
-      return total?String(total):'';
-    }
-    function getImg(i){
-      if(!i)return'';
-      if(Array.isArray(i))i=i[0];
-      if(typeof i==='string')return i;
-      return i.url||i.contentUrl||'';
-    }
-    function parseIngLine(s){
-      s=String(s).trim();
-      var fracMap={'½':'.5','¼':'.25','¾':'.75','⅓':'.33','⅔':'.67','⅛':'.125'};
-      s=s.replace(/[½¼¾⅓⅔⅛]/g,function(c){return fracMap[c]||c;});
-      var m=s.match(/^([\d.\/\-\s]+)\s*(cups?|tbsp\.?|tablespoons?|tsp\.?|teaspoons?|ounces?|oz\.?|pounds?|lbs?\.?|lb\.?|grams?|g\.?|kilograms?|kg\.?|ml|milliliters?|liters?|l\.?|cloves?|slices?|pinch(?:es)?|dash(?:es)?|cans?|packages?|stalks?|sprigs?|bunche?s?)\b\.?\s*(.*)$/i);
-      if(m)return{name:m[3].trim()||s,qty:m[1].trim(),unit:m[2].replace(/\.$/,'')};
-      var m2=s.match(/^([\d.\/\-\s]+)\s+(.+)$/);
-      if(m2)return{name:m2[2].trim(),qty:m2[1].trim(),unit:''};
-      return{name:s,qty:'',unit:''};
-    }
-    function mapCategory(cat){
-      var opts=['Breakfast','Lunch','Dinner','Dessert','Snack','Soup','Salad','Baking','Drink','Side Dish','Appetizer'];
-      cat=String(cat||'').toLowerCase();
-      for(var i=0;i<opts.length;i++)if(cat.indexOf(opts[i].toLowerCase())>=0)return opts[i];
-      return'';
-    }
-    function findSectionItems(keywords){
-      var heads=Array.prototype.slice.call(document.querySelectorAll('h1,h2,h3,h4,strong,b'));
-      var head=null;
-      for(var i=0;i<heads.length;i++){var t=heads[i].textContent.toLowerCase();if(keywords.some(function(k){return t.indexOf(k)>=0;})){head=heads[i];break;}}
-      if(!head)return[];
-      var list=head.nextElementSibling,tries=0;
-      while(list&&list.tagName!=='UL'&&list.tagName!=='OL'&&tries<5){list=list.nextElementSibling;tries++;}
-      if(!list)return[];
-      return Array.prototype.slice.call(list.querySelectorAll('li')).map(function(li){return li.textContent.trim();}).filter(Boolean);
-    }
-    var recipe=null;
-    var scripts=document.querySelectorAll('script[type="application/ld+json"]');
-    for(var i=0;i<scripts.length&&!recipe;i++){
-      try{
-        var j=JSON.parse(scripts[i].textContent.trim());
-        var arr=Array.isArray(j)?j:[j].concat(j['@graph']||[]);
-        for(var k=0;k<arr.length;k++){
-          var x=arr[k];
-          if(x&&(x['@type']==='Recipe'||(Array.isArray(x['@type'])&&x['@type'].indexOf('Recipe')>=0))){recipe=x;break;}
-        }
-      }catch(e){}
-    }
-    var prefill;
-    if(recipe){
-      var authorName=recipe.author?(Array.isArray(recipe.author)?(recipe.author[0]&&recipe.author[0].name):(recipe.author.name||recipe.author)):'';
-      var descBits=[];
-      if(recipe.description)descBits.push(String(recipe.description).replace(/<[^>]*>/g,'').trim());
-      if(authorName)descBits.push('Originally by '+authorName+'.');
-      descBits.push('Imported from '+location.hostname.replace(/^www\./,'')+'.');
-      prefill={
-        name:recipe.name||document.title||'',
-        cat:mapCategory(recipe.recipeCategory),
-        cuisine:'',
-        servings:String(Array.isArray(recipe.recipeYield)?recipe.recipeYield[0]:(recipe.recipeYield||'')).replace(/[^\d.]/g,''),
-        active:isoDurToMin(recipe.prepTime)||isoDurToMin(recipe.totalTime),
-        passive:isoDurToMin(recipe.cookTime),
-        photo:getImg(recipe.image),
-        desc:descBits.join(' ').slice(0,600),
-        cal:String((recipe.nutrition&&recipe.nutrition.calories)||'').replace(/[^\d]/g,''),
-        protein:String((recipe.nutrition&&recipe.nutrition.proteinContent)||'').replace(/[^\d.]/g,''),
-        carbs:String((recipe.nutrition&&recipe.nutrition.carbohydrateContent)||'').replace(/[^\d.]/g,''),
-        fat:String((recipe.nutrition&&recipe.nutrition.fatContent)||'').replace(/[^\d.]/g,''),
-        ingredients:(recipe.recipeIngredient||[]).map(parseIngLine),
-        steps:flattenInstructions(recipe.recipeInstructions),
-        sourceUrl:location.href
-      };
-    }else{
-      var ingLines=findSectionItems(['ingredient']);
-      var stepLines=findSectionItems(['instruction','direction','method','step']);
-      var ogImg=document.querySelector('meta[property="og:image"]');
-      var h1=document.querySelector('h1');
-      prefill={
-        name:(h1&&h1.textContent.trim())||document.title||'',
-        cat:'',cuisine:'',servings:'',active:'',passive:'',
-        photo:ogImg?ogImg.getAttribute('content'):'',
-        desc:'Imported from '+location.hostname.replace(/^www\./,'')+'.',
-        cal:'',protein:'',carbs:'',fat:'',
-        ingredients:ingLines.map(parseIngLine),
-        steps:stepLines,
-        sourceUrl:location.href
-      };
-      if(!ingLines.length&&!stepLines.length)alert('Recipe Clipper: could not find structured recipe data on this page. Opening your cookbook with the title/photo filled in — you\'ll need to add ingredients and steps by hand this time.');
-    }
-    var json=JSON.stringify(prefill);
-    var b64=btoa(unescape(encodeURIComponent(json)));
+    var out=parserFactory().extract(document,location.href);
+    var r=out.recipe;
+    if(!r.ingredients.length&&!r.steps.length)alert('Recipe Clipper: could not find structured recipe data on this page. Opening your cookbook with the title/photo filled in — you\'ll need to add ingredients and steps by hand this time.');
+    var b64=btoa(unescape(encodeURIComponent(JSON.stringify(r))));
     window.open(cookbookUrl+'#import='+b64,'_blank');
   }catch(e){
     alert('Recipe Clipper hit an error: '+e.message+'\n\nAdd this one manually with the ＋ Add Recipe button instead.');
@@ -1872,7 +1820,8 @@ function _wfcBookmarkletPayload(cookbookUrl){
 }
 function initBookmarklet(){
   var cookbookUrl=location.origin+location.pathname;
-  var code='('+_wfcBookmarkletPayload.toString()+')('+JSON.stringify(cookbookUrl)+');';
+  var lib=wfcParserLib.toString().replace(/^\s*\/\*.*\*\/\s*$/gm,'').replace(/^\s+/gm,'').replace(/\n+/g,'\n');
+  var code='('+_wfcClipperMain.toString()+')('+lib+','+JSON.stringify(cookbookUrl)+');';
   var href='javascript:'+encodeURIComponent(code);
   var link=document.getElementById('bookmarkletLink');
   var box=document.getElementById('bookmarkletCode');
