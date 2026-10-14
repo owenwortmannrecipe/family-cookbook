@@ -21,7 +21,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
-  import { getAuth, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   const firebaseConfig = {
     apiKey:"AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
     authDomain:"wortmann-family-recipes.firebaseapp.com",
@@ -40,12 +40,34 @@
   // NOTE: query is fetched WITHOUT orderBy on purpose — Firestore silently excludes any
   // document missing the sorted field (e.g. one added by hand in the console), which
   // caused recipes to vanish. Sorting now happens client-side in renderCards() instead.
-  window._fns={addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,onSnapshot,ref,uploadBytes,getDownloadURL,signInAnonymously,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
+  window._fns={addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,onSnapshot,ref,uploadBytes,getDownloadURL,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
+  // ACCESS MODEL: the cookbook is private. A visitor must (1) be signed in with a real
+  // email+password account AND (2) be on the family approval list (Firestore doc family/<uid>,
+  // which only the owner can create, from the Firebase console). Anonymous sessions are never
+  // created, and any left over from the old version are signed out. The same two checks are
+  // enforced server-side in firestore.rules — this code only decides what to show.
+  var unsubFamily=null;
   onAuthStateChanged(auth,function(user){
-    if(!user){signInAnonymously(auth).catch(function(e){console.error('anon auth failed',e);});return;}
-    window._authReady=true;window._myUid=user.uid;window._isGuest=user.isAnonymous;window._myDisplayName=user.displayName||'';
-    document.dispatchEvent(new Event("firebase-ready"));
-    document.dispatchEvent(new Event("wfc-auth-changed"));
+    if(unsubFamily){unsubFamily();unsubFamily=null;}
+    window._approved=undefined;
+    if(user&&user.isAnonymous){signOut(auth).catch(function(){});return;}
+    if(!user){
+      window._authReady=true;window._myUid=null;window._isGuest=true;window._myDisplayName='';window._approved=false;
+      document.dispatchEvent(new Event("wfc-auth-changed"));
+      return;
+    }
+    window._authReady=true;window._myUid=user.uid;window._isGuest=false;window._myDisplayName=user.displayName||'';
+    unsubFamily=onSnapshot(doc(db,'family',user.uid),function(snap){
+      if(!snap.exists()&&snap.metadata&&snap.metadata.fromCache)return;
+      var was=window._approved===true;
+      window._approved=snap.exists();
+      if(window._approved&&!was)document.dispatchEvent(new Event("firebase-ready"));
+      document.dispatchEvent(new Event("wfc-auth-changed"));
+    },function(err){
+      console.warn('approval check failed',err);
+      window._approved=false;
+      document.dispatchEvent(new Event("wfc-auth-changed"));
+    });
   });
 </script>
 <style>
@@ -133,7 +155,7 @@ body{font-family:'Nunito',sans-serif;background:var(--parchment);color:var(--ink
 .fg{display:flex;flex-direction:column;gap:4px}
 .fg.full{grid-column:1/-1}
 label{font-size:12.5px;font-weight:700;color:var(--ink2)}
-input[type=text],input[type=number],input[type=url],select,textarea{font-family:'Nunito',sans-serif;font-size:13.5px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--warm);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
+input[type=text],input[type=password],input[type=number],input[type=url],select,textarea{font-family:'Nunito',sans-serif;font-size:13.5px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--warm);color:var(--ink);outline:none;transition:border-color .15s;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--rust2)}
 textarea{resize:vertical;min-height:70px}
 .section-sep{font-family:'Lora',serif;font-size:14px;font-weight:600;color:var(--ink);margin:16px 0 7px;padding-bottom:6px;border-bottom:1.5px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -311,9 +333,20 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,15,5,.4);z-index:190}
 @media(max-width:768px){.sidebar-backdrop.show{display:block}}
 @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.sb-toggle{display:flex}.form-grid{grid-template-columns:1fr}.nutri-grid,.nutri-cards{grid-template-columns:repeat(2,1fr)}.season-grid,.safe-temps{grid-template-columns:repeat(2,1fr)}.ing-row{grid-template-columns:1fr 1fr auto}}
+body.locked{display:block;background:var(--ink)}
+body.locked .sidebar,body.locked .sb-toggle,body.locked .sidebar-backdrop,body.locked .main>.page{display:none!important}
+.gate-brand{display:none;text-align:center;color:var(--parchment);padding:3rem 1rem 1.25rem}
+.gate-brand .t{font-family:'Lora',serif;font-size:26px;font-weight:600;line-height:1.25}
+.gate-brand .s{font-size:12px;opacity:.6;letter-spacing:1.2px;margin-top:5px}
+body.locked .gate-brand{display:block}
+#gateLoading{display:none;text-align:center;color:var(--parchment);padding:30vh 1rem 0;font-size:14px}
+body.locked #gateLoading{display:block}
+#gateLoading a{color:var(--rust2);font-weight:700}
+body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.btn-primary){display:none}
 </style>
 </head>
-<body>
+<body class="locked">
+<div id="gateLoading">📖 Opening the cookbook…</div>
 <nav class="sidebar" id="sidebar">
   <div class="sb-logo"><div class="title">📖 Wortmann<br>Family Cookbook</div><div class="sub">Shared Recipes</div></div>
   <div class="sb-nav">
@@ -835,6 +868,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 
 <!-- ACCOUNT MODAL (signed out: sign in / create account) -->
 <div class="overlay" id="acctOverlay">
+  <div class="gate-brand"><div class="t">📖 Wortmann Family Cookbook</div><div class="s">FAMILY MEMBERS ONLY</div></div>
   <div class="modal" style="max-width:400px">
     <div class="modal-head"><h2 id="acctTitle">Sign In</h2><button class="x-btn" onclick="closeOverlay('acctOverlay')">✕</button></div>
     <div class="modal-body">
@@ -842,7 +876,7 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
         <button class="acct-tab active" id="tabSignin" onclick="setAcctMode('signin')">Sign In</button>
         <button class="acct-tab" id="tabSignup" onclick="setAcctMode('signup')">Create Account</button>
       </div>
-      <p style="font-size:12.5px;color:var(--ink3);margin:.7rem 0 .9rem">A real account keeps your favorites and the recipes you add tied to <em>you</em>, across any phone or computer you sign into.</p>
+      <p style="font-size:12.5px;color:var(--ink3);margin:.7rem 0 .9rem">This cookbook is private to the family. Sign in with your email and password. New here? Create an account — the cookbook owner approves new accounts before you can see any recipes.</p>
       <div class="fg full" id="acctNameField" style="display:none;margin-bottom:9px"><label>Your name</label><input type="text" id="acctName" placeholder="e.g. Owen"></div>
       <div class="fg full" style="margin-bottom:9px"><label>Email</label><input type="text" id="acctEmail" placeholder="you@example.com" autocomplete="username"></div>
       <div class="fg full"><label>Password</label><input type="password" id="acctPassword" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAcctForm()"></div>
@@ -853,6 +887,20 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
       <button class="btn" onclick="closeOverlay('acctOverlay')">Cancel</button>
       <button class="btn btn-primary" id="acctSubmitBtn" onclick="submitAcctForm()">Sign In</button>
     </div>
+  </div>
+</div>
+
+<!-- WAITING-FOR-APPROVAL (signed in, but not on the family list yet) -->
+<div class="overlay" id="pendingOverlay">
+  <div class="gate-brand"><div class="t">📖 Wortmann Family Cookbook</div><div class="s">FAMILY MEMBERS ONLY</div></div>
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h2>Waiting for approval</h2></div>
+    <div class="modal-body">
+      <p style="font-size:13.5px;margin-bottom:.8rem">Hi <strong id="pendingName"></strong> — your account is ready, but the cookbook owner has to approve it before recipes unlock. Send them this code:</p>
+      <div style="display:flex;gap:6px;align-items:center"><input type="text" id="pendingUid" readonly onclick="this.select()" style="font-family:monospace;font-size:12px"><button class="btn btn-sm" onclick="copyPendingUid()">Copy</button></div>
+      <p style="font-size:12.5px;color:var(--ink3);margin-top:.8rem">This screen unlocks by itself once you're approved — no need to refresh.</p>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="logOut()">Sign out</button></div>
   </div>
 </div>
 
@@ -895,6 +943,7 @@ var recipes=[],trashedRecipes=[],editingId=null,dbReady=false,activeDiets=new Se
 var WFC=wfcParserLib(); // shared recipe parser / quantity helpers (recipe-parser.js)
 var FAMILY_PIN='1234'; // Site owner: change this to your own family PIN.
 var _pendingUnlockAction=null;
+var _unsubRecipes=null,_unsubUsers=null;
 var USERS={}; // uid -> {name, email} — public directory so everyone can see who added/wrote what
 function isLoggedIn(){return!!(window._authReady&&window._myUid&&!window._isGuest);}
 function myName(){
@@ -902,7 +951,7 @@ function myName(){
   return'';
 }
 function initUsersSync(){
-  window._fns.onSnapshot(window._usersCol,function(snap){
+  _unsubUsers=window._fns.onSnapshot(window._usersCol,function(snap){
     USERS={};
     snap.docs.forEach(function(d){USERS[d.id]=d.data();});
     renderAcctUI();renderCards();if(viewingId)viewRecipe(viewingId,viewScale,viewMetric);
@@ -973,7 +1022,8 @@ async function submitAcctForm(){
       await fns.updateProfile(cred.user,{displayName:name});
       await fns.setDoc(fns.doc(window._db,'users',cred.user.uid),{name:name,email:email,createdAt:new Date().toISOString()},{merge:true});
       window._myDisplayName=name;
-      showToast('👋 Welcome, '+name+'!');
+      showToast('✅ Account created!');
+      updateGate();
     }else{
       await fns.signInWithEmailAndPassword(window._auth,email,pass);
       showToast('👋 Welcome back!');
@@ -995,7 +1045,56 @@ async function logOut(){
   showToast('👋 Signed out');
   renderAcctUI();renderCards();
 }
-document.addEventListener('wfc-auth-changed',function(){renderAcctUI();renderCards();});
+function stopSync(){
+  if(_unsubRecipes){_unsubRecipes();_unsubRecipes=null;}
+  if(_unsubUsers){_unsubUsers();_unsubUsers=null;}
+  _usersSyncStarted=false;dbReady=false;
+  recipes=[];trashedRecipes=[];USERS={};viewingId=null;editingId=null;
+}
+function copyPendingUid(){
+  var el=document.getElementById('pendingUid');
+  el.select();
+  try{navigator.clipboard.writeText(el.value);}catch(e){try{document.execCommand('copy');}catch(e2){}}
+  showToast('📋 Code copied');
+}
+/* Shows exactly one of: sign-in screen, waiting-for-approval screen, or the app. */
+function updateGate(){
+  if(!window._authReady)return;
+  var signedIn=!!window._myUid&&!window._isGuest;
+  if(signedIn&&window._approved===undefined)return;
+  var b=document.body,loading=document.getElementById('gateLoading');
+  if(loading)loading.style.display='none';
+  var acct=document.getElementById('acctOverlay'),pend=document.getElementById('pendingOverlay');
+  if(signedIn&&window._approved){
+    b.classList.remove('locked');
+    acct.classList.remove('open');pend.classList.remove('open');
+    b.style.overflow='';
+    return;
+  }
+  var wasLocked=b.classList.contains('locked');
+  b.classList.add('locked');
+  stopSync();
+  if(!wasLocked){
+    Array.prototype.slice.call(document.querySelectorAll('.overlay.open')).forEach(function(o){if(o.id!=='acctOverlay'&&o.id!=='pendingOverlay')o.classList.remove('open');});
+    try{renderCards();}catch(e){}
+  }
+  if(!signedIn){
+    pend.classList.remove('open');
+    if(!acct.classList.contains('open'))openAcctModal();
+  }else{
+    acct.classList.remove('open');
+    var u=window._auth&&window._auth.currentUser;
+    document.getElementById('pendingName').textContent=window._myDisplayName||(u&&u.displayName)||(u&&u.email)||'there';
+    document.getElementById('pendingUid').value=window._myUid;
+    pend.classList.add('open');b.style.overflow='hidden';
+  }
+}
+document.addEventListener('wfc-auth-changed',function(){updateGate();renderAcctUI();renderCards();});
+setTimeout(function(){
+  var l=document.getElementById('gateLoading');
+  if(l&&document.body.classList.contains('locked')&&(!window._authReady||(window._myUid&&window._approved===undefined)))
+    l.innerHTML='Can\'t reach the cookbook right now. Check your connection and <a href="">try again</a>.';
+},10000);
 function isTrustedDevice(){var until=0;try{until=+(localStorage.getItem('wfc_trust_until')||0);}catch(e){}return until>Date.now();}
 function requireUnlock(promptText,action){
   if(isTrustedDevice()){action();return;}
@@ -1098,7 +1197,7 @@ function setSyncStatus(s){
 function initFirebase(){
   var fns=window._fns;
   setSyncStatus('syncing');
-  fns.onSnapshot(window._col,
+  _unsubRecipes=fns.onSnapshot(window._col,
     function(snap){
       var all=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
       recipes=all.filter(function(r){return !r.deleted;});
@@ -1791,7 +1890,7 @@ function exportPDF(){
 
 
 function openOverlay(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
-function closeOverlay(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+function closeOverlay(id){if(document.body.classList.contains('locked')&&(id==='acctOverlay'||id==='pendingOverlay'))return;document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('click',function(e){if(e.target===el)closeOverlay(el.id);});});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')['viewOverlay','addOverlay','cookOverlay'].forEach(closeOverlay);});
 

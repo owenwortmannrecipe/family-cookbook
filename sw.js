@@ -2,10 +2,11 @@
 // Caches the app shell (this page + icons) so the site opens instantly and
 // still opens with no signal. It never touches Firestore/Storage requests —
 // those go straight to the network so recipes stay live and in sync.
-var CACHE_NAME = 'wfc-shell-v1';
+var CACHE_NAME = 'wfc-shell-v2';
 var SHELL_FILES = [
   './',
   './index.html',
+  './recipe-parser.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
@@ -43,8 +44,11 @@ self.addEventListener('fetch', function (event) {
   event.respondWith(
     fetch(req)
       .then(function (res) {
-        var copy = res.clone();
-        caches.open(CACHE_NAME).then(function (cache) { cache.put(req, copy); });
+        // Only keep good responses, so a temporary 404/500 never replaces a working cached copy.
+        if (res && res.ok) {
+          var copy = res.clone();
+          caches.open(CACHE_NAME).then(function (cache) { cache.put(req, copy); });
+        }
         return res;
       })
       .catch(function () {
