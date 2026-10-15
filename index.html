@@ -20,7 +20,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
   import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   const firebaseConfig = {
     apiKey:"AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
@@ -34,13 +33,12 @@
   const db=getFirestore(app);
   const col=collection(db,"recipes");
   const usersCol=collection(db,"users");
-  const storage=getStorage(app);
   const auth=getAuth(app);
-  window._db=db;window._col=col;window._usersCol=usersCol;window._storage=storage;window._auth=auth;
+  window._db=db;window._col=col;window._usersCol=usersCol;window._auth=auth;
   // NOTE: query is fetched WITHOUT orderBy on purpose — Firestore silently excludes any
   // document missing the sorted field (e.g. one added by hand in the console), which
   // caused recipes to vanish. Sorting now happens client-side in renderCards() instead.
-  window._fns={addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,onSnapshot,ref,uploadBytes,getDownloadURL,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
+  window._fns={addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,onSnapshot,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
   // ACCESS MODEL: the cookbook is private. A visitor must (1) be signed in with a real
   // email+password account AND (2) be on the family approval list (Firestore doc family/<uid>,
   // which only the owner can create, from the Firebase console). Anonymous sessions are never
@@ -804,7 +802,7 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
         <div class="fg"><label>Servings</label><input type="number" id="f_servings" placeholder="4" min="1"></div>
         <div class="fg"><label>Active time (mins) — hands-on cooking</label><input type="number" id="f_active" placeholder="20" min="0"></div>
         <div class="fg"><label>Passive time (mins) — baking, marinating…</label><input type="number" id="f_passive" placeholder="45" min="0"></div>
-        <div class="fg full"><label>Photo</label><input type="url" id="f_photo" placeholder="Paste a photo URL…" oninput="previewPhoto()"><input type="file" id="f_photoFile" accept="image/*" style="margin-top:5px" onchange="handlePhotoFile(this)"><small style="color:var(--ink3);font-size:11px">Paste a link, or choose a photo from your phone/computer — either works.</small><img class="img-preview" id="photoPreview" alt=""></div>
+        <div class="fg full"><label>Photo</label><input type="url" id="f_photo" placeholder="Paste a photo URL…" oninput="previewPhoto()"><input type="file" id="f_photoFile" accept="image/*" style="margin-top:5px" onchange="handlePhotoFile(this)"><small style="color:var(--ink3);font-size:11px">Paste a link, or choose a photo from your phone/computer. Chosen photos are shrunk automatically and saved privately with the recipe.</small><img class="img-preview" id="photoPreview" alt=""><button type="button" class="btn btn-sm" id="photoRemoveBtn" style="display:none;margin-top:6px" onclick="removePhoto()">✕ Remove photo</button></div>
         <div class="fg full"><label>Description / Story behind the dish</label><textarea id="f_desc" placeholder="A memory, tip, or note about this recipe…"></textarea></div>
         <div class="fg full"><label>Serves well with <span style="font-weight:400;color:var(--ink3)">(recipe names, comma-separated)</span></label><input type="text" id="f_pairings" placeholder="e.g. Caesar Salad, Garlic Bread"></div>
         <input type="hidden" id="f_sourceUrl">
@@ -1495,15 +1493,63 @@ function backupJSON(){
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wortmann-recipes-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
   showToast('🧰 Backup downloaded — '+recipes.length+' recipes');
 }
-var pendingPhotoFile=null;
-function handlePhotoFile(input){
+/* ===== Photos: shrunk in the browser, saved inside the recipe (no Cloud Storage needed) ===== */
+var pendingPhotoData=null;            // data: URL of a chosen/compressed photo, or an existing saved one
+var PHOTO_TARGET=130000;              // aim for <= ~95 KB of image (characters of base64)
+var PHOTO_HARD_MAX=400000;            // never save more than ~300 KB (Firestore docs cap at 1 MB)
+function decodeImage(file){
+  function viaImg(){return new Promise(function(res,rej){
+    var url=URL.createObjectURL(file),img=new Image();
+    img.onload=function(){URL.revokeObjectURL(url);res(img);};
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('decode'));};
+    img.src=url;});}
+  if(window.createImageBitmap){
+    return createImageBitmap(file,{imageOrientation:'from-image'})
+      .catch(function(){return createImageBitmap(file);})
+      .catch(viaImg);
+  }
+  return viaImg();
+}
+async function compressPhoto(file){
+  if(!/^image\//.test(file.type||'')&&!/\.(jpe?g|png|webp|gif|bmp|heic|heif)$/i.test(file.name||''))throw new Error('not an image');
+  var src=await decodeImage(file);
+  try{
+    var w0=src.width||src.naturalWidth,h0=src.height||src.naturalHeight;
+    if(!w0||!h0)throw new Error('empty image');
+    var best=null,dims=[800,640,520,420],quals=[0.74,0.64,0.54,0.44];
+    for(var i=0;i<dims.length;i++){
+      var k=Math.min(1,dims[i]/Math.max(w0,h0)),c=document.createElement('canvas');
+      c.width=Math.max(1,Math.round(w0*k));c.height=Math.max(1,Math.round(h0*k));
+      var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(src,0,0,c.width,c.height);
+      for(var j=0;j<quals.length;j++){
+        var url=c.toDataURL('image/jpeg',quals[j]);
+        if(!best||url.length<best.length)best=url;
+        if(url.length<=PHOTO_TARGET)return url;
+      }
+    }
+    if(!best||best.length>PHOTO_HARD_MAX)throw new Error('too big');
+    return best;
+  }finally{if(src&&src.close)src.close();}
+}
+async function handlePhotoFile(input){
   var file=input.files&&input.files[0];
   if(!file)return;
-  pendingPhotoFile=file;
+  showToast('🖼 Preparing photo…');
+  try{
+    pendingPhotoData=await compressPhoto(file);
+    document.getElementById('f_photo').value='';
+    previewPhoto();
+    showToast('✅ Photo ready (~'+Math.max(1,Math.round(pendingPhotoData.length*0.75/1024))+' KB)');
+  }catch(e){
+    console.error(e);input.value='';
+    showToast('❌ Couldn\'t use that file — try a JPG or PNG photo');
+  }
+}
+function removePhoto(){
+  pendingPhotoData=null;
   document.getElementById('f_photo').value='';
-  var reader=new FileReader();
-  reader.onload=function(e){var img=document.getElementById('photoPreview');img.src=e.target.result;img.style.display='block';};
-  reader.readAsDataURL(file);
+  var pf=document.getElementById('f_photoFile');if(pf)pf.value='';
+  previewPhoto();
 }
 
 function openAdd(prefill){
@@ -1532,7 +1578,9 @@ function openEdit(id){
   clearForm();
   ['name','author','servings','active','passive','photo','cal','protein','carbs','fat','pairings','sourceUrl'].forEach(function(k){setValue('f_'+k,r[k]);});
   setValue('f_desc',r.description);
-  setValue('f_cat',r.category);setValue('f_cuisine',r.cuisine);previewPhoto();
+  setValue('f_cat',r.category);setValue('f_cuisine',r.cuisine);
+  if(/^data:image\//.test(r.photo||'')){setValue('f_photo','');pendingPhotoData=r.photo;}
+  previewPhoto();
   (r.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.closest('.diet-check').classList.add('checked');el.checked=true;}});
   (r.ingredients||[]).forEach(function(i){addIng(i.name,i.qty,i.unit);});
   if(!(r.ingredients||[]).length)addIng();
@@ -1546,9 +1594,8 @@ function clearForm(){
   ['f_cat','f_cuisine'].forEach(function(id){var el=document.getElementById(id);if(el)el.selectedIndex=0;});
   document.getElementById('ingList').innerHTML='';
   document.getElementById('stepList').innerHTML='';
-  document.getElementById('photoPreview').style.display='none';
   var pf=document.getElementById('f_photoFile');if(pf)pf.value='';
-  pendingPhotoFile=null;
+  pendingPhotoData=null;previewPhoto();
   document.querySelectorAll('.diet-check').forEach(function(el){el.classList.remove('checked');el.querySelector('input').checked=false;});
 }
 function addIng(name,qty,unit){
@@ -1566,7 +1613,13 @@ function addStep(text){
 }
 function removeStep(btn){btn.closest('.step-row').remove();document.querySelectorAll('.step-num').forEach(function(el,i){el.textContent=i+1;});}
 function toggleCheck(label){setTimeout(function(){label.classList.toggle('checked',label.querySelector('input').checked);},0);}
-function previewPhoto(){var url=document.getElementById('f_photo').value.trim();if(url){pendingPhotoFile=null;var pf=document.getElementById('f_photoFile');if(pf)pf.value='';}var img=document.getElementById('photoPreview');img.src=url;img.style.display=url?'block':'none';}
+function previewPhoto(){
+  var url=document.getElementById('f_photo').value.trim();
+  if(url){pendingPhotoData=null;var pf=document.getElementById('f_photoFile');if(pf)pf.value='';}
+  var src=pendingPhotoData||url,img=document.getElementById('photoPreview');
+  img.src=src||'';img.style.display=src?'block':'none';
+  var rb=document.getElementById('photoRemoveBtn');if(rb)rb.style.display=src?'':'none';
+}
 
 async function saveRecipe(){
   var name=document.getElementById('f_name').value.trim();
@@ -1584,16 +1637,10 @@ async function saveRecipe(){
   setSyncStatus('syncing');
   try{
     var fns=window._fns;
-    if(pendingPhotoFile){
-      showToast('📤 Uploading photo…');
-      var path='recipe-photos/'+Date.now()+'-'+pendingPhotoFile.name.replace(/[^a-zA-Z0-9.\-_]/g,'_');
-      var sref=fns.ref(window._storage,path);
-      await fns.uploadBytes(sref,pendingPhotoFile);
-      data.photo=await fns.getDownloadURL(sref);
-    }
+    if(pendingPhotoData)data.photo=pendingPhotoData;
     if(editingId){await fns.updateDoc(fns.doc(window._db,'recipes',editingId),data);showToast('✅ Recipe updated!');}
     else{data.createdAt=fns.serverTimestamp();await fns.addDoc(window._col,data);showToast('✅ Recipe saved for the whole family!');}
-    pendingPhotoFile=null;
+    pendingPhotoData=null;
     closeOverlay('addOverlay');
   }catch(e){console.error(e);showToast('❌ Save failed — check your connection');setSyncStatus('error');}
 }

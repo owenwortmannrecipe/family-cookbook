@@ -15,7 +15,9 @@ until you approve it.
    - Add one field: `name` (string) = their name. Save.
    - Repeat for every family member who should keep access. **Do yourself first.**
 2. **Publish the Firestore rules.** Firestore Database → Rules → paste `firestore.rules` → Publish.
-3. **Publish the Storage rules.** Storage → Rules → paste `storage.rules` → Publish.
+3. **Storage: nothing to do.** The app no longer uses Cloud Storage at all (it needs a paid plan now).
+   Chosen photos are shrunk in the browser and saved inside the recipe in Firestore, so they are
+   protected by `firestore.rules` like everything else. You can ignore Storage in the console.
 4. **Turn off anonymous sign-in.** Authentication → Sign-in method → Anonymous → Disable.
    (Optional cleanup: Authentication → Users → delete the old "anonymous" rows.)
 5. **Upload** the new `index.html`, `recipe-parser.js`, and `sw.js` to GitHub Pages.
@@ -39,7 +41,9 @@ own UID has a document in `family`, and that the rules were published without er
   static content on GitHub Pages — only the **recipes, notes, favorites and profiles** are
   protected. Don't put anything private in the static pages.
 - "Download site" (offline copy) embeds every recipe in a file. Treat that file as private.
-- Recipe photo links are long unguessable URLs. Only approved family can see them in the
-  app, but anyone who is *given* a link can open that one photo.
+- Photos you choose from your device live inside the recipe, so only approved family can read them.
+  Photos added by pasting a web link are just links to wherever they are hosted.
+- Photos uploaded *before* this change are still in Cloud Storage. Their links keep working only
+  while that bucket exists; if one stops loading, re-add the photo (or paste a link).
 - A person who creates an account but is not approved can still store their own name/email
-  profile and upload a photo to Storage (images only, 10 MB max). They cannot read anything.
+  profile (that is how you find their code). They cannot read anything else.
