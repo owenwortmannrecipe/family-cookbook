@@ -47,3 +47,37 @@ own UID has a document in `family`, and that the rules were published without er
   while that bucket exists; if one stops loading, re-add the photo (or paste a link).
 - A person who creates an account but is not approved can still store their own name/email
   profile (that is how you find their code). They cannot read anything else.
+
+---
+
+## Updating for: shared lists & planners, tags, new layout
+
+**What changed in the data:** shopping lists and meal planners are now *groups*. Everyone always has the
+open **Family List** and **Family Planner**; anyone can also start their own, and anyone in the family
+can view it and **join** it to add to it. Data lives in `lists/{id}/items`, `planners/{id}/entries`
+(plus the `lists` and `planners` documents that hold each group's name, owner and members).
+Recipes and tags are unchanged.
+
+**Do these in order:**
+1. **Publish the new rules first.** Firestore Database → Rules → replace everything with the new
+   `firestore.rules` → Publish. Upload the site before this and the lists/planner will show
+   "could not update" errors until the rules are in.
+2. Upload the new `index.html` and `recipe-parser.js`. (`sw.js` is unchanged.)
+3. Reload once on each device, and re-drag the **Clip Recipe** bookmarklet from *Import a Recipe*.
+
+**Nothing to create by hand.** Collections appear automatically on first use.
+
+**Your old per-device shopping list moves itself** into the Family List the first time an approved person
+opens the app after the update (same items combine), and the local copy is then removed.
+
+**If you tested the earlier "Phase 4" build against your real Firebase:** it stored items in flat
+`shoppingItems` and `mealPlan` collections. The new build doesn't read those, and the new rules no longer
+allow them. Delete them in the console if they hold anything you don't need.
+
+**How sharing works (and its limits):**
+- Everyone approved can *see* every list and planner (that's how you find one to join). Only a group's
+  **members** can change what's on it. Joining adds only yourself; you can't add other people.
+- The owner can delete their list/planner; any member can rename it or leave it.
+- This is built for a family you trust: members of a group can edit each other's items.
+
+**Cost:** Firestore only (no Storage), so no billing change.

@@ -19,7 +19,7 @@
 <script src="recipe-parser.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, where, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   const firebaseConfig = {
     apiKey:"AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
@@ -38,7 +38,7 @@
   // NOTE: query is fetched WITHOUT orderBy on purpose — Firestore silently excludes any
   // document missing the sorted field (e.g. one added by hand in the console), which
   // caused recipes to vanish. Sorting now happens client-side in renderCards() instead.
-  window._fns={addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,onSnapshot,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
+  window._fns={collection,getDocs,addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,where,onSnapshot,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
   // ACCESS MODEL: the cookbook is private. A visitor must (1) be signed in with a real
   // email+password account AND (2) be on the family approval list (Firestore doc family/<uid>,
   // which only the owner can create, from the Firebase console). Anonymous sessions are never
@@ -300,6 +300,51 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .timer-display{font-family:'Lora',serif;font-size:22px;font-weight:600;min-width:70px}
 .timer-display.done{color:var(--rust2);animation:pulse 1s infinite}
 .shop-group{margin-bottom:1.2rem}
+.grp-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--ink3);margin:.1rem 0 1rem;min-height:30px}
+.grp-view{margin-left:auto;display:inline-flex;gap:4px}
+.btn-primary.btn-sm{color:#fff}
+.plan-by{color:var(--ink3);font-size:11px;margin-left:6px;font-weight:600}
+.nav-badge-soft{background:rgba(255,255,255,.18)}
+.exp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem;margin:1rem 0 1.6rem}
+.exp-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.55rem}
+.exp-card h3{margin:0;font-family:'Lora',serif;font-size:16px;color:var(--ink)}
+.exp-card p{margin:0;font-size:13px;line-height:1.6}
+.exp-meta{font-size:12px;color:var(--ink3);line-height:1.5}
+.exp-card .btn{margin-top:auto;align-self:flex-start}
+.exp-more{margin:1rem 0;border:1.5px solid var(--border);border-radius:var(--r);padding:.7rem 1rem;background:var(--parchment2)}
+.exp-more summary{cursor:pointer;font-weight:700;font-size:13.5px;color:var(--ink2)}
+.exp-more[open] summary{margin-bottom:.6rem}
+.guide-search{margin-bottom:.6rem;max-width:none}
+.guide-count{font-size:12.5px;color:var(--ink3);min-height:18px;margin-bottom:.4rem}
+.guide-tabs{margin:.2rem 0 1.2rem}
+.guide-tabs.dim .guide-tab.active{background:var(--warm)!important;color:var(--ink2)!important;border-color:var(--border)!important}
+.guide-panel{display:none}
+.guide-panel.active{display:block}
+.guide-hit-label{display:none;font-size:11.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--rust);margin:1.2rem 0 .5rem}
+.static-page h2.guide-part{font-size:21px;margin-top:2.2rem;padding-top:1.3rem;border-top:1.5px solid var(--border)}
+#guideBody.searching .guide-panel{display:block}
+#guideBody.searching .guide-panel.gs-empty{display:none}
+#guideBody.searching .guide-panel>h1,#guideBody.searching .guide-panel>h2,#guideBody.searching .guide-panel>h3,#guideBody.searching .guide-panel>.page-sub,#guideBody.searching .guide-panel>hr{display:none}
+.gs-hide{display:none!important}
+.plan-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.plan-nav strong{font-family:'Lora',serif;font-size:16px;min-width:150px;text-align:center}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:12px}
+.plan-day{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:.75rem .8rem}
+.plan-day.today{border-color:var(--rust);box-shadow:0 0 0 2px var(--rust-pale)}
+.plan-day-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.45rem;font-size:13px}
+.plan-day-head span{color:var(--ink3);font-size:12px}
+.plan-slot{border-top:1px dashed var(--border);padding:.4rem 0}
+.plan-slot-head{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px}
+.plan-add{background:none;border:1.5px solid var(--border);color:var(--rust);border-radius:50%;width:22px;height:22px;line-height:1;cursor:pointer;font-weight:700}
+.plan-entry{display:flex;justify-content:space-between;gap:6px;align-items:flex-start;font-size:13.5px;margin-top:4px}
+.plan-entry a{color:var(--ink);font-weight:600;cursor:pointer}
+.plan-entry a:hover{color:var(--rust)}
+.plan-entry button{background:none;border:none;color:var(--ink3);cursor:pointer;font-size:12px}
+.plan-pick-item{padding:.55rem .7rem;border:1.5px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;background:var(--warm);font-size:14px}
+.plan-pick-item:hover{border-color:var(--rust);background:var(--rust-pale)}
+.plan-pick-item small{color:var(--ink3);margin-left:6px}
+.tag-pill{font-size:11.5px;padding:2px 8px;border-radius:12px;background:var(--rust-pale);color:var(--rust);font-weight:700;cursor:pointer}
+.chip small{opacity:.7;font-weight:700}
 .shop-group h3{font-family:'Lora',serif;font-size:15px;margin-bottom:.5rem;color:var(--ink2)}
 .shop-item{display:flex;align-items:center;gap:9px;padding:7px 4px;border-bottom:1px solid var(--border);font-size:13.5px}
 .shop-item.checked span{text-decoration:line-through;opacity:.45}
@@ -348,30 +393,28 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 <nav class="sidebar" id="sidebar">
   <div class="sb-logo"><div class="title">📖 Wortmann<br>Family Cookbook</div><div class="sub">Shared Recipes</div></div>
   <div class="sb-nav">
-    <div class="nav-sec">Cookbook</div>
     <div class="nav-item active" id="nav-recipes" onclick="showPage('recipes')"><span class="ic">🍽️</span>All Recipes</div>
+    <div class="nav-item" id="nav-planner" onclick="showPage('planner')"><span class="ic">📅</span>Meal Planner</div>
+    <div class="nav-item" id="nav-shopping" onclick="showPage('shopping')"><span class="ic">🛒</span>Shopping List<span class="nav-badge" id="shopBadge" style="display:none"></span></div>
+    <div class="nav-item" id="nav-trash" onclick="showPage('trash')"><span class="ic">🗑</span>Trash<span class="nav-badge nav-badge-soft" id="trashBadge" style="display:none"></span></div>
+    <div class="nav-sec">Cookbook</div>
     <div class="nav-item" id="nav-preface" onclick="showPage('preface')"><span class="ic">📜</span>Preface</div>
+    <div class="nav-item" id="nav-import" onclick="showPage('import')"><span class="ic">🔗</span>Import a Recipe</div>
+    <div class="nav-sec-row" onclick="toggleGuideNav()"><div class="nav-sec">Kitchen Guide</div><span class="chev" id="guideChev">▾</span></div>
+    <div class="nav-group" id="guideNavItems">
+    <div class="nav-item" id="nav-guide-tech" onclick="openGuide('tech')"><span class="ic">🔪</span>Techniques &amp; Tips</div>
+    <div class="nav-item" id="nav-guide-flavor" onclick="openGuide('flavor')"><span class="ic">🧪</span>Flavor &amp; Wine</div>
+    <div class="nav-item" id="nav-guide-terms" onclick="openGuide('terms')"><span class="ic">📖</span>Cooking Terms</div>
+    <div class="nav-item" id="nav-guide-equip" onclick="openGuide('equip')"><span class="ic">🍳</span>Equipment</div>
+    <div class="nav-item" id="nav-guide-season" onclick="openGuide('season')"><span class="ic">🌿</span>In Season</div>
+    </div>
     <div class="nav-sec-row" onclick="toggleRefNav()"><div class="nav-sec">Reference</div><span class="chev" id="refChev">▾</span></div>
     <div class="nav-group" id="refNavItems">
     <div class="nav-item" id="nav-conversions" onclick="showPage('conversions')"><span class="ic">⚖️</span>Unit Conversions</div>
     <div class="nav-item" id="nav-doneness" onclick="showPage('doneness')"><span class="ic">🥩</span>Meat Doneness</div>
-    <div class="nav-item" id="nav-flavors" onclick="showPage('flavors')"><span class="ic">🧪</span>Flavor Pairings</div>
-    <div class="nav-item" id="nav-tips" onclick="showPage('tips')"><span class="ic">💡</span>Cooking Tips</div>
-    <div class="nav-item" id="nav-seasonal" onclick="showPage('seasonal')"><span class="ic">🌿</span>Seasonal Guide</div>
-    <div class="nav-item" id="nav-equipment" onclick="showPage('equipment')"><span class="ic">🍳</span>Kitchen Equipment</div>
-    <div class="nav-item" id="nav-glossary" onclick="showPage('glossary')"><span class="ic">📖</span>Cooking Definitions</div>
-    <div class="nav-item" id="nav-cutting" onclick="showPage('cutting')"><span class="ic">🔪</span>Cutting Techniques</div>
-    <div class="nav-item" id="nav-winepairing" onclick="showPage('winepairing')"><span class="ic">🍷</span>Wine Pairing</div>
     </div>
-    <div class="nav-sec">Tools</div>
-    <div class="nav-item" id="nav-import" onclick="showPage('import')"><span class="ic">🔗</span>Import from Web</div>
-    <div class="nav-item" id="nav-shopping" onclick="showPage('shopping')"><span class="ic">🛒</span>Shopping List<span class="nav-badge" id="shopBadge" style="display:none"></span></div>
-    <div class="nav-item" id="nav-trash" onclick="showPage('trash')"><span class="ic">🗑</span>Trash</div>
-    <div class="nav-item" id="nav-apps" onclick="showPage('apps')"><span class="ic">📱</span>Get the App</div>
-    <div class="nav-divider"></div>
-    <div class="nav-item nav-action" onclick="downloadSite()"><span class="ic">💾</span>Download Site</div>
-    <div class="nav-item nav-action" onclick="exportPDF()"><span class="ic">📄</span>Export as PDF</div>
-    <div class="nav-item nav-action" onclick="backupJSON()"><span class="ic">🧰</span>Backup Recipes (JSON)</div>
+    <div class="nav-sec">Backup &amp; App</div>
+    <div class="nav-item" id="nav-export" onclick="showPage('export')"><span class="ic">📦</span>Backup, Export &amp; Install</div>
   </div>
   <div class="sb-foot">
     <div class="profile-row" id="profileRow" onclick="onProfileRowClick()"><span class="ic">👤</span><span id="profileLabel">Sign In</span></div>
@@ -394,6 +437,7 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
       <span class="recipe-count" id="recipeCount">Loading…</span>
     </div>
     <div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
+    <div class="chip-bar" id="tagBar" style="display:none"></div>
     <div class="recipe-grid" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
   </div>
 </div>
@@ -493,34 +537,36 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 </div>
 
 <!-- FLAVOR PAIRINGS -->
-<div class="page" id="page-flavors">
-  <div class="topbar"><div class="topbar-title">🧪 Flavor Pairings</div></div>
-  <div class="container"><div class="static-page">
-    <h1>Flavor Pairing Guide</h1><p class="page-sub">Understanding which flavors work together — the foundation of instinctive, confident cooking.</p>
-    <h2>The Basic Tastes &amp; How They Interact</h2>
-    <div class="flavor-grid">
-      <div class="flavor-card"><div class="flavor-head" style="background:#FEF3C7;color:#92400E">🍯 Sweet</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Salty (enhances sweetness — salted caramel)</li><li>Sour (balance — lemon tart, fruit vinaigrettes)</li><li>Bitter (contrast — dark chocolate &amp; orange)</li><li>Fatty (rounds out sweetness)</li></ul><p><strong>Tames:</strong> Bitterness, excessive heat/spice</p><p><strong>Classic:</strong> Brown sugar on bacon, honey-glazed carrots, sweet &amp; sour sauce</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#EFF6FF;color:#1E40AF">🧂 Salty</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Sweet (suppresses bitterness, amplifies sweet)</li><li>Fatty (cuts richness, brightens flavor)</li><li>Sour (amplifies both)</li><li>Umami (deepens savory notes)</li></ul><p><strong>Tames:</strong> Bitterness, flatness in any dish</p><p><strong>Classic:</strong> Parmesan on pasta, miso in soup, anchovies in sauces</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#FEF9C3;color:#854D0E">🍋 Sour / Acid</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Fatty (acid cuts fat — lemon on fish, vinegar in mayo)</li><li>Sweet (balance — citrus desserts, fruit tarts)</li><li>Salty (amplifies both)</li><li>Rich dishes (brightens and lifts heaviness)</li></ul><p><strong>Tames:</strong> Richness, heaviness, excessive sweetness</p><p><strong>Classic:</strong> Lemon on chicken, vinegar in braises, lime in tacos</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#F0FDF4;color:#166534">🥬 Bitter</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Sweet (contrast — coffee &amp; chocolate, radicchio &amp; balsamic)</li><li>Fatty (richness softens bitterness)</li><li>Salty (reduces perceived bitterness)</li></ul><p><strong>Tames:</strong> Excessive sweetness, richness</p><p><strong>Classic:</strong> Dark chocolate in chili, arugula with rich meats, coffee rubs on pork</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#FDF0E8;color:#9A3412">🍖 Umami (Savory)</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Salty (synergistic — both deepen savory)</li><li>Fatty (richness amplifies umami depth)</li><li>Other umami sources (stack them: parmesan + mushrooms + tomato)</li></ul><p><strong>Tames:</strong> Flatness, one-dimensionality</p><p><strong>Classic:</strong> Mushrooms + soy sauce, parmesan rind in soup, fish sauce in Thai dishes</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#FDE8F0;color:#9B2626">🧈 Fatty / Rich</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Acid (essential — fat needs brightness to not feel heavy)</li><li>Salty (amplifies richness)</li><li>Bitter (contrast and balance)</li><li>Spicy (fat carries and softens heat)</li></ul><p><strong>Tames:</strong> Sharpness, excessive acid, aggressive spice</p><p><strong>Classic:</strong> Butter + lemon, cream sauce + white wine, brie + apple</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#EDE9FE;color:#5B21B6">🌶️ Spicy / Heat</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Fatty (dairy tames capsaicin — yogurt, cream, butter)</li><li>Sweet (honey hot sauce, Thai chili-mango)</li><li>Acid (lime + chili is a classic)</li></ul><p><strong>Tames:</strong> Richness can feel flat without contrast</p><p><strong>Classic:</strong> Chili + chocolate, hot sauce + butter, sriracha + honey</p></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🌿 Herbal &amp; Aromatic</div><div class="flavor-body"><p><strong>Classic herb pairings:</strong></p><ul><li><strong>Basil</strong> → tomato, garlic, mozzarella</li><li><strong>Tarragon</strong> → chicken, eggs, cream (Julia Child's favorite)</li><li><strong>Thyme</strong> → mushrooms, pork, root vegetables</li><li><strong>Rosemary</strong> → lamb, potatoes, focaccia</li><li><strong>Dill</strong> → fish, cucumbers, sour cream</li><li><strong>Sage</strong> → butter, pork, winter squash</li></ul></div></div>
-    </div>
-    <h2>The "Fix It" Guide — When Something Tastes Off</h2>
-    <div class="tip-card"><span class="tip-icon">😐</span><div class="tip-text"><h4>Too bland / flat</h4><p>Add salt first — always. Then try acid (lemon, vinegar). A touch of umami (soy sauce, Worcestershire, parmesan) can dramatically deepen flavor in seconds.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">😬</span><div class="tip-text"><h4>Too salty</h4><p>Add acid (lemon or vinegar) — it distracts from saltiness. Add more unsalted ingredients to dilute. A pinch of sugar can help balance. A potato simmered in soup absorbs some salt.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">😣</span><div class="tip-text"><h4>Too sour / acidic</h4><p>Add fat (butter, cream, oil) to coat and soften. A pinch of sugar balances. A small amount of salt helps reduce perceived sourness.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🥵</span><div class="tip-text"><h4>Too spicy / hot</h4><p>Add dairy (cream, butter, yogurt, sour cream). Starchy ingredients (potato, rice, bread) absorb capsaicin. Sugar or honey can help. More fat-based ingredients generally.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🍫</span><div class="tip-text"><h4>Too bitter</h4><p>Add fat, salt, or a small amount of sugar. Acid actually enhances bitterness — avoid adding more. Cream or butter is often the fastest fix.</p></div></div>
-  </div></div>
-</div>
 
 <!-- COOKING TIPS -->
-<div class="page" id="page-tips">
-  <div class="topbar"><div class="topbar-title">💡 Cooking Tips &amp; Techniques</div></div>
+
+<!-- SEASONAL -->
+
+<!-- KITCHEN EQUIPMENT -->
+
+
+<!-- CUTTING TECHNIQUES -->
+
+
+<div class="page" id="page-shopping">
+  <div class="topbar"><div class="topbar-title">🛒 Shopping List</div><div class="tb-actions"><button class="btn btn-sm" onclick="clearCheckedShopping()">✓ Clear Checked</button><button class="btn btn-sm" onclick="clearShoppingList()">🗑 Clear All</button><button class="btn btn-sm" onclick="printShoppingList()">🖨 Print</button></div></div>
+  <div class="container">
+    <div class="chip-bar" id="listBar"></div>
+    <div class="grp-meta" id="listMeta"></div>
+    <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Open a recipe and tap <strong>🛒 Add to Shopping List</strong> to send its ingredients here. Everyone on a list sees changes live. Start your own list (<strong>＋ New list</strong>) for a trip or a party — anyone in the family can join it and add what they need.</p>
+    <div id="shoppingListBody"></div>
+  </div>
+</div>
+
+<!-- KITCHEN GUIDE (Cooking Tips, Cutting, Flavors, Wine, Terms, Equipment, Seasonal — one searchable page) -->
+<div class="page" id="page-guide">
+  <div class="topbar"><div class="topbar-title">📚 Kitchen Guide</div></div>
   <div class="container"><div class="static-page">
+    <div class="search-wrap guide-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input class="search-input" id="guideSearch" placeholder="Search the whole guide — try “sear”, “basil”, or “whisk”…" oninput="guideSearch()" autocomplete="off"></div>
+    <div class="guide-count" id="guideCount"></div>
+    <div class="chip-bar guide-tabs" id="guideTabs"><button class="chip guide-tab active" data-guide="tech" onclick="guideTab('tech')">🔪 Techniques &amp; Tips</button><button class="chip guide-tab" data-guide="flavor" onclick="guideTab('flavor')">🧪 Flavor &amp; Wine</button><button class="chip guide-tab" data-guide="terms" onclick="guideTab('terms')">📖 Cooking Terms</button><button class="chip guide-tab" data-guide="equip" onclick="guideTab('equip')">🍳 Equipment</button><button class="chip guide-tab" data-guide="season" onclick="guideTab('season')">🌿 In Season</button></div>
+    <div id="guideBody">
+<section class="guide-panel active" data-guide="tech"><div class="guide-hit-label">Techniques &amp; Tips</div>
     <h1>Cooking Tips &amp; Techniques</h1><p class="page-sub">Drawn from classical technique and Julia Child's <em>Mastering the Art of French Cooking</em>.</p>
     <h2>On Heat — The Foundation of Everything</h2>
     <div class="tip-card"><span class="tip-icon">🔥</span><div class="tip-text"><h4>Master your heat, master your cooking</h4><p>More dishes are ruined by too-high heat than any other single cause. Food that is browned needs high heat briefly; food that is braised needs gentle, patient heat. Knowing which to use is the core of good cooking.</p></div></div>
@@ -549,13 +595,87 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
     <h2>On Eggs — Mastery in Miniature</h2>
     <div class="tip-card"><span class="tip-icon">🍳</span><div class="tip-text"><h4>The omelette is a cook's true test</h4><p>Julia Child considered the French omelette the truest test of skill. The pan must be very hot, eggs beaten just until combined (not frothy), and the whole operation takes under 60 seconds. The eggs should be creamy and barely set — never browned.</p></div></div>
     <div class="tip-card"><span class="tip-icon">🫧</span><div class="tip-text"><h4>Whipping egg whites</h4><p>Even a trace of yolk or grease prevents egg whites from reaching stiff peaks. Use a clean glass or copper bowl (copper stabilizes the foam), wipe with a cut lemon and dry thoroughly. Cream of tartar (⅛ tsp per white) helps stabilize in stainless steel.</p></div></div>
-  </div></div>
-</div>
-
-<!-- SEASONAL -->
-<div class="page" id="page-seasonal">
-  <div class="topbar"><div class="topbar-title">🌿 Seasonal Guide</div></div>
-  <div class="container"><div class="static-page">
+<h2 class="guide-part">Cutting Techniques</h3><p class="page-sub">A few weeks of practice with these knife basics pays off for the rest of your life in the kitchen.</p>
+    <div class="tip-card"><span class="tip-icon">✋</span><div class="tip-text"><h4>The grip</h4><p>Pinch the blade itself between your thumb and index finger, just in front of the handle, and wrap your remaining fingers around the handle. This gives far more control than gripping the handle alone. On your guiding hand, curl your fingertips under and away from the blade — knuckles forward, fingertips tucked.</p></div></div>
+    <div class="step-list-item"><b>Slicing round vegetables (potatoes, onions):</b> Cut the vegetable in half first so it sits flat and stable on the board — a rolling round vegetable is how knife accidents happen. Use your curled-under knuckles as a guide, moving them back slightly after each cut.</div>
+    <div class="step-list-item"><b>Slicing long vegetables (carrots, zucchini):</b> Trim a thin strip off one side first so the vegetable lies flat instead of rolling, then slice crosswise as above.</div>
+    <div class="step-list-item"><b>Julienne (matchsticks):</b> Cut a vegetable into flat slabs, stack a few at a time, then cut lengthwise into thin, even strips.</div>
+    <div class="step-list-item"><b>Dice:</b> Take your julienned strips and cut crosswise into small cubes — the strip width sets the cube size.</div>
+    <div class="step-list-item"><b>Mincing onion or shallot:</b> Halve through the root, lay cut-side down with the root pointing away from your knife hand. Make several horizontal cuts toward the root (not through it), then vertical cuts, then slice crosswise — the root end holds everything together until the last cut, so nothing rolls away.</div>
+    <div class="tip-card"><span class="tip-icon">🧹</span><div class="tip-text"><h4>Chopping herbs and garlic</h4><p>Rock the knife tip-down, keeping the point on the board and lifting only the heel, walking the blade back and forth across the pile while gathering it back together with your free hand between passes.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🛡️</span><div class="tip-text"><h4>The one safety rule that matters most</h4><p>A dull knife is more dangerous than a sharp one — it slips instead of cutting cleanly, and slipping is how fingers get cut. Keep your knife sharp, keep your fingertips curled back, and let the knife's weight do the work rather than forcing it.</p></div></div>
+</section>
+<section class="guide-panel" data-guide="flavor"><div class="guide-hit-label">Flavor &amp; Wine</div>
+    <h1>Flavor Pairing Guide</h1><p class="page-sub">Understanding which flavors work together — the foundation of instinctive, confident cooking.</p>
+    <h2>The Basic Tastes &amp; How They Interact</h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#FEF3C7;color:#92400E">🍯 Sweet</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Salty (enhances sweetness — salted caramel)</li><li>Sour (balance — lemon tart, fruit vinaigrettes)</li><li>Bitter (contrast — dark chocolate &amp; orange)</li><li>Fatty (rounds out sweetness)</li></ul><p><strong>Tames:</strong> Bitterness, excessive heat/spice</p><p><strong>Classic:</strong> Brown sugar on bacon, honey-glazed carrots, sweet &amp; sour sauce</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EFF6FF;color:#1E40AF">🧂 Salty</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Sweet (suppresses bitterness, amplifies sweet)</li><li>Fatty (cuts richness, brightens flavor)</li><li>Sour (amplifies both)</li><li>Umami (deepens savory notes)</li></ul><p><strong>Tames:</strong> Bitterness, flatness in any dish</p><p><strong>Classic:</strong> Parmesan on pasta, miso in soup, anchovies in sauces</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FEF9C3;color:#854D0E">🍋 Sour / Acid</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Fatty (acid cuts fat — lemon on fish, vinegar in mayo)</li><li>Sweet (balance — citrus desserts, fruit tarts)</li><li>Salty (amplifies both)</li><li>Rich dishes (brightens and lifts heaviness)</li></ul><p><strong>Tames:</strong> Richness, heaviness, excessive sweetness</p><p><strong>Classic:</strong> Lemon on chicken, vinegar in braises, lime in tacos</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F0FDF4;color:#166534">🥬 Bitter</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Sweet (contrast — coffee &amp; chocolate, radicchio &amp; balsamic)</li><li>Fatty (richness softens bitterness)</li><li>Salty (reduces perceived bitterness)</li></ul><p><strong>Tames:</strong> Excessive sweetness, richness</p><p><strong>Classic:</strong> Dark chocolate in chili, arugula with rich meats, coffee rubs on pork</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FDF0E8;color:#9A3412">🍖 Umami (Savory)</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Salty (synergistic — both deepen savory)</li><li>Fatty (richness amplifies umami depth)</li><li>Other umami sources (stack them: parmesan + mushrooms + tomato)</li></ul><p><strong>Tames:</strong> Flatness, one-dimensionality</p><p><strong>Classic:</strong> Mushrooms + soy sauce, parmesan rind in soup, fish sauce in Thai dishes</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FDE8F0;color:#9B2626">🧈 Fatty / Rich</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Acid (essential — fat needs brightness to not feel heavy)</li><li>Salty (amplifies richness)</li><li>Bitter (contrast and balance)</li><li>Spicy (fat carries and softens heat)</li></ul><p><strong>Tames:</strong> Sharpness, excessive acid, aggressive spice</p><p><strong>Classic:</strong> Butter + lemon, cream sauce + white wine, brie + apple</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EDE9FE;color:#5B21B6">🌶️ Spicy / Heat</div><div class="flavor-body"><p><strong>Pairs with:</strong></p><ul><li>Fatty (dairy tames capsaicin — yogurt, cream, butter)</li><li>Sweet (honey hot sauce, Thai chili-mango)</li><li>Acid (lime + chili is a classic)</li></ul><p><strong>Tames:</strong> Richness can feel flat without contrast</p><p><strong>Classic:</strong> Chili + chocolate, hot sauce + butter, sriracha + honey</p></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🌿 Herbal &amp; Aromatic</div><div class="flavor-body"><p><strong>Classic herb pairings:</strong></p><ul><li><strong>Basil</strong> → tomato, garlic, mozzarella</li><li><strong>Tarragon</strong> → chicken, eggs, cream (Julia Child's favorite)</li><li><strong>Thyme</strong> → mushrooms, pork, root vegetables</li><li><strong>Rosemary</strong> → lamb, potatoes, focaccia</li><li><strong>Dill</strong> → fish, cucumbers, sour cream</li><li><strong>Sage</strong> → butter, pork, winter squash</li></ul></div></div>
+    </div>
+    <h2>The "Fix It" Guide — When Something Tastes Off</h2>
+    <div class="tip-card"><span class="tip-icon">😐</span><div class="tip-text"><h4>Too bland / flat</h4><p>Add salt first — always. Then try acid (lemon, vinegar). A touch of umami (soy sauce, Worcestershire, parmesan) can dramatically deepen flavor in seconds.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">😬</span><div class="tip-text"><h4>Too salty</h4><p>Add acid (lemon or vinegar) — it distracts from saltiness. Add more unsalted ingredients to dilute. A pinch of sugar can help balance. A potato simmered in soup absorbs some salt.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">😣</span><div class="tip-text"><h4>Too sour / acidic</h4><p>Add fat (butter, cream, oil) to coat and soften. A pinch of sugar balances. A small amount of salt helps reduce perceived sourness.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🥵</span><div class="tip-text"><h4>Too spicy / hot</h4><p>Add dairy (cream, butter, yogurt, sour cream). Starchy ingredients (potato, rice, bread) absorb capsaicin. Sugar or honey can help. More fat-based ingredients generally.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍫</span><div class="tip-text"><h4>Too bitter</h4><p>Add fat, salt, or a small amount of sugar. Acid actually enhances bitterness — avoid adding more. Cream or butter is often the fastest fix.</p></div></div>
+<h2 class="guide-part">Wine &amp; Food Pairing</h3><p class="page-sub">General guidelines, not rules — the best pairing is the one you enjoy. But these hold up more often than not.</p>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#F3E9DC;color:#7A4A21">🍋 Light, Dry Whites</div><div class="flavor-body"><p>Sauvignon Blanc, Pinot Grigio, Muscadet, dry Riesling.</p><p><strong>Serve with:</strong></p><ul><li>Oysters and raw or steamed shellfish</li><li>Light fish, salads, goat cheese</li><li>Chilled to about 45–50°F</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🧈 Full-Bodied Whites</div><div class="flavor-body"><p>Oaked Chardonnay, white Burgundy, Viognier.</p><p><strong>Serve with:</strong></p><ul><li>Fish and poultry in cream or butter sauces</li><li>Roast chicken, lobster</li><li>Chilled to about 50–55°F</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FDE8F0;color:#9B2626">🌹 Rosé</div><div class="flavor-body"><p>Dry rosé from Provence or elsewhere.</p><p><strong>Serve with:</strong></p><ul><li>Almost anything — its versatility is the whole point</li><li>Especially good with pâté, eggs, pork, and picnic food</li><li>Chilled, like a white</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#E8F0E9;color:#2F5233">🍇 Light-Bodied Reds</div><div class="flavor-body"><p>Pinot Noir, Beaujolais, light Bordeaux.</p><p><strong>Serve with:</strong></p><ul><li>Roast chicken and turkey, pork, salmon</li><li>Mild cheeses, casual stews</li><li>Slightly cool — around 60–65°F</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EAF1F6;color:#1F4E6B">🥩 Full-Bodied Reds</div><div class="flavor-body"><p>Cabernet Sauvignon, big Burgundy, Rhône reds, Malbec.</p><p><strong>Serve with:</strong></p><ul><li>Red meat, duck, game, hearty stews</li><li>Aged, strong cheeses</li><li>Around room temperature, 65°F</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EDE9FE;color:#5B21B6">🍰 Sweet Wines</div><div class="flavor-body"><p>Sauternes, late-harvest Riesling, sweet sparkling.</p><p><strong>Serve with:</strong></p><ul><li>Desserts, fruit tarts, custards</li><li>Rich pâté or strong blue cheese</li><li>Well chilled</li></ul></div></div>
+    </div>
+    <h3>A Few Rules of Thumb</h3>
+    <div class="tip-card"><span class="tip-icon">⚖️</span><div class="tip-text"><h4>Match weight to weight</h4><p>A delicate dish gets overpowered by a big, tannic red; a highly-spiced or rich dish will flatten a light, subtle wine. Pair intensity with intensity.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍯</span><div class="tip-text"><h4>Sweetness needs sweetness</h4><p>A dry wine tastes sour next to a sweet dessert. The wine should be at least as sweet as the food.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🧂</span><div class="tip-text"><h4>Only cook with what you'd drink</h4><p>"Cooking wine" is usually salted and unpleasant on its own — and it will taste that way in the dish, too. Use a decent bottle you'd actually pour a glass of.</p></div></div>
+</section>
+<section class="guide-panel" data-guide="terms"><div class="guide-hit-label">Cooking Terms</div>
+    <h1>Cooking Definitions</h1><p class="page-sub">A glossary of classic cooking terms — useful shorthand once you know what they mean.</p>
+    <div class="conv-card" style="max-width:720px">
+      <div id="glossaryList">
+      <div class="glossary-item"><span class="glossary-term">Baste</span><span class="glossary-fr">arroser</span><div class="glossary-def">Spoon melted fat, pan juices, or liquid over food as it cooks, to keep the surface moist and add flavor.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Blanch</span><span class="glossary-fr">blanchir</span><div class="glossary-def">Briefly boil food — often vegetables — then usually shock it in ice water. Sets color and texture, par-cooks, or mellows a strong raw flavor.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Braise</span><span class="glossary-fr">braiser</span><div class="glossary-def">Brown food in fat, then cook it slowly, covered, in a small amount of liquid. Turns tough cuts tender over time.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Deglaze</span><span class="glossary-fr">déglacer</span><div class="glossary-def">After searing or sautéing, add liquid to the hot pan and scrape up the browned bits stuck to the bottom (the <em>fond</em>) — the base of a fast, flavorful pan sauce.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Degrease</span><span class="glossary-fr">dégraisser</span><div class="glossary-def">Skim or spoon off fat pooling on the surface of a hot liquid — a sauce, stock, or the drippings under a roast.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Dice / Mince</span><span class="glossary-fr">couper en dés / hacher</span><div class="glossary-def">Cutting into small cubes (dice) or very finely chopping (mince). See Cutting Techniques for how.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Fold</span><span class="glossary-fr">incorporer</span><div class="glossary-def">Gently combine a light, airy mixture (whipped cream, beaten egg whites) into a heavier one, using a scoop-and-turn motion that keeps as much air in as possible.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Gratiné</span><span class="glossary-fr">gratiner</span><div class="glossary-def">Brown the top of a dish under a broiler or in a very hot oven — usually with cheese, breadcrumbs, or a pat of butter on top — until a light, crisp crust forms.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Macerate / Marinate</span><span class="glossary-fr">macérer / mariner</span><div class="glossary-def">Let food sit in a liquid to absorb flavor or soften. "Macerate" usually refers to fruit steeped in sugar or liqueur; "marinate" to savory foods soaked in an acidic or seasoned liquid.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Nap</span><span class="glossary-fr">napper</span><div class="glossary-def">Coat food with just enough sauce to cling to it evenly, without drowning it — thick enough to coat the back of a spoon.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Poach</span><span class="glossary-fr">pocher</span><div class="glossary-def">Cook gently in liquid that's barely simmering — little to no visible bubbling — ideal for delicate items like eggs, fish, and fruit.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Purée</span><span class="glossary-fr">réduire en purée</span><div class="glossary-def">Mash or blend food until smooth, using a food mill, blender, sieve, or potato masher.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Reduce</span><span class="glossary-fr">réduire</span><div class="glossary-def">Simmer or boil a liquid down to concentrate its flavor and thicken it — a cornerstone of sauce-making.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Refresh</span><span class="glossary-fr">rafraîchir</span><div class="glossary-def">Plunge hot food into cold water to stop the cooking immediately, or to rinse it.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Sauté</span><span class="glossary-fr">sauter</span><div class="glossary-def">Cook quickly in a small amount of very hot fat, usually in an open pan. Needs three things to work: hot fat, dry food, and an uncrowded pan — skip any one and food steams instead of browning.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Simmer</span><span class="glossary-fr">mijoter</span><div class="glossary-def">A gentle boil — small, lazy bubbles rather than a rolling boil. Most soups, sauces, and braises want a simmer, not a boil.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Sweat</span><span class="glossary-fr">suer</span><div class="glossary-def">Cook aromatics (onion, celery, garlic) gently in fat over low heat until soft and translucent, without browning — builds a flavor base without adding color.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Whisk / Whip</span><span class="glossary-fr">fouetter</span><div class="glossary-def">Beat vigorously with a wire whisk to mix, aerate, or emulsify — eggs, cream, vinaigrettes, and sauces.</div></div>
+      <div class="glossary-item"><span class="glossary-term">Zest</span><span class="glossary-fr">zeste</span><div class="glossary-def">The thin, colored (not white/bitter) outer peel of citrus, removed with a grater or peeler — full of aromatic oil and flavor.</div></div>
+      </div>
+    </div>
+</section>
+<section class="guide-panel" data-guide="equip"><div class="guide-hit-label">Equipment</div>
+    <h1>Kitchen Equipment</h1><p class="page-sub">Good tools don't make you a better cook, but they take a lot of friction out of trying — this is what actually earns a place in the kitchen.</p>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#F3E9DC;color:#7A4A21">🍲 Pots &amp; Pans</div><div class="flavor-body"><p>Heavy-bottomed cookware heats evenly and won't scorch. Enameled cast iron is the most forgiving all-purpose material — it browns well, doesn't react with acidic foods, and can go from stovetop to oven.</p><ul><li>A large Dutch oven (7–8 qt) for braises, stews, and soups</li><li>A smaller 2–3 qt saucepan for sauces and reheating</li><li>A heavy skillet for searing, plus a nonstick for eggs</li><li>Uncoated cast iron and copper conduct heat beautifully but react with wine, tomato, and egg — fine for browning, but line-copper or enamel is safer for delicate sauces</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#E8F0E9;color:#2F5233">🔪 Knives</div><div class="flavor-body"><p>One sharp knife beats a drawer of dull ones. A knife is "sharp enough" if its own weight, drawn across a tomato skin, cuts it.</p><ul><li>An 8" chef's knife for nearly everything — chopping, slicing, mincing</li><li>A paring knife for small, precise work</li><li>A sharpening steel (use it before every session) plus an occasional real sharpening</li><li>Hand-wash and dry knives immediately — the dishwasher dulls and pits blades</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EAF1F6;color:#1F4E6B">🥣 Small Tools</div><div class="flavor-body"><p>Inexpensive, and genuinely useful daily:</p><ul><li>A wire whisk — faster than a fork for eggs, sauces, and vinaigrettes</li><li>A rubber spatula for scraping bowls and pans completely clean</li><li>A fine-mesh sieve or food mill for silky purées and soups</li><li>Kitchen shears, a bulb baster, and a box grater</li><li>A digital instant-read thermometer — the single most useful $12 you can spend on doneness</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🥧 Bakeware</div><div class="flavor-body"><p>Light-colored aluminum bakes more evenly than dark nonstick, which browns bottoms too fast.</p><ul><li>A 9×13" pan, an 8 or 9" round cake pan (pairs are handy for layers)</li><li>A rimmed half-sheet pan — for roasting vegetables as much as for cookies</li><li>A kitchen scale for consistent baking (see Unit Conversions)</li><li>A portable oven thermometer — most ovens run 25–50°F off their dial</li></ul></div></div>
+    </div>
+    <h2>Where to Shop</h2>
+    <p>Restaurant-supply stores are an underrated source for sturdy, professional-grade equipment at a fraction of the price of "kitchen boutique" retail — the goods are made for daily commercial abuse, so they tend to outlast consumer versions by decades.</p>
+</section>
+<section class="guide-panel" data-guide="season"><div class="guide-hit-label">In Season</div>
     <h1>Seasonal Cooking Guide</h1><p class="page-sub">Cook with what's fresh — food tastes better and costs less in season.</p>
     <div class="season-grid">
       <div class="season-card s-spring"><div style="font-size:32px">🌸</div><h3>Spring</h3><p>Asparagus, peas, artichokes, spinach, radishes, strawberries, rhubarb, morels, spring onions, fava beans.</p></div>
@@ -592,97 +712,67 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
     <h2>Preserving the Harvest</h2>
     <div class="tip-card"><span class="tip-icon">🫙</span><div class="tip-text"><h4>Canning</h4><p>Water-bath canning for high-acid foods (tomatoes, fruit, pickles). Pressure canner for low-acid vegetables and meats. Always process for the full recommended time — cutting it short risks botulism.</p></div></div>
     <div class="tip-card"><span class="tip-icon">🧊</span><div class="tip-text"><h4>Freezing</h4><p>Blanch vegetables 1–3 minutes before freezing to deactivate enzymes causing texture and color loss. Cool in ice water, dry thoroughly, freeze in a single layer before bagging. Most vegetables last 8–12 months frozen.</p></div></div>
-  </div></div>
-</div>
-
-<!-- KITCHEN EQUIPMENT -->
-<div class="page" id="page-equipment">
-  <div class="topbar"><div class="topbar-title">🍳 Kitchen Equipment</div></div>
-  <div class="container"><div class="static-page">
-    <h1>Kitchen Equipment</h1><p class="page-sub">Good tools don't make you a better cook, but they take a lot of friction out of trying — this is what actually earns a place in the kitchen.</p>
-    <div class="flavor-grid">
-      <div class="flavor-card"><div class="flavor-head" style="background:#F3E9DC;color:#7A4A21">🍲 Pots &amp; Pans</div><div class="flavor-body"><p>Heavy-bottomed cookware heats evenly and won't scorch. Enameled cast iron is the most forgiving all-purpose material — it browns well, doesn't react with acidic foods, and can go from stovetop to oven.</p><ul><li>A large Dutch oven (7–8 qt) for braises, stews, and soups</li><li>A smaller 2–3 qt saucepan for sauces and reheating</li><li>A heavy skillet for searing, plus a nonstick for eggs</li><li>Uncoated cast iron and copper conduct heat beautifully but react with wine, tomato, and egg — fine for browning, but line-copper or enamel is safer for delicate sauces</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#E8F0E9;color:#2F5233">🔪 Knives</div><div class="flavor-body"><p>One sharp knife beats a drawer of dull ones. A knife is "sharp enough" if its own weight, drawn across a tomato skin, cuts it.</p><ul><li>An 8" chef's knife for nearly everything — chopping, slicing, mincing</li><li>A paring knife for small, precise work</li><li>A sharpening steel (use it before every session) plus an occasional real sharpening</li><li>Hand-wash and dry knives immediately — the dishwasher dulls and pits blades</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#EAF1F6;color:#1F4E6B">🥣 Small Tools</div><div class="flavor-body"><p>Inexpensive, and genuinely useful daily:</p><ul><li>A wire whisk — faster than a fork for eggs, sauces, and vinaigrettes</li><li>A rubber spatula for scraping bowls and pans completely clean</li><li>A fine-mesh sieve or food mill for silky purées and soups</li><li>Kitchen shears, a bulb baster, and a box grater</li><li>A digital instant-read thermometer — the single most useful $12 you can spend on doneness</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🥧 Bakeware</div><div class="flavor-body"><p>Light-colored aluminum bakes more evenly than dark nonstick, which browns bottoms too fast.</p><ul><li>A 9×13" pan, an 8 or 9" round cake pan (pairs are handy for layers)</li><li>A rimmed half-sheet pan — for roasting vegetables as much as for cookies</li><li>A kitchen scale for consistent baking (see Unit Conversions)</li><li>A portable oven thermometer — most ovens run 25–50°F off their dial</li></ul></div></div>
+</section>
     </div>
-    <h2>Where to Shop</h2>
-    <p>Restaurant-supply stores are an underrated source for sturdy, professional-grade equipment at a fraction of the price of "kitchen boutique" retail — the goods are made for daily commercial abuse, so they tend to outlast consumer versions by decades.</p>
   </div></div>
 </div>
 
-<!-- COOKING DEFINITIONS -->
-<div class="page" id="page-glossary">
-  <div class="topbar"><div class="topbar-title">📖 Cooking Definitions</div></div>
+<!-- EXPORT, BACKUP & INSTALL -->
+<div class="page" id="page-export">
+  <div class="topbar"><div class="topbar-title">📦 Backup, Export &amp; Install</div></div>
   <div class="container"><div class="static-page">
-    <h1>Cooking Definitions</h1><p class="page-sub">A glossary of classic cooking terms — useful shorthand once you know what they mean.</p>
-    <div class="conv-card" style="max-width:720px">
-      <div id="glossaryList">
-      <div class="glossary-item"><span class="glossary-term">Baste</span><span class="glossary-fr">arroser</span><div class="glossary-def">Spoon melted fat, pan juices, or liquid over food as it cooks, to keep the surface moist and add flavor.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Blanch</span><span class="glossary-fr">blanchir</span><div class="glossary-def">Briefly boil food — often vegetables — then usually shock it in ice water. Sets color and texture, par-cooks, or mellows a strong raw flavor.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Braise</span><span class="glossary-fr">braiser</span><div class="glossary-def">Brown food in fat, then cook it slowly, covered, in a small amount of liquid. Turns tough cuts tender over time.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Deglaze</span><span class="glossary-fr">déglacer</span><div class="glossary-def">After searing or sautéing, add liquid to the hot pan and scrape up the browned bits stuck to the bottom (the <em>fond</em>) — the base of a fast, flavorful pan sauce.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Degrease</span><span class="glossary-fr">dégraisser</span><div class="glossary-def">Skim or spoon off fat pooling on the surface of a hot liquid — a sauce, stock, or the drippings under a roast.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Dice / Mince</span><span class="glossary-fr">couper en dés / hacher</span><div class="glossary-def">Cutting into small cubes (dice) or very finely chopping (mince). See Cutting Techniques for how.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Fold</span><span class="glossary-fr">incorporer</span><div class="glossary-def">Gently combine a light, airy mixture (whipped cream, beaten egg whites) into a heavier one, using a scoop-and-turn motion that keeps as much air in as possible.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Gratiné</span><span class="glossary-fr">gratiner</span><div class="glossary-def">Brown the top of a dish under a broiler or in a very hot oven — usually with cheese, breadcrumbs, or a pat of butter on top — until a light, crisp crust forms.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Macerate / Marinate</span><span class="glossary-fr">macérer / mariner</span><div class="glossary-def">Let food sit in a liquid to absorb flavor or soften. "Macerate" usually refers to fruit steeped in sugar or liqueur; "marinate" to savory foods soaked in an acidic or seasoned liquid.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Nap</span><span class="glossary-fr">napper</span><div class="glossary-def">Coat food with just enough sauce to cling to it evenly, without drowning it — thick enough to coat the back of a spoon.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Poach</span><span class="glossary-fr">pocher</span><div class="glossary-def">Cook gently in liquid that's barely simmering — little to no visible bubbling — ideal for delicate items like eggs, fish, and fruit.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Purée</span><span class="glossary-fr">réduire en purée</span><div class="glossary-def">Mash or blend food until smooth, using a food mill, blender, sieve, or potato masher.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Reduce</span><span class="glossary-fr">réduire</span><div class="glossary-def">Simmer or boil a liquid down to concentrate its flavor and thicken it — a cornerstone of sauce-making.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Refresh</span><span class="glossary-fr">rafraîchir</span><div class="glossary-def">Plunge hot food into cold water to stop the cooking immediately, or to rinse it.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Sauté</span><span class="glossary-fr">sauter</span><div class="glossary-def">Cook quickly in a small amount of very hot fat, usually in an open pan. Needs three things to work: hot fat, dry food, and an uncrowded pan — skip any one and food steams instead of browning.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Simmer</span><span class="glossary-fr">mijoter</span><div class="glossary-def">A gentle boil — small, lazy bubbles rather than a rolling boil. Most soups, sauces, and braises want a simmer, not a boil.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Sweat</span><span class="glossary-fr">suer</span><div class="glossary-def">Cook aromatics (onion, celery, garlic) gently in fat over low heat until soft and translucent, without browning — builds a flavor base without adding color.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Whisk / Whip</span><span class="glossary-fr">fouetter</span><div class="glossary-def">Beat vigorously with a wire whisk to mix, aerate, or emulsify — eggs, cream, vinaigrettes, and sauces.</div></div>
-      <div class="glossary-item"><span class="glossary-term">Zest</span><span class="glossary-fr">zeste</span><div class="glossary-def">The thin, colored (not white/bitter) outer peel of citrus, removed with a grater or peeler — full of aromatic oil and flavor.</div></div>
+    <h1>Take your cookbook with you</h1>
+    <p class="page-sub">Three ways to keep a copy of your recipes, plus how to put the cookbook on your phone. <span id="exportCount" style="font-style:normal;font-weight:600"></span></p>
+    <div class="exp-grid">
+      <div class="exp-card">
+        <h3>💾 Offline copy</h3>
+        <p>One file that opens in any web browser <strong>with no internet</strong> — handy for a cabin, a trip, or a kitchen with bad signal.</p>
+        <div class="exp-meta"><strong>File:</strong> .html · <strong>Includes:</strong> every recipe as it is right now</div>
+        <p style="font-size:12px;color:var(--ink3)">It's a snapshot and won't update by itself, and it contains your whole cookbook — keep it to yourselves.</p>
+        <button class="btn btn-primary btn-sm" onclick="downloadSite()">💾 Download offline copy</button>
+      </div>
+      <div class="exp-card">
+        <h3>📄 Printable cookbook (PDF)</h3>
+        <p>A properly laid-out book — title page, preface, kitchen notes, then every recipe in order. Print it, bind it, or give it as a gift.</p>
+        <div class="exp-meta"><strong>File:</strong> .pdf · <strong>Takes:</strong> a moment to build</div>
+        <button class="btn btn-primary btn-sm" onclick="exportPDF()">📄 Create PDF</button>
+      </div>
+      <div class="exp-card">
+        <h3>🧰 Backup (JSON)</h3>
+        <p>A safety copy of <strong>all the data</strong> — ingredients, steps, tags, photos and notes. It isn't meant to be read; it's what you'd use to rebuild the cookbook if something ever went wrong.</p>
+        <div class="exp-meta"><strong>File:</strong> .json · <strong>Tip:</strong> save one every month somewhere safe (email it to yourself, or a cloud drive)</div>
+        <button class="btn btn-primary btn-sm" onclick="backupJSON()">🧰 Download backup</button>
       </div>
     </div>
-  </div></div>
-</div>
 
-<!-- CUTTING TECHNIQUES -->
-<div class="page" id="page-cutting">
-  <div class="topbar"><div class="topbar-title">🔪 Cutting Techniques</div></div>
-  <div class="container"><div class="static-page">
-    <h1>Cutting Techniques</h1><p class="page-sub">A few weeks of practice with these knife basics pays off for the rest of your life in the kitchen.</p>
-    <div class="tip-card"><span class="tip-icon">✋</span><div class="tip-text"><h4>The grip</h4><p>Pinch the blade itself between your thumb and index finger, just in front of the handle, and wrap your remaining fingers around the handle. This gives far more control than gripping the handle alone. On your guiding hand, curl your fingertips under and away from the blade — knuckles forward, fingertips tucked.</p></div></div>
-    <div class="step-list-item"><b>Slicing round vegetables (potatoes, onions):</b> Cut the vegetable in half first so it sits flat and stable on the board — a rolling round vegetable is how knife accidents happen. Use your curled-under knuckles as a guide, moving them back slightly after each cut.</div>
-    <div class="step-list-item"><b>Slicing long vegetables (carrots, zucchini):</b> Trim a thin strip off one side first so the vegetable lies flat instead of rolling, then slice crosswise as above.</div>
-    <div class="step-list-item"><b>Julienne (matchsticks):</b> Cut a vegetable into flat slabs, stack a few at a time, then cut lengthwise into thin, even strips.</div>
-    <div class="step-list-item"><b>Dice:</b> Take your julienned strips and cut crosswise into small cubes — the strip width sets the cube size.</div>
-    <div class="step-list-item"><b>Mincing onion or shallot:</b> Halve through the root, lay cut-side down with the root pointing away from your knife hand. Make several horizontal cuts toward the root (not through it), then vertical cuts, then slice crosswise — the root end holds everything together until the last cut, so nothing rolls away.</div>
-    <div class="tip-card"><span class="tip-icon">🧹</span><div class="tip-text"><h4>Chopping herbs and garlic</h4><p>Rock the knife tip-down, keeping the point on the board and lifting only the heel, walking the blade back and forth across the pile while gathering it back together with your free hand between passes.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🛡️</span><div class="tip-text"><h4>The one safety rule that matters most</h4><p>A dull knife is more dangerous than a sharp one — it slips instead of cutting cleanly, and slipping is how fingers get cut. Keep your knife sharp, keep your fingertips curled back, and let the knife's weight do the work rather than forcing it.</p></div></div>
-  </div></div>
-</div>
-
-<!-- WINE PAIRING -->
-<div class="page" id="page-winepairing">
-  <div class="topbar"><div class="topbar-title">🍷 Wine Pairing</div></div>
-  <div class="container"><div class="static-page">
-    <h1>Wine &amp; Food Pairing</h1><p class="page-sub">General guidelines, not rules — the best pairing is the one you enjoy. But these hold up more often than not.</p>
-    <div class="flavor-grid">
-      <div class="flavor-card"><div class="flavor-head" style="background:#F3E9DC;color:#7A4A21">🍋 Light, Dry Whites</div><div class="flavor-body"><p>Sauvignon Blanc, Pinot Grigio, Muscadet, dry Riesling.</p><p><strong>Serve with:</strong></p><ul><li>Oysters and raw or steamed shellfish</li><li>Light fish, salads, goat cheese</li><li>Chilled to about 45–50°F</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">🧈 Full-Bodied Whites</div><div class="flavor-body"><p>Oaked Chardonnay, white Burgundy, Viognier.</p><p><strong>Serve with:</strong></p><ul><li>Fish and poultry in cream or butter sauces</li><li>Roast chicken, lobster</li><li>Chilled to about 50–55°F</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#FDE8F0;color:#9B2626">🌹 Rosé</div><div class="flavor-body"><p>Dry rosé from Provence or elsewhere.</p><p><strong>Serve with:</strong></p><ul><li>Almost anything — its versatility is the whole point</li><li>Especially good with pâté, eggs, pork, and picnic food</li><li>Chilled, like a white</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#E8F0E9;color:#2F5233">🍇 Light-Bodied Reds</div><div class="flavor-body"><p>Pinot Noir, Beaujolais, light Bordeaux.</p><p><strong>Serve with:</strong></p><ul><li>Roast chicken and turkey, pork, salmon</li><li>Mild cheeses, casual stews</li><li>Slightly cool — around 60–65°F</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#EAF1F6;color:#1F4E6B">🥩 Full-Bodied Reds</div><div class="flavor-body"><p>Cabernet Sauvignon, big Burgundy, Rhône reds, Malbec.</p><p><strong>Serve with:</strong></p><ul><li>Red meat, duck, game, hearty stews</li><li>Aged, strong cheeses</li><li>Around room temperature, 65°F</li></ul></div></div>
-      <div class="flavor-card"><div class="flavor-head" style="background:#EDE9FE;color:#5B21B6">🍰 Sweet Wines</div><div class="flavor-body"><p>Sauternes, late-harvest Riesling, sweet sparkling.</p><p><strong>Serve with:</strong></p><ul><li>Desserts, fruit tarts, custards</li><li>Rich pâté or strong blue cheese</li><li>Well chilled</li></ul></div></div>
+    <h2>📱 Put it on your phone</h2>
+    <p>The cookbook is already set up to install like a normal app — it gets its own icon, opens full-screen, and keeps working with a weak connection. It's free and takes ten seconds:</p>
+    <div class="step-list">
+      <div class="step-list-item"><b>iPhone / iPad</b> — open the cookbook in <strong>Safari</strong>, tap the <strong>Share</strong> button, then <strong>Add to Home Screen</strong>.</div>
+      <div class="step-list-item"><b>Android</b> — open it in <strong>Chrome</strong>, tap the <strong>⋮</strong> menu, then <strong>Add to Home screen</strong> (or <strong>Install app</strong>).</div>
+      <div class="step-list-item"><b>Computer</b> — in Chrome or Edge, click the <strong>install</strong> icon at the right end of the address bar.</div>
     </div>
-    <h2>A Few Rules of Thumb</h2>
-    <div class="tip-card"><span class="tip-icon">⚖️</span><div class="tip-text"><h4>Match weight to weight</h4><p>A delicate dish gets overpowered by a big, tannic red; a highly-spiced or rich dish will flatten a light, subtle wine. Pair intensity with intensity.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🍯</span><div class="tip-text"><h4>Sweetness needs sweetness</h4><p>A dry wine tastes sour next to a sweet dessert. The wine should be at least as sweet as the food.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🧂</span><div class="tip-text"><h4>Only cook with what you'd drink</h4><p>"Cooking wine" is usually salted and unpleasant on its own — and it will taste that way in the dish, too. Use a decent bottle you'd actually pour a glass of.</p></div></div>
+    <details class="exp-more">
+      <summary>Want a “real” App Store app instead? (needs a developer)</summary>
+      <ul>
+        <li><strong>React Native / Expo</strong> — one codebase for iPhone and Android, App Store distribution. Roughly <strong>$500–$2,000</strong> from a freelancer, plus Apple's $99/yr and Google's $25 one-time fee. Your Firebase backend works as it is.</li>
+        <li><strong>Native iPhone app (Swift)</strong> — best iPhone performance, Siri and widgets, but iPhone only. Roughly <strong>$3,000–$10,000+</strong>, plus Apple's $99/yr.</li>
+        <li><strong>Desktop app (Electron)</strong> — wraps this site as a Windows/Mac program. Roughly <strong>$300–$1,000</strong>.</li>
+      </ul>
+      <p style="font-size:13px;color:var(--ink3)">For a family cookbook the free install above is almost always enough.</p>
+    </details>
   </div></div>
 </div>
 
-<div class="page" id="page-shopping">
-  <div class="topbar"><div class="topbar-title">🛒 Shopping List</div><div class="tb-actions"><button class="btn btn-sm" onclick="clearCheckedShopping()">✓ Clear Checked</button><button class="btn btn-sm" onclick="clearShoppingList()">🗑 Clear All</button><button class="btn btn-sm" onclick="printShoppingList()">🖨 Print</button></div></div>
+<!-- MEAL PLANNER -->
+<div class="page" id="page-planner">
+  <div class="topbar"><div class="topbar-title">📅 Meal Planner</div><div class="tb-actions"><button class="btn btn-sm" onclick="planWeekToShopping()">🛒 Add this week to Shopping List</button></div></div>
   <div class="container">
-    <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Open a recipe and tap <strong>🛒 Add to Shopping List</strong> to send its ingredients here. This list lives only on this device.</p>
-    <div id="shoppingListBody"></div>
+    <div class="chip-bar" id="planBar"></div>
+    <div class="grp-meta" id="planMeta"></div>
+    <div class="plan-nav"><button class="btn btn-sm" onclick="shiftPlanWeek(-1)">◀</button><strong id="planRange">—</strong><button class="btn btn-sm" onclick="shiftPlanWeek(1)">▶</button><button class="btn btn-sm" onclick="planToday()">Today</button></div>
+    <p style="color:var(--ink3);font-size:13px;margin:.5rem 0 1rem">Everyone on a planner sees changes live — each meal shows who picked it. Tap <strong>＋</strong> to plan a meal, or start your own planner and let others join.</p>
+    <div class="plan-grid" id="plannerBody"></div>
   </div>
 </div>
 
@@ -691,104 +781,60 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
   <div class="topbar"><div class="topbar-title">🗑 Trash</div><div class="tb-actions"><button class="btn btn-sm btn-danger" onclick="emptyTrash()">🗑 Empty Trash</button></div></div>
   <div class="container">
     <p style="color:var(--ink3);font-size:13px;margin-bottom:1rem">Deleted recipes stay here until someone restores or permanently removes them, so an accidental delete never loses a recipe for good. Permanently deleting asks for the family PIN first.</p>
-    <div class="lock-note"><strong>⚠️ If "Delete Forever" or "Empty Trash" fails:</strong> your Firestore Security Rules are blocking deletes. In the Firebase console → Firestore Database → Rules, allow deletes on the <code>recipes</code> collection for signed-in users (accounts or guests), e.g. <code>allow delete: if request.auth != null;</code> — then publish the rules and try again.</div>
     <div class="recipe-grid" id="trashGrid"></div>
   </div>
 </div>
 
 <!-- IMPORT -->
 <div class="page" id="page-import">
-  <div class="topbar"><div class="topbar-title">🔖 Import Recipe from Web</div></div>
+  <div class="topbar"><div class="topbar-title">🔗 Import a Recipe</div></div>
   <div class="container"><div class="static-page">
-    <h1>Recipe Clipper</h1>
-    <p class="page-sub">A bookmarklet that reads the recipe off the page you're already looking at — logged in, paywall and all — and sends it straight into your cookbook's Add Recipe form.</p>
-
-    <div class="tip-card"><span class="tip-icon">✨</span><div class="tip-text"><h4>Works with NYT Cooking</h4><p>Because it runs in your own browser tab while you're signed in, it sees the same page you do — no server-side fetching, so paywalls and bot-blocking never come into play. It also works on <strong>justtherecipe.com</strong> and almost any recipe site with the little "print recipe" schema most sites use for SEO.</p></div></div>
-
-    <h2>Step 1 — Add the button to your bookmarks bar</h2>
-    <div class="import-area">
-      <div style="font-size:32px;margin-bottom:.5rem">🔖</div>
-      <a id="bookmarkletLink" href="#" class="btn btn-primary" style="display:inline-block;margin:.4rem auto;text-decoration:none" onclick="return confirmBookmarklet(event)">📖 Clip Recipe</a>
-      <p style="font-size:12.5px;color:var(--ink3);margin-top:.5rem">Drag that button up to your browser's bookmarks bar. (Bookmarks bar not showing? <kbd>Ctrl/Cmd+Shift+B</kbd> toggles it in Chrome/Firefox/Edge.)</p>
+    <h1>Import a Recipe</h1>
+    <p class="page-sub">Bring a recipe in from any website. It lands in the Add Recipe form so you can check it over before saving.</p>
+    <div class="acct-tabs" style="margin-bottom:1rem">
+      <button class="acct-tab active" id="impTabClip" onclick="setImportTab('clip')">📖 Clipper <small>(best)</small></button>
+      <button class="acct-tab" id="impTabUrl" onclick="setImportTab('url')">🔗 Paste a link</button>
+      <button class="acct-tab" id="impTabPaste" onclick="setImportTab('paste')">📋 Paste page source</button>
     </div>
 
-    <h2>Step 2 — Use it on any recipe page</h2>
-    <div class="step-list">
-      <div class="step-list-item"><b>1.</b> Open the recipe — e.g. sign into NYT Cooking and open the recipe page, or paste a URL into justtherecipe.com and open its result.</div>
-      <div class="step-list-item"><b>2.</b> Click <strong>📖 Clip Recipe</strong> in your bookmarks bar.</div>
-      <div class="step-list-item"><b>3.</b> A new tab opens your cookbook with the Add Recipe form already filled in — title, ingredients, steps, photo, and a link back to the original. Check it over and hit Save.</div>
+    <div id="impPaneClip">
+      <p>One button in your browser's bookmarks bar that reads the recipe off the page you're already looking at — <strong>logged in, paywall and all</strong>. It works with NYT Cooking and other sites that block link-fetching.</p>
+      <div class="import-area">
+        <a id="bookmarkletLink" href="#" class="btn btn-primary" style="display:inline-block;margin:.4rem auto;text-decoration:none" onclick="return confirmBookmarklet(event)">📖 Clip Recipe</a>
+        <p style="font-size:12.5px;color:var(--ink3);margin-top:.5rem"><strong>Drag that button up to your bookmarks bar</strong> (once). Bar not showing? <kbd>Ctrl/Cmd+Shift+B</kbd> toggles it in Chrome, Firefox and Edge.</p>
+      </div>
+      <div class="step-list">
+        <div class="step-list-item"><b>1.</b> Open any recipe page.</div>
+        <div class="step-list-item"><b>2.</b> Click <strong>📖 Clip Recipe</strong> in your bookmarks bar.</div>
+        <div class="step-list-item"><b>3.</b> Your cookbook opens in a new tab with the form filled in — title, ingredients, steps, photo, tags and a link back to the original. Check it and hit Save.</div>
+      </div>
+      <details class="exp-more">
+        <summary>On a phone, or the button won't drag?</summary>
+        <p>Bookmarklets are fiddlier on phones. Open this page on your phone, press and hold <strong>📖 Clip Recipe</strong>, and choose “Add to Bookmarks” or “Copy Link” — then run it from your bookmarks the same way. Or use the <strong>Paste a link</strong> tab here instead.</p>
+        <p style="font-size:13px;color:var(--ink3)">If your browser blocks dragging a <code>javascript:</code> link: right-click the button → <em>Bookmark Link</em>, or create a bookmark by hand and paste this code as its address:</p>
+        <textarea id="bookmarkletCode" readonly onclick="this.select()" style="width:100%;min-height:70px;font-family:monospace;font-size:11px;color:var(--ink3);background:var(--parchment2)"></textarea>
+      </details>
     </div>
 
-    <h2>On a phone?</h2>
-    <p>Bookmarklets are trickiest on mobile browsers. The most reliable path: open this page on your phone, tap and hold <strong>📖 Clip Recipe</strong> above, and choose "Add to Bookmarks" or "Copy Link" depending on your browser — then run it from your bookmarks the same way. On iPhones, Safari's bookmarklets work once added via <em>Bookmarks → Edit</em>. If it won't cooperate, the copy-code option below works everywhere DevTools does, or just use ＋ Add Recipe and paste the ingredients by hand — still under a minute for most recipes.</p>
+    <div id="impPaneUrl" style="display:none">
+      <p style="font-size:13px;color:var(--ink3)">Paste a recipe's web address and the cookbook fetches the page through a public relay. Works on most recipe blogs; blocked by NYT Cooking and other paywalled or bot-protected sites — use the Clipper or <em>Paste page source</em> for those.</p>
+      <div class="import-area">
+        <input type="url" id="importUrl" placeholder="https://www.allrecipes.com/recipe/..." style="max-width:460px;margin:.6rem auto;display:block">
+        <button class="btn btn-sm" style="margin-top:.4rem" onclick="importRecipe()">🔍 Fetch Recipe</button>
+      </div>
+    </div>
 
-    <h2>Doesn't drag onto your bookmarks bar?</h2>
-    <p style="font-size:13px;color:var(--ink3)">Some browsers block dragging a <code>javascript:</code> link directly. If so: right-click the button → <em>Bookmark Link</em> (or copy the code below, create a new bookmark by hand, and paste the code as its URL).</p>
-    <textarea id="bookmarkletCode" readonly onclick="this.select()" style="width:100%;min-height:70px;font-family:monospace;font-size:11px;color:var(--ink3);background:var(--parchment2)"></textarea>
+    <div id="impPanePaste" style="display:none">
+      <p style="font-size:13px;color:var(--ink3)">Works everywhere, paywalls included. Open the recipe, press <kbd>Ctrl/Cmd+U</kbd> (view source), select all, copy, and paste below. You can also paste just the recipe's JSON-LD block.</p>
+      <textarea id="importPaste" placeholder="Paste the page source or JSON-LD here…" style="width:100%;min-height:110px;font-family:monospace;font-size:11px"></textarea>
+      <input type="url" id="importPasteUrl" placeholder="Original link (optional — saved as the recipe's source)" style="margin-top:.5rem">
+      <button class="btn btn-sm" style="margin-top:.5rem" onclick="importFromPaste()">🔍 Read Recipe</button>
+    </div>
 
-    <hr>
-    <h2>Other ways to import</h2>
-<div class="acct-tabs" style="margin-bottom:.9rem">
-<button class="acct-tab active" id="impTabUrl" onclick="setImportTab('url')">Fetch by link</button>
-<button class="acct-tab" id="impTabPaste" onclick="setImportTab('paste')">Paste page source</button>
-</div>
-<div id="impPaneUrl">
-<p style="font-size:13px;color:var(--ink3)">Fetches the page through a public relay and reads the same recipe data the clipper does. Works on most recipe blogs; blocked by NYT Cooking and other paywalled or bot-protected sites — use the clipper or paste option for those.</p>
-<div class="import-area">
-<input type="url" id="importUrl" placeholder="https://www.allrecipes.com/recipe/..." style="max-width:460px;margin:.6rem auto;display:block">
-<button class="btn btn-sm" style="margin-top:.4rem" onclick="importRecipe()">🔍 Fetch Recipe</button>
-</div>
-</div>
-<div id="impPanePaste" style="display:none">
-<p style="font-size:13px;color:var(--ink3)">Works everywhere, paywalls included. Open the recipe, press <kbd>Ctrl/Cmd+U</kbd> (view source), select all, copy, and paste below. You can also paste just the recipe's JSON-LD block.</p>
-<textarea id="importPaste" placeholder="Paste the page source or JSON-LD here…" style="width:100%;min-height:110px;font-family:monospace;font-size:11px"></textarea>
-<input type="url" id="importPasteUrl" placeholder="Original link (optional — saved as the recipe's source)" style="margin-top:.5rem">
-<button class="btn btn-sm" style="margin-top:.5rem" onclick="importFromPaste()">🔍 Read Recipe</button>
-</div>
-<div class="import-result" id="importResult"></div>
+    <div class="import-result" id="importResult"></div>
   </div></div>
 </div>
 
-<!-- APPS -->
-<div class="page" id="page-apps">
-  <div class="topbar"><div class="topbar-title">📱 Get the App</div></div>
-  <div class="container"><div class="static-page">
-    <h1>Making This an App</h1><p class="page-sub">Options for turning this family cookbook into a native iOS, Android, or desktop app.</p>
-    <h2>Your Options at a Glance</h2>
-    <div class="app-grid">
-      <div class="app-card"><div class="app-card-head"><span class="icon">📱</span><h3>Progressive Web App (PWA)</h3></div>
-        <span class="difficulty diff-easy">● Easy — No coding needed</span>
-        <p>The fastest option, and the one this site is already set up for: a manifest, home-screen icons, and a service worker are built in. It looks and feels like a native app — home screen icon, works offline, no browser bar.</p>
-        <p><strong>iPhone:</strong> Open the cookbook site in Safari → Share button → "Add to Home Screen."<br><strong>Android:</strong> Open in Chrome → 3-dot menu → "Add to Home Screen."</p>
-        <div class="pro-con"><div class="pro">Works right now, free</div><div class="pro">iOS + Android + desktop</div><div class="con">Not in App Store</div><div class="con">Limited device features</div></div>
-        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Verdict: Do this today.</strong> It's already good enough for most family use.</p>
-      </div>
-      <div class="app-card"><div class="app-card-head"><span class="icon">🤖</span><h3>React Native / Expo</h3></div>
-        <span class="difficulty diff-medium">● Medium — JavaScript coding required</span>
-        <p>One JavaScript codebase that compiles into real native iOS and Android apps. The Firebase backend you already have works identically.</p>
-        <p><strong>You need:</strong> A developer to rebuild the UI in React Native. App Store account ($99/yr Apple, $25 one-time Google).</p>
-        <div class="pro-con"><div class="pro">Real native iOS + Android</div><div class="pro">App Store distribution</div><div class="con">Requires developer</div><div class="con">Annual Apple fee</div></div>
-        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Cost estimate:</strong> $500–$2,000 from a freelancer. One build covers both platforms.</p>
-      </div>
-      <div class="app-card"><div class="app-card-head"><span class="icon">🍎</span><h3>Native iOS (Swift)</h3></div>
-        <span class="difficulty diff-hard">● Hard — iOS specialist needed</span>
-        <p>Fully native Swift/SwiftUI app. Best iOS performance, Siri integration, widgets, iCloud. Firebase has a first-class iOS SDK.</p>
-        <p><strong>You need:</strong> An iOS specialist developer. Apple Developer account ($99/yr). App Store review: 1–7 days.</p>
-        <div class="pro-con"><div class="pro">Best iOS performance</div><div class="pro">Siri / Widgets / iCloud</div><div class="con">iOS only — no Android</div><div class="con">Highest cost</div></div>
-        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Cost estimate:</strong> $3,000–$10,000+ for a polished native app.</p>
-      </div>
-      <div class="app-card"><div class="app-card-head"><span class="icon">🖥️</span><h3>Desktop App (Electron)</h3></div>
-        <span class="difficulty diff-medium">● Medium — Web developer needed</span>
-        <p>Wrap this website in Electron to create a real desktop app for Windows and Mac. The existing HTML/CSS/JS is reused almost as-is.</p>
-        <p><strong>How:</strong> A developer wraps the existing index.html with Electron. Distributed as .exe (Windows) or .dmg (Mac).</p>
-        <div class="pro-con"><div class="pro">Reuses existing code</div><div class="pro">Windows + Mac offline</div><div class="con">Large file size</div><div class="con">No mobile</div></div>
-        <p style="margin-top:.6rem;font-size:12px;color:var(--ink3)"><strong>Cost estimate:</strong> $300–$1,000 — most work is already done.</p>
-      </div>
-    </div>
-    <h2>Recommendation</h2>
-    <div class="tip-card"><span class="tip-icon">⭐</span><div class="tip-text"><h4>Start with the PWA today</h4><p>Open the cookbook site on each family member's phone and add it to their home screens. It looks and behaves like an app, syncs via Firebase, and costs nothing. If you later want something in the App Store, React Native is the most practical path — one codebase for both iOS and Android.</p></div></div>
-  </div></div>
-</div>
 <!-- ADD / EDIT MODAL -->
 <div class="overlay" id="addOverlay">
   <div class="modal">
@@ -805,6 +851,7 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
         <div class="fg full"><label>Photo</label><input type="url" id="f_photo" placeholder="Paste a photo URL…" oninput="previewPhoto()"><input type="file" id="f_photoFile" accept="image/*" style="margin-top:5px" onchange="handlePhotoFile(this)"><small style="color:var(--ink3);font-size:11px">Paste a link, or choose a photo from your phone/computer. Chosen photos are shrunk automatically and saved privately with the recipe.</small><img class="img-preview" id="photoPreview" alt=""><button type="button" class="btn btn-sm" id="photoRemoveBtn" style="display:none;margin-top:6px" onclick="removePhoto()">✕ Remove photo</button></div>
         <div class="fg full"><label>Description / Story behind the dish</label><textarea id="f_desc" placeholder="A memory, tip, or note about this recipe…"></textarea></div>
         <div class="fg full"><label>Serves well with <span style="font-weight:400;color:var(--ink3)">(recipe names, comma-separated)</span></label><input type="text" id="f_pairings" placeholder="e.g. Caesar Salad, Garlic Bread"></div>
+        <div class="fg full"><label>Tags <span style="font-weight:400;color:var(--ink3)">(comma-separated — e.g. holiday, grandma, quick)</span></label><input type="text" id="f_tags" list="tagList" placeholder="e.g. holiday, grandma's kitchen, make-ahead" autocomplete="off"><datalist id="tagList"></datalist></div>
         <input type="hidden" id="f_sourceUrl">
       </div>
       <div class="section-sep">Dietary Labels</div>
@@ -903,6 +950,43 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 </div>
 
 <!-- ACCOUNT MODAL (signed in: profile + log out) -->
+<div class="overlay" id="grpJoinOverlay">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-head"><h2 id="grpJoinTitle">Join</h2><button class="x-btn" onclick="closeOverlay('grpJoinOverlay')">✕</button></div>
+    <div class="modal-body" id="grpJoinBody"></div>
+  </div>
+</div>
+<div class="overlay" id="listPickOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h2>🛒 Add to which list?</h2><button class="x-btn" onclick="closeOverlay('listPickOverlay')">✕</button></div>
+    <div class="modal-body" id="listPickBody"></div>
+  </div>
+</div>
+<div class="overlay" id="plannerPickOverlay">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head"><h2 id="planPickTitle">Add to plan</h2><button class="x-btn" onclick="closeOverlay('plannerPickOverlay')">✕</button></div>
+    <div class="modal-body">
+      <div class="fg"><input type="text" id="planPickSearch" placeholder="Search your recipes…" oninput="renderPlanPickList()" autocomplete="off"></div>
+      <div id="planPickList" style="max-height:44vh;overflow-y:auto;margin-top:.7rem"></div>
+      <div style="margin-top:.9rem;border-top:1.5px solid var(--border);padding-top:.8rem">
+        <label style="font-size:12px;font-weight:700;color:var(--ink2)">Or add a note instead</label>
+        <div class="fg" style="flex-direction:row;gap:6px;margin-top:4px"><input type="text" id="planNote" placeholder="e.g. Leftovers, Eating out" style="flex:1" onkeydown="if(event.key==='Enter')addPlanNote()"><button class="btn btn-sm" onclick="addPlanNote()">Add</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="overlay" id="planOneOverlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><h2>📅 Plan this recipe</h2><button class="x-btn" onclick="closeOverlay('planOneOverlay')">✕</button></div>
+    <div class="modal-body">
+      <p id="planOneName" style="font-weight:600;margin-bottom:.8rem"></p>
+      <div class="fg"><label>Day</label><input type="date" id="planOneDate"></div>
+      <div class="fg" id="planOnePlannerRow" style="margin-top:.6rem;display:none"><label>Planner</label><select id="planOnePlanner"></select></div>
+      <div class="fg" style="margin-top:.6rem"><label>Meal</label><select id="planOneSlot"><option value="breakfast">Breakfast</option><option value="lunch">Lunch</option><option value="dinner" selected>Dinner</option></select></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeOverlay('planOneOverlay')">Cancel</button><button class="btn btn-primary" onclick="confirmPlanOne()">Add to Plan</button></div>
+  </div>
+</div>
 <div class="overlay" id="acctMenuOverlay">
   <div class="modal" style="max-width:340px">
     <div class="modal-head"><h2>👤 Your Account</h2><button class="x-btn" onclick="closeOverlay('acctMenuOverlay')">✕</button></div>
@@ -1046,6 +1130,8 @@ async function logOut(){
 function stopSync(){
   if(_unsubRecipes){_unsubRecipes();_unsubRecipes=null;}
   if(_unsubUsers){_unsubUsers();_unsubUsers=null;}
+  ['list','plan'].forEach(function(k){var G=GRP[k];if(G.unG){G.unG();G.unG=null;}if(G.unS){G.unS();G.unS=null;}G.all=[];});
+  shoppingList=[];mealPlan=[];_shopMigrated=false;
   _usersSyncStarted=false;dbReady=false;
   recipes=[];trashedRecipes=[];USERS={};viewingId=null;editingId=null;
 }
@@ -1113,12 +1199,14 @@ function submitPin(){
   var action=_pendingUnlockAction;_pendingUnlockAction=null;
   if(action)action();
 }
-function toggleRefNav(){
-  var box=document.getElementById('refNavItems'),chev=document.getElementById('refChev');
+function toggleNavGroup(boxId,chevId,key){
+  var box=document.getElementById(boxId),chev=document.getElementById(chevId);
   var collapsed=box.classList.toggle('collapsed');
   chev.classList.toggle('collapsed',collapsed);
-  try{localStorage.setItem('wfc_ref_collapsed',collapsed?'1':'0');}catch(e){}
+  try{localStorage.setItem(key,collapsed?'1':'0');}catch(e){}
 }
+function toggleRefNav(){toggleNavGroup('refNavItems','refChev','wfc_ref_collapsed');}
+function toggleGuideNav(){toggleNavGroup('guideNavItems','guideChev','wfc_guide_collapsed');}
 function toggleMineOnly(el){
   if(!isLoggedIn()){showToast('⚠️ Sign in to filter to your own recipes');openAcctModal();return;}
   mineOnly=!mineOnly;el.classList.toggle('active',mineOnly);renderCards();
@@ -1132,10 +1220,14 @@ function attribution(r){
 }
 var cookSteps=[],cookIngs=[],cookIdx=0,cookTimer=null,cookTimerSecs=0,cookTimerTotal=0;
 var viewScale=1,viewMetric=false,viewingId=null;
-var shoppingList=[];
-try{shoppingList=JSON.parse(localStorage.getItem('wfc_shopping')||'[]');}catch(e){shoppingList=[];}
-function saveShoppingList(){try{localStorage.setItem('wfc_shopping',JSON.stringify(shoppingList));}catch(e){}updateShopBadge();}
-function updateShopBadge(){var b=document.getElementById('shopBadge');if(!b)return;var n=shoppingList.filter(function(i){return!i.checked;}).length;b.style.display=n?'inline-block':'none';b.textContent=n;}
+var shoppingList=[],mealPlan=[],_shopMigrated=false,activeTags=new Set(),shopView='aisle';
+try{shopView=localStorage.getItem('wfc_shop_view')==='person'?'person':'aisle';}catch(e){}
+function updateShopBadge(){
+  var b=document.getElementById('shopBadge');
+  if(b){var n=shoppingList.filter(function(i){return!i.checked;}).length;b.style.display=n?'inline-block':'none';b.textContent=n;}
+  var t=document.getElementById('trashBadge');
+  if(t){var c=trashedRecipes.length;t.style.display=c?'inline-block':'none';t.textContent=c;}
+}
 var EMOJIS={Breakfast:"🍳",Lunch:"🥗",Dinner:"🍽️",Dessert:"🍰",Snack:"🧆",Soup:"🍲",Salad:"🥙",Baking:"🍞",Drink:"🥤","Side Dish":"🥦",Appetizer:"🫕",Other:"🍴"};
 var DLABELS={vegan:"🌱 Vegan",vegetarian:"🥦 Veg",glutenfree:"🌾 GF",dairyfree:"🥛 DF",keto:"🥑 Keto"};
 var DCLS={vegan:"dt-vegan",vegetarian:"dt-vegetarian",glutenfree:"dt-glutenfree",dairyfree:"dt-dairyfree",keto:"dt-keto"};
@@ -1158,6 +1250,9 @@ function showPage(name){
   var nav=document.getElementById('nav-'+name);
   if(nav)nav.classList.add('active');
   if(name==='shopping')renderShoppingList();
+  if(name==='planner')renderPlanner();
+  if(name==='export')updateExportInfo();
+  if(name==='guide'&&!document.querySelector('.guide-panel.active'))guideTab('tech');
   if(name==='trash')renderTrash();
   if(window.innerWidth<768)closeSidebarMobile();
   window.scrollTo(0,0);
@@ -1211,6 +1306,7 @@ var _usersSyncStarted=false;
 document.addEventListener('firebase-ready',function(){
   dbReady=true;
   try{initFirebase();}catch(e){setSyncStatus('error');renderCards();}
+  try{grpInit('list');grpInit('plan');}catch(e){console.warn(e);}
   if(!_usersSyncStarted){_usersSyncStarted=true;try{initUsersSync();}catch(e){console.warn(e);}}
   renderAcctUI();
 });
@@ -1223,16 +1319,18 @@ function toggleDiet(el){
 }
 
 function renderCards(){
+  renderTagBar();
   var q=document.getElementById('searchInput').value.toLowerCase();
   var cat=document.getElementById('catFilter').value;
   var cui=document.getElementById('cuisineFilter').value;
   var srt=document.getElementById('sortFilter').value;
   var list=recipes.filter(function(r){
-    var terms=[(r.name||''),(r.description||''),(r.cuisine||''),(r.author||'')].concat((r.ingredients||[]).map(function(i){return i.name||'';}));
+    var terms=[(r.name||''),(r.description||''),(r.cuisine||''),(r.author||'')].concat(r.tags||[]).concat((r.ingredients||[]).map(function(i){return i.name||'';}));
     if(q&&!terms.some(function(s){return s.toLowerCase().indexOf(q)>=0;}))return false;
     if(cat&&r.category!==cat)return false;
     if(cui&&r.cuisine!==cui)return false;
     if(activeDiets.size>0){var rd=new Set(r.diets||[]);for(var d of activeDiets)if(!rd.has(d))return false;}
+    if(activeTags.size>0){var rt=new Set(r.tags||[]);for(var tg of activeTags)if(!rt.has(tg))return false;}
     if(favOnly&&!isFav(r))return false;
     if(mineOnly&&!isMine(r))return false;
     return true;
@@ -1285,6 +1383,7 @@ function viewRecipe(id,scale,metric){
   }
 
   var diets=(isMine(r)?'<span class="diet-tag mine-tag" style="font-size:11.5px;padding:2px 8px">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:11.5px;padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
+  var tagPills=(r.tags||[]).length?'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">'+r.tags.map(function(t){return'<span class="tag-pill" data-tag="'+h(t)+'" onclick="filterByTag(this.dataset.tag)">#'+h(t)+'</span>';}).join('')+'</div>':'';
   var pairs=(r.pairings||'').split(',').map(function(p){return p.trim();}).filter(Boolean);
   var scaledServings=Math.round(base*s*4)/4;
 
@@ -1292,7 +1391,7 @@ function viewRecipe(id,scale,metric){
     '<div style="padding:0 1.5rem"><div class="modal-head" style="border-radius:0;padding:.9rem 0;background:transparent">'+
     '<div style="flex:1"><div style="font-size:11px;color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div>'+
     '<h2 style="font-family:\'Lora\',serif;font-size:22px">'+h(r.name)+'</h2>'+
-    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+diets+'</div></div>'+
+    '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+diets+'</div>'+tagPills+'</div>'+
     '<div style="display:flex;gap:5px;align-items:flex-start;flex-wrap:wrap;justify-content:flex-end">'+
     '<button class="heart-btn'+(isFav(r)?' on':'')+'" style="font-size:22px" onclick="toggleFavorite(\''+r.id+'\',event);viewRecipe(\''+r.id+'\','+s+','+m+')" title="Favorite">❤</button>'+
     '<button class="btn btn-sm" onclick="openEdit(\''+r.id+'\');closeOverlay(\'viewOverlay\')">✏️ Edit</button>'+
@@ -1303,6 +1402,7 @@ function viewRecipe(id,scale,metric){
     (r.sourceUrl?'<p style="margin:-.5rem 0 .85rem"><a href="'+h(r.sourceUrl)+'" target="_blank" rel="noopener" style="color:var(--rust);font-size:12.5px;font-weight:600">🔗 View original recipe</a></p>':'')+
     '<div class="view-actions-row">'+
     '<button class="btn btn-sm" onclick="addToShoppingList(\''+r.id+'\')">🛒 Add to Shopping List</button>'+
+    '<button class="btn btn-sm" onclick="planRecipe(\''+r.id+'\')">📅 Plan</button>'+
     '<button class="btn btn-sm" onclick="markCooked(\''+r.id+'\')">🍳 Mark as Cooked Today</button>'+
     '</div>'+
     (r.lastCooked?'<p style="font-size:12px;color:var(--ink3);margin:-.6rem 0 .85rem">Last cooked '+formatLastCooked(r.lastCooked)+'</p>':'')+
@@ -1392,66 +1492,448 @@ async function addNote(id){
     showToast('💬 Note added');viewRecipe(id,viewScale,viewMetric);
   }catch(e){console.error(e);showToast('❌ Could not add note');}
 }
+/* ===== Shared lists & planners =====
+   The family always has one open "Family" list and one "Family" planner. Anyone can also start their
+   own (e.g. "Mom's Costco run"); anyone in the family can view it and JOIN to add to it. */
+var GRP={
+  list:{col:'lists',sub:'items',noun:'list',famName:'Family List',selKey:'wfc_sel_list',all:[],sel:'family',unG:null,unS:null},
+  plan:{col:'planners',sub:'entries',noun:'planner',famName:'Family Planner',selKey:'wfc_sel_plan',all:[],sel:'family',unG:null,unS:null}
+};
+function grpMe(){return window._myUid||'';}
+function myName(){var u=(typeof USERS!=='undefined'&&USERS[grpMe()])||null;return window._myDisplayName||(u&&u.name)||'Someone';}
+function byGroupName(a,b){return String(a.name||'').localeCompare(String(b.name||''));}
+function grpFind(kind,id){return GRP[kind].all.filter(function(g){return g.id===id;})[0]||null;}
+function grpIsMember(kind,id){if(id==='family')return true;var g=grpFind(kind,id);return !!(g&&(g.members||[]).indexOf(grpMe())>=0);}
+function grpMine(kind){return[{id:'family',name:GRP[kind].famName,fam:true}].concat(GRP[kind].all.filter(function(g){return(g.members||[]).indexOf(grpMe())>=0;}).sort(byGroupName));}
+function grpOthers(kind){return GRP[kind].all.filter(function(g){return(g.members||[]).indexOf(grpMe())<0;}).sort(byGroupName);}
+function grpName(kind,id){if(id==='family')return GRP[kind].famName;var g=grpFind(kind,id);return g?g.name:'(removed)';}
+function grpColRef(kind,id){var G=GRP[kind];return window._fns.collection(window._db,G.col,id,G.sub);}
+function grpDocRef(kind,id,docId){var G=GRP[kind];return window._fns.doc(window._db,G.col,id,G.sub,docId);}
+function grpTopRef(kind,id){return window._fns.doc(window._db,GRP[kind].col,id);}
+function canEdit(kind){
+  if(grpIsMember(kind,GRP[kind].sel))return true;
+  showToast('👀 You are only viewing this '+GRP[kind].noun+' — tap “Join to edit” first');
+  return false;
+}
+function memberNames(g){
+  return(g.members||[]).map(function(u){var x=USERS[u];var n=(x&&x.name)||(u===g.ownerUid?g.ownerName:'')||'Member';return n+(u===g.ownerUid?' (owner)':'');});
+}
+function grpInit(kind){
+  var G=GRP[kind],f=window._fns;
+  if(G.unG){G.unG();G.unG=null;}
+  try{G.sel=localStorage.getItem(G.selKey)||'family';}catch(e){G.sel='family';}
+  G.unG=f.onSnapshot(f.collection(window._db,G.col),function(snap){
+    G.all=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+    if(G.sel!=='family'&&!grpFind(kind,G.sel)&&!(snap.metadata&&snap.metadata.fromCache)){G.sel='family';grpSubscribe(kind);return;}
+    renderGrpBar(kind);
+  },function(e){console.warn(kind+' groups sync failed',e);});
+  grpSubscribe(kind);
+}
+function grpSubscribe(kind){
+  var G=GRP[kind],f=window._fns;
+  if(G.unS){G.unS();G.unS=null;}
+  if(kind==='list')shoppingList=[];else mealPlan=[];
+  var ref=grpColRef(kind,G.sel);
+  if(kind==='plan'){var cutoff=new Date();cutoff.setDate(cutoff.getDate()-35);ref=f.query(ref,f.where('date','>=',ymd(cutoff)));}
+  G.unS=f.onSnapshot(ref,function(snap){
+    var rows=snap.docs.map(function(d){return Object.assign({id:d.id},d.data({serverTimestamps:'estimate'}));});
+    if(kind==='list'){shoppingList=rows;sortShopping();renderShoppingList();if(!(snap.metadata&&snap.metadata.fromCache))migrateLocalShopping();}
+    else{mealPlan=rows;renderPlanner();}
+  },function(e){console.warn(kind+' sync failed',e);});
+  if(kind==='list')renderShoppingList();else renderPlanner();
+  renderGrpBar(kind);
+}
+function grpSelect(kind,id){GRP[kind].sel=id;try{localStorage.setItem(GRP[kind].selKey,id);}catch(e){}grpSubscribe(kind);}
+function renderGrpBar(kind){
+  var G=GRP[kind],bar=document.getElementById(kind+'Bar'),meta=document.getElementById(kind+'Meta');
+  if(!bar||!meta)return;
+  var others=grpOthers(kind).length;
+  var chips=grpMine(kind).map(function(g){return'<div class="chip'+(g.id===G.sel?' active':'')+'" onclick="grpSelect(\''+kind+'\',\''+g.id+'\')">'+(g.fam?'👪 ':'👤 ')+h(g.name)+'</div>';}).join('');
+  var cur=G.sel==='family'?null:grpFind(kind,G.sel),viewing=!!cur&&!grpIsMember(kind,cur.id);
+  if(viewing)chips+='<div class="chip active">👀 '+h(cur.name)+'</div>';
+  bar.innerHTML=chips+'<div class="chip" onclick="grpCreate(\''+kind+'\')">＋ New '+G.noun+'</div><div class="chip" onclick="grpOpenJoin(\''+kind+'\')">🔎 Join a '+G.noun+(others?' <small>'+others+'</small>':'')+'</div>';
+  var m='';
+  if(G.sel==='family')m='<span>👪 Open to the whole family — everyone can add to it.</span>';
+  else if(cur){
+    m='<span>👥 '+h(memberNames(cur).join(', '))+'</span>';
+    if(viewing)m+='<button class="btn btn-sm btn-primary" onclick="grpJoin(\''+kind+'\',\''+cur.id+'\')">Join to edit</button>';
+    else{
+      m+='<button class="btn btn-sm" onclick="grpRename(\''+kind+'\')">✏️ Rename</button>';
+      m+=cur.ownerUid===grpMe()?'<button class="btn btn-sm btn-danger" onclick="grpDelete(\''+kind+'\')">🗑 Delete</button>':'<button class="btn btn-sm" onclick="grpLeave(\''+kind+'\')">Leave</button>';
+    }
+  }
+  if(kind==='list')m+='<span class="grp-view"><button class="btn btn-sm'+(shopView==='aisle'?' btn-primary':'')+'" onclick="setShopView(\'aisle\')">By aisle</button><button class="btn btn-sm'+(shopView==='person'?' btn-primary':'')+'" onclick="setShopView(\'person\')">By person</button></span>';
+  meta.innerHTML=m;
+}
+async function grpCreate(kind){
+  var G=GRP[kind],f=window._fns;
+  var name=prompt('Name your new '+G.noun+' (for example "Mom\'s Costco run" or "Dad\'s week"):','');
+  if(name===null)return;
+  name=name.trim().slice(0,60);
+  if(!name){showToast('⚠️ Please type a name');return;}
+  try{
+    var ref=await f.addDoc(f.collection(window._db,G.col),{name:name,ownerUid:grpMe(),ownerName:myName(),members:[grpMe()],createdAt:f.serverTimestamp()});
+    grpSelect(kind,ref.id);showToast('✅ Created “'+name+'” — anyone in the family can now join it');
+  }catch(e){console.error(e);showToast('❌ Could not create it — check your connection');}
+}
+function grpOpenJoin(kind){
+  var G=GRP[kind],list=grpOthers(kind);
+  document.getElementById('grpJoinTitle').textContent='🔎 Join a '+G.noun;
+  document.getElementById('grpJoinBody').innerHTML=list.length?list.map(function(g){
+    var n=(g.members||[]).length;
+    return'<div class="plan-pick-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:default"><span><strong>'+h(g.name)+'</strong><small>by '+h(g.ownerName||'someone')+' · '+n+' member'+(n!==1?'s':'')+'</small></span><span style="display:flex;gap:6px;flex-shrink:0"><button class="btn btn-sm" onclick="grpPreview(\''+kind+'\',\''+g.id+'\')">View</button><button class="btn btn-sm btn-primary" onclick="grpJoin(\''+kind+'\',\''+g.id+'\')">Join</button></span></div>';
+  }).join(''):'<p style="color:var(--ink3);font-size:13px">There are no other '+G.noun+'s to join yet. Tap “＋ New '+G.noun+'” to start your own — anyone in the family can join it.</p>';
+  openOverlay('grpJoinOverlay');
+}
+function grpPreview(kind,id){closeOverlay('grpJoinOverlay');grpSelect(kind,id);}
+async function grpJoin(kind,id){
+  try{
+    await window._fns.updateDoc(grpTopRef(kind,id),{members:window._fns.arrayUnion(grpMe())});
+    closeOverlay('grpJoinOverlay');grpSelect(kind,id);showToast('✅ You joined “'+grpName(kind,id)+'”');
+  }catch(e){console.error(e);showToast('❌ Could not join — check your connection');}
+}
+async function grpLeave(kind){
+  var id=GRP[kind].sel,nm=grpName(kind,id);
+  if(id==='family'||!confirm('Leave “'+nm+'”? You can join again any time.'))return;
+  try{await window._fns.updateDoc(grpTopRef(kind,id),{members:window._fns.arrayRemove(grpMe())});grpSelect(kind,'family');showToast('You left “'+nm+'”');}
+  catch(e){console.error(e);showToast('❌ Could not leave — check your connection');}
+}
+async function grpRename(kind){
+  var id=GRP[kind].sel,g=grpFind(kind,id);if(!g)return;
+  var name=prompt('Rename this '+GRP[kind].noun+':',g.name);
+  if(name===null)return;name=name.trim().slice(0,60);if(!name)return;
+  try{await window._fns.updateDoc(grpTopRef(kind,id),{name:name});}
+  catch(e){console.error(e);showToast('❌ Could not rename — check your connection');}
+}
+async function grpDelete(kind){
+  var id=GRP[kind].sel,g=grpFind(kind,id),f=window._fns;
+  if(!g||g.ownerUid!==grpMe())return;
+  if(!confirm('Delete “'+g.name+'” for everyone? This removes everything on it.'))return;
+  try{
+    var rows=kind==='list'?shoppingList:mealPlan;
+    await Promise.all(rows.map(function(r){return f.deleteDoc(grpDocRef(kind,id,r.id));}));
+    await f.deleteDoc(grpTopRef(kind,id));
+    grpSelect(kind,'family');showToast('🗑 Deleted “'+g.name+'”');
+  }catch(e){console.error(e);showToast('❌ Could not delete — check your connection');}
+}
+/* choose which of MY lists an action should add to (skips the question if I only have the Family list) */
+function chooseList(cb){
+  var mine=grpMine('list');
+  if(mine.length===1){cb('family');return;}
+  window._chooseCb=cb;
+  var sel=GRP.list.sel;
+  mine.sort(function(a,b){return(b.id===sel)-(a.id===sel);});
+  document.getElementById('listPickBody').innerHTML=mine.map(function(g){
+    return'<div class="plan-pick-item" onclick="pickTargetList(\''+g.id+'\')">'+(g.fam?'👪 ':'👤 ')+h(g.name)+(g.id===sel?'<small>currently open</small>':'')+'</div>';
+  }).join('');
+  openOverlay('listPickOverlay');
+}
+function pickTargetList(id){closeOverlay('listPickOverlay');var cb=window._chooseCb;window._chooseCb=null;if(cb)cb(id);}
+
+/* ===== Shopping list ===== */
+function sortShopping(){
+  shoppingList.sort(function(a,b){return((a.createdAt&&a.createdAt.seconds)||0)-((b.createdAt&&b.createdAt.seconds)||0)||String(a.name).localeCompare(String(b.name));});
+}
+function setShopView(v){shopView=v;try{localStorage.setItem('wfc_shop_view',v);}catch(e){}renderGrpBar('list');renderShoppingList();}
+async function fetchGroupRows(kind,id){
+  var snap=await window._fns.getDocs(grpColRef(kind,id));
+  return snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
+}
+function migrateLocalShopping(){
+  if(_shopMigrated)return;_shopMigrated=true;
+  var local=[];try{local=JSON.parse(localStorage.getItem('wfc_shopping')||'[]');}catch(e){}
+  if(!local.length)return;
+  mergeShoppingEntries(local.filter(function(i){return i&&i.name;}).map(function(i){return{name:i.name,qty:i.qty||'',unit:i.unit||'',from:i.from||'',checked:!!i.checked};}),'','family')
+    .then(function(n){try{localStorage.removeItem('wfc_shopping');}catch(e){}showToast('🛒 Moved '+n+' items from this device to the Family List');})
+    .catch(function(e){console.warn('shopping migration failed',e);_shopMigrated=false;});
+}
+async function mergeShoppingEntries(entries,fromLabel,listId){
+  listId=listId||'family';
+  var f=window._fns,me=myName();
+  var base=(listId===GRP.list.sel)?shoppingList:await fetchGroupRows('list',listId);
+  var work=base.map(function(it){return{id:it.id,name:it.name,qty:it.qty||'',unit:it.unit||'',checked:!!it.checked,from:it.from||'',by:(it.by||[]).slice(),dirty:false};});
+  var added=[];
+  entries.forEach(function(e){
+    var key=WFC.normalizeKey(e.name),hit=null,from=e.from||fromLabel||'',pool=work.concat(added);
+    for(var i=0;i<pool.length&&!hit;i++){
+      var it=pool[i];
+      if(WFC.normalizeKey(it.name)!==key)continue;
+      var sum=WFC.addQuantities({qty:it.qty,unit:it.unit},{qty:e.qty||'',unit:e.unit||''});
+      if(!sum)continue;
+      it.qty=sum.qty;it.unit=sum.unit;
+      if(e.checked!==true)it.checked=false;
+      var srcs=(it.from||'').split(', ').filter(Boolean);
+      from.split(', ').filter(Boolean).forEach(function(x){if(srcs.indexOf(x)<0)srcs.push(x);});
+      it.from=srcs.join(', ');
+      if(it.by.indexOf(me)<0)it.by.push(me);
+      it.dirty=true;hit=it;
+    }
+    if(!hit)added.push({name:e.name,qty:e.qty||'',unit:WFC.canonUnit(e.unit||''),checked:e.checked===true,from:from,by:[me]});
+  });
+  var ops=[];
+  work.forEach(function(it){if(it.dirty)ops.push(f.updateDoc(grpDocRef('list',listId,it.id),{qty:it.qty,unit:it.unit,checked:it.checked,from:it.from,by:it.by}));});
+  added.forEach(function(it){ops.push(f.addDoc(grpColRef('list',listId),{name:it.name,qty:it.qty,unit:it.unit,checked:it.checked,from:it.from,by:it.by,addedBy:grpMe(),createdAt:f.serverTimestamp()}));});
+  await Promise.all(ops);
+  return entries.length;
+}
 function addToShoppingList(id){
   var r=recipes.find(function(x){return x.id===id;});
   if(!r)return;
+  if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return;}
   var factor=(viewingId===id&&viewScale)?viewScale:1;
-  var n=0;
-  (r.ingredients||[]).forEach(function(ing){
-    if(!ing.name)return;
-    var qty=ing.qty?WFC.scaleQty(ing.qty,factor,'ascii'):'';
-    var key=WFC.normalizeKey(ing.name),merged=false;
-    for(var i=0;i<shoppingList.length&&!merged;i++){
-      var it=shoppingList[i];
-      if(WFC.normalizeKey(it.name)!==key)continue;
-      var sum=WFC.addQuantities({qty:it.qty,unit:it.unit},{qty:qty,unit:ing.unit||''});
-      if(!sum)continue;
-      it.qty=sum.qty;it.unit=sum.unit;it.checked=false;
-      var srcs=(it.from||'').split(', ').filter(Boolean);
-      if(srcs.indexOf(r.name)<0)srcs.push(r.name);
-      it.from=srcs.join(', ');
-      merged=true;
-    }
-    if(!merged)shoppingList.push({name:ing.name,qty:qty,unit:WFC.canonUnit(ing.unit||''),checked:false,from:r.name});
-    n++;
+  var entries=(r.ingredients||[]).filter(function(i){return i.name;}).map(function(i){return{name:i.name,qty:i.qty?WFC.scaleQty(i.qty,factor,'ascii'):'',unit:i.unit||'',from:r.name};});
+  chooseList(async function(listId){
+    try{
+      await mergeShoppingEntries(entries,r.name,listId);
+      showToast('🛒 Added '+entries.length+' ingredients'+(factor!==1?' (scaled to your servings)':'')+' to “'+grpName('list',listId)+'”');
+    }catch(e){console.error(e);showToast('❌ Could not update the shopping list');}
   });
-  saveShoppingList();
-  showToast('🛒 Added '+n+' ingredients'+(factor!==1?' (scaled to your servings)':'')+' to your shopping list');
 }
 function shoppingLine(item){
   var q=WFC.parseQty(item.qty),qs=q?WFC.formatQty(q,'pretty'):(item.qty||'');
   return((qs||'')+' '+WFC.displayUnit(item.unit,item.qty)+' '+item.name).replace(/\s+/g,' ').trim();
 }
+function shopSmall(item){
+  var by=item.by||[],parts=[];
+  if(item.from)parts.push(item.from);
+  var who=shopView==='person'?by.slice(1):by;
+  if(who.length)parts.push(who.join(', '));
+  return parts.join(' · ');
+}
 function groupedShopping(){
-  var groups={};
-  shoppingList.forEach(function(item,i){
-    var a=WFC.aisleFor(item.name);
-    (groups[a]=groups[a]||[]).push({item:item,i:i});
+  var groups={},me=myName();
+  shoppingList.forEach(function(item){
+    var key=shopView==='person'?((item.by&&item.by[0])||'Someone'):WFC.aisleFor(item.name);
+    (groups[key]=groups[key]||[]).push({item:item});
   });
-  return WFC.aisleOrder.filter(function(a){return groups[a];}).map(function(a){return{aisle:a,items:groups[a]};});
+  var order=shopView==='person'
+    ?Object.keys(groups).sort(function(a,b){return a===me?-1:(b===me?1:a.localeCompare(b));})
+    :WFC.aisleOrder.filter(function(a){return groups[a];});
+  return order.map(function(k){return{aisle:k,items:groups[k]};});
 }
 function renderShoppingList(){
   var body=document.getElementById('shoppingListBody');
-  if(!shoppingList.length){body.innerHTML='<div class="empty"><div class="big">🛒</div><h3>Your shopping list is empty</h3><p>Open a recipe and add its ingredients here.</p></div>';updateShopBadge();return;}
+  if(!body)return;
+  if(!shoppingList.length){body.innerHTML='<div class="empty"><div class="big">🛒</div><h3>This list is empty</h3><p>Open a recipe and add its ingredients, or plan your week and add it all at once.</p></div>';updateShopBadge();return;}
+  var me=myName();
   body.innerHTML=groupedShopping().map(function(g){
-    return '<div class="shop-group"><h3>'+h(g.aisle)+'</h3>'+g.items.map(function(e){
-      var item=e.item;
-      return '<div class="shop-item'+(item.checked?' checked':'')+'"><input type="checkbox" '+(item.checked?'checked':'')+' onchange="toggleShoppingItem('+e.i+')"><span>'+h(shoppingLine(item))+(item.from?' <small style="color:var(--ink3)">— '+h(item.from)+'</small>':'')+'</span><button onclick="removeShoppingItem('+e.i+')">✕</button></div>';
+    var title=h(g.aisle)+(shopView==='person'&&g.aisle===me?' <small style="font-weight:400;color:var(--ink3)">(you)</small>':'');
+    return'<div class="shop-group"><h3>'+title+'</h3>'+g.items.map(function(e){
+      var item=e.item,sm=shopSmall(item);
+      return'<div class="shop-item'+(item.checked?' checked':'')+'"><input type="checkbox" '+(item.checked?'checked':'')+' onchange="toggleShoppingItem(\''+item.id+'\')"><span>'+h(shoppingLine(item))+(sm?' <small style="color:var(--ink3)">— '+h(sm)+'</small>':'')+'</span><button onclick="removeShoppingItem(\''+item.id+'\')">✕</button></div>';
     }).join('')+'</div>';
   }).join('');
   updateShopBadge();
 }
-function toggleShoppingItem(i){shoppingList[i].checked=!shoppingList[i].checked;saveShoppingList();renderShoppingList();}
-function removeShoppingItem(i){shoppingList.splice(i,1);saveShoppingList();renderShoppingList();}
-function clearCheckedShopping(){var n=shoppingList.filter(function(i){return i.checked;}).length;if(!n){showToast('Nothing checked off yet');return;}shoppingList=shoppingList.filter(function(i){return !i.checked;});saveShoppingList();renderShoppingList();}
-function clearShoppingList(){if(!shoppingList.length)return;if(!confirm('Clear the whole shopping list?'))return;shoppingList=[];saveShoppingList();renderShoppingList();}
+async function toggleShoppingItem(id){
+  var it=shoppingList.find(function(x){return x.id===id;});if(!it)return;
+  if(!canEdit('list')){renderShoppingList();return;}
+  it.checked=!it.checked;renderShoppingList();
+  try{await window._fns.updateDoc(grpDocRef('list',GRP.list.sel,id),{checked:it.checked});}
+  catch(e){console.error(e);showToast('❌ Could not update — check your connection');}
+}
+async function removeShoppingItem(id){
+  if(!canEdit('list'))return;
+  try{await window._fns.deleteDoc(grpDocRef('list',GRP.list.sel,id));}
+  catch(e){console.error(e);showToast('❌ Could not remove — check your connection');}
+}
+async function clearCheckedShopping(){
+  var ids=shoppingList.filter(function(i){return i.checked;}).map(function(i){return i.id;});
+  if(!ids.length){showToast('Nothing checked off yet');return;}
+  if(!canEdit('list'))return;
+  try{await Promise.all(ids.map(function(id){return window._fns.deleteDoc(grpDocRef('list',GRP.list.sel,id));}));}
+  catch(e){console.error(e);showToast('❌ Could not clear — check your connection');}
+}
+async function clearShoppingList(){
+  if(!shoppingList.length)return;
+  if(!canEdit('list'))return;
+  if(!confirm('Clear everything on “'+grpName('list',GRP.list.sel)+'” for everyone?'))return;
+  var ids=shoppingList.map(function(i){return i.id;});
+  try{await Promise.all(ids.map(function(id){return window._fns.deleteDoc(grpDocRef('list',GRP.list.sel,id));}));}
+  catch(e){console.error(e);showToast('❌ Could not clear — check your connection');}
+}
 function printShoppingList(){
   if(!shoppingList.length){showToast('⚠️ List is empty');return;}
   var w=window.open('','_blank');
   var body=groupedShopping().map(function(g){return'<h2>'+h(g.aisle)+'</h2><ul>'+g.items.map(function(e){return'<li>☐ '+h(shoppingLine(e.item))+'</li>';}).join('')+'</ul>';}).join('');
-  w.document.write('<html><head><title>Shopping List</title><style>body{font-family:Georgia,serif;padding:30px}h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ccc}ul{list-style:none;padding:0}li{margin-bottom:6px;font-size:15px}</style></head><body><h1>🛒 Shopping List</h1>'+body+'</body></html>');
+  w.document.write('<html><head><title>Shopping List</title><style>body{font-family:Georgia,serif;padding:30px}h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ccc}ul{list-style:none;padding:0}li{margin-bottom:6px;font-size:15px}</style></head><body><h1>🛒 '+h(grpName('list',GRP.list.sel))+'</h1>'+body+'</body></html>');
   w.document.close();w.print();
 }
+
+/* ===== Meal planner ===== */
+var PLAN_SLOTS=[['breakfast','🍳 Breakfast'],['lunch','🥗 Lunch'],['dinner','🍽️ Dinner']];
+var DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var planWeekStart=null,planPick={date:'',slot:''},planOneId='';
+function ymd(d){function p(n){return(n<10?'0':'')+n;}return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function parseYmd(s){var a=String(s).split('-');return new Date(+a[0],(+a[1])-1,+a[2]);}
+function startOfWeek(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-x.getDay());return x;}
+function planLabel(e){var r=e.recipeId&&recipes.find(function(x){return x.id===e.recipeId;});return r?r.name:(e.recipeName||e.title||'(removed recipe)');}
+function renderPlanner(){
+  var body=document.getElementById('plannerBody');if(!body)return;
+  if(!planWeekStart)planWeekStart=startOfWeek(new Date());
+  var end=new Date(planWeekStart);end.setDate(end.getDate()+6);
+  document.getElementById('planRange').textContent=MON[planWeekStart.getMonth()]+' '+planWeekStart.getDate()+' – '+MON[end.getMonth()]+' '+end.getDate()+', '+end.getFullYear();
+  var today=ymd(new Date()),html='',mem=grpIsMember('plan',GRP.plan.sel);
+  for(var i=0;i<7;i++){
+    var d=new Date(planWeekStart);d.setDate(d.getDate()+i);
+    var key=ymd(d);
+    html+='<div class="plan-day'+(key===today?' today':'')+'"><div class="plan-day-head"><strong>'+DOW[d.getDay()]+'</strong><span>'+MON[d.getMonth()]+' '+d.getDate()+'</span></div>';
+    PLAN_SLOTS.forEach(function(sl){
+      var items=mealPlan.filter(function(e){return e.date===key&&e.slot===sl[0];});
+      html+='<div class="plan-slot"><div class="plan-slot-head">'+sl[1]+(mem?'<button class="plan-add" title="Add" onclick="openPlanPicker(\''+key+'\',\''+sl[0]+'\')">＋</button>':'')+'</div>'+
+        items.map(function(e){
+          var live=e.recipeId&&recipes.some(function(x){return x.id===e.recipeId;});
+          return'<div class="plan-entry"><span>'+(live?'<a onclick="viewRecipe(\''+e.recipeId+'\')">'+h(planLabel(e))+'</a>':h(planLabel(e)))+(e.byName?'<small class="plan-by">'+h(e.byName)+'</small>':'')+'</span>'+(mem?'<button title="Remove" onclick="removePlanEntry(\''+e.id+'\')">✕</button>':'')+'</div>';
+        }).join('')+'</div>';
+    });
+    html+='</div>';
+  }
+  body.innerHTML=html;
+}
+function shiftPlanWeek(n){if(!planWeekStart)planWeekStart=startOfWeek(new Date());planWeekStart.setDate(planWeekStart.getDate()+7*n);renderPlanner();}
+function planToday(){planWeekStart=startOfWeek(new Date());renderPlanner();}
+async function addPlanEntry(date,slot,recipe,title,plannerId){
+  plannerId=plannerId||GRP.plan.sel;
+  if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return false;}
+  if(!grpIsMember('plan',plannerId)){showToast('👀 Join this planner first to add meals');return false;}
+  var f=window._fns;
+  try{
+    await f.addDoc(grpColRef('plan',plannerId),{date:date,slot:slot,recipeId:recipe?recipe.id:'',recipeName:recipe?recipe.name:'',title:title||'',byName:myName(),addedBy:grpMe(),createdAt:f.serverTimestamp()});
+    return true;
+  }catch(e){console.error(e);showToast('❌ Could not save the plan — check your connection');return false;}
+}
+function openPlanPicker(date,slot){
+  planPick={date:date,slot:slot};
+  var d=parseYmd(date),sl=PLAN_SLOTS.filter(function(x){return x[0]===slot;})[0];
+  document.getElementById('planPickTitle').textContent=(sl?sl[1]:'Plan')+' · '+DOW[d.getDay()]+' '+MON[d.getMonth()]+' '+d.getDate();
+  document.getElementById('planPickSearch').value='';document.getElementById('planNote').value='';
+  renderPlanPickList();openOverlay('plannerPickOverlay');
+}
+function renderPlanPickList(){
+  var q=document.getElementById('planPickSearch').value.toLowerCase().trim();
+  var list=recipes.filter(function(r){return !r.deleted&&(!q||(r.name||'').toLowerCase().indexOf(q)>=0||(r.category||'').toLowerCase().indexOf(q)>=0||(r.tags||[]).some(function(t){return t.indexOf(q)>=0;}));})
+    .sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
+  document.getElementById('planPickList').innerHTML=list.length?list.map(function(r){
+    return'<div class="plan-pick-item" onclick="pickPlanRecipe(\''+r.id+'\')">'+(EMOJIS[r.category]||'🍴')+' '+h(r.name)+(r.category?'<small>'+h(r.category)+'</small>':'')+'</div>';
+  }).join(''):'<p style="color:var(--ink3);font-size:13px">No recipes match.</p>';
+}
+async function pickPlanRecipe(id){
+  var r=recipes.find(function(x){return x.id===id;});if(!r)return;
+  if(await addPlanEntry(planPick.date,planPick.slot,r,'')){closeOverlay('plannerPickOverlay');showToast('📅 Added '+r.name);}
+}
+async function addPlanNote(){
+  var t=document.getElementById('planNote').value.trim();
+  if(!t){showToast('⚠️ Type a note first');return;}
+  if(await addPlanEntry(planPick.date,planPick.slot,null,t)){closeOverlay('plannerPickOverlay');}
+}
+async function removePlanEntry(id){
+  if(!canEdit('plan'))return;
+  try{await window._fns.deleteDoc(grpDocRef('plan',GRP.plan.sel,id));}
+  catch(e){console.error(e);showToast('❌ Could not remove — check your connection');}
+}
+function planRecipe(id){
+  var r=recipes.find(function(x){return x.id===id;});if(!r)return;
+  planOneId=id;
+  document.getElementById('planOneName').textContent=r.name;
+  document.getElementById('planOneDate').value=ymd(new Date());
+  var mine=grpMine('plan'),sel=grpIsMember('plan',GRP.plan.sel)?GRP.plan.sel:'family';
+  document.getElementById('planOnePlanner').innerHTML=mine.map(function(g){return'<option value="'+g.id+'"'+(g.id===sel?' selected':'')+'>'+h(g.name)+'</option>';}).join('');
+  document.getElementById('planOnePlannerRow').style.display=mine.length>1?'':'none';
+  openOverlay('planOneOverlay');
+}
+async function confirmPlanOne(){
+  var r=recipes.find(function(x){return x.id===planOneId;});if(!r)return;
+  var date=document.getElementById('planOneDate').value,pid=document.getElementById('planOnePlanner').value||'family';
+  if(!date){showToast('⚠️ Pick a day');return;}
+  if(await addPlanEntry(date,document.getElementById('planOneSlot').value,r,'',pid)){
+    closeOverlay('planOneOverlay');
+    planWeekStart=startOfWeek(parseYmd(date));
+    if(pid!==GRP.plan.sel)grpSelect('plan',pid);else renderPlanner();
+    showToast('📅 Added to “'+grpName('plan',pid)+'”');
+  }
+}
+function planWeekToShopping(){
+  if(!planWeekStart)planWeekStart=startOfWeek(new Date());
+  var keys=[];for(var i=0;i<7;i++){var d=new Date(planWeekStart);d.setDate(d.getDate()+i);keys.push(ymd(d));}
+  var entries=[],n=0;
+  mealPlan.filter(function(e){return keys.indexOf(e.date)>=0&&e.recipeId;}).forEach(function(e){
+    var r=recipes.find(function(x){return x.id===e.recipeId;});if(!r)return;
+    n++;
+    (r.ingredients||[]).filter(function(i){return i.name;}).forEach(function(i){entries.push({name:i.name,qty:i.qty||'',unit:i.unit||'',from:r.name});});
+  });
+  if(!n){showToast('No recipes planned this week yet');return;}
+  if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return;}
+  chooseList(async function(listId){
+    try{await mergeShoppingEntries(entries,'',listId);showToast('🛒 Added ingredients for '+n+' planned meal'+(n!==1?'s':'')+' to “'+grpName('list',listId)+'”');}
+    catch(e){console.error(e);showToast('❌ Could not update the shopping list');}
+  });
+}
+
+/* ===== Kitchen Guide ===== */
+var GUIDE_ITEMS='.flavor-card,.tip-card,.step-list-item,.glossary-item,.season-card,.gs-block';
+function guideInit(){
+  document.querySelectorAll('.guide-panel').forEach(function(p){
+    Array.prototype.forEach.call(p.children,function(el){if(/^(P|UL|OL)$/.test(el.tagName)&&!el.classList.contains('page-sub'))el.classList.add('gs-block');});
+  });
+}
+function openGuide(tab){showPage('guide');guideTab(tab||'tech');}
+function guideTab(tab){
+  var box=document.getElementById('guideSearch');
+  if(box&&box.value){box.value='';guideSearch();}
+  document.querySelectorAll('.guide-panel').forEach(function(p){p.classList.toggle('active',p.dataset.guide===tab);});
+  document.querySelectorAll('.guide-tab').forEach(function(t){t.classList.toggle('active',t.dataset.guide===tab);});
+  document.querySelectorAll('[id^="nav-guide-"]').forEach(function(n){n.classList.toggle('active',n.id==='nav-guide-'+tab);});
+}
+function guideSearch(){
+  var q=document.getElementById('guideSearch').value.toLowerCase().trim(),body=document.getElementById('guideBody'),total=0;
+  body.classList.toggle('searching',!!q);
+  body.querySelectorAll('.guide-panel').forEach(function(p){
+    var hits=0;
+    p.querySelectorAll(GUIDE_ITEMS).forEach(function(el){
+      var m=!q||el.textContent.toLowerCase().indexOf(q)>=0;
+      el.classList.toggle('gs-hide',!m);
+      if(q&&m)hits++;
+    });
+    var lab=p.querySelector('.guide-hit-label');if(lab)lab.style.display=(q&&hits)?'block':'none';
+    p.classList.toggle('gs-empty',!!q&&!hits);
+    total+=hits;
+  });
+  document.getElementById('guideTabs').classList.toggle('dim',!!q);
+  var cur=document.querySelector('.guide-panel.active');
+  document.querySelectorAll('[id^="nav-guide-"]').forEach(function(n){n.classList.toggle('active',!q&&!!cur&&n.id==='nav-guide-'+cur.dataset.guide);});
+  document.getElementById('guideCount').textContent=q?(total?total+' match'+(total!==1?'es':'')+' across the guide':'Nothing found — try a simpler word'):'';
+}
+function updateExportInfo(){
+  var el=document.getElementById('exportCount');if(!el)return;
+  var n=recipes.filter(function(r){return !r.deleted;}).length;
+  el.textContent=n?'Your cookbook has '+n+' recipe'+(n!==1?'s':'')+'.':'';
+}
+
+/* ===== Tags ===== */
+function parseTags(str){
+  var seen={},out=[];
+  String(str||'').split(',').forEach(function(t){
+    t=t.trim().toLowerCase().replace(/\s+/g,' ').replace(/^#/,'');
+    if(!t||t.length>24||seen[t])return;seen[t]=1;out.push(t);
+  });
+  return out.slice(0,8);
+}
+function renderTagBar(){
+  var bar=document.getElementById('tagBar');if(!bar)return;
+  var c={};recipes.forEach(function(r){(r.tags||[]).forEach(function(t){c[t]=(c[t]||0)+1;});});
+  var names=Object.keys(c).sort(function(a,b){return c[b]-c[a]||a.localeCompare(b);});
+  Array.from(activeTags).forEach(function(t){if(!c[t])activeTags.delete(t);});
+  var dl=document.getElementById('tagList');if(dl)dl.innerHTML=names.map(function(n){return'<option value="'+h(n)+'">';}).join('');
+  if(!names.length){bar.style.display='none';bar.innerHTML='';return;}
+  bar.style.display='';
+  bar.innerHTML='<span style="font-size:11.5px;color:var(--ink3);font-weight:700;align-self:center">🏷 Tags:</span>'+
+    names.slice(0,24).map(function(n){return'<div class="chip'+(activeTags.has(n)?' active':'')+'" data-tag="'+h(n)+'" onclick="toggleTag(this)">'+h(n)+' <small>'+c[n]+'</small></div>';}).join('')+
+    (activeTags.size?'<div class="chip" onclick="clearTags()">✕ Clear</div>':'');
+}
+function toggleTag(el){var t=el.dataset.tag;if(activeTags.has(t))activeTags.delete(t);else activeTags.add(t);renderCards();}
+function clearTags(){activeTags.clear();renderCards();}
+function filterByTag(t){closeOverlay('viewOverlay');showPage('recipes');activeTags=new Set([t]);renderCards();}
+
 function renderTrash(){
   var grid=document.getElementById('trashGrid');
   if(!trashedRecipes.length){grid.innerHTML='<div class="empty"><div class="big">🗑</div><h3>Trash is empty</h3><p>Deleted recipes will show up here.</p></div>';return;}
@@ -1563,6 +2045,7 @@ function openAdd(prefill){
     Object.keys(prefill).forEach(function(k){if(typeof prefill[k]==='string'){var el=document.getElementById('f_'+k);if(el)el.value=prefill[k];}});
     (prefill.ingredients||[]).forEach(function(i){addIng(i.name,i.qty||'',i.unit||'');});
     (prefill.steps||[]).forEach(function(s){addStep(s);});
+    if(prefill.tags&&prefill.tags.length)setValue('f_tags',prefill.tags.join(', '));
     (prefill.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.checked=true;el.closest('.diet-check').classList.add('checked');}});
   }
   if(!document.querySelectorAll('.ing-row').length){addIng();addIng();addIng();}
@@ -1578,6 +2061,7 @@ function openEdit(id){
   clearForm();
   ['name','author','servings','active','passive','photo','cal','protein','carbs','fat','pairings','sourceUrl'].forEach(function(k){setValue('f_'+k,r[k]);});
   setValue('f_desc',r.description);
+  setValue('f_tags',(r.tags||[]).join(', '));
   setValue('f_cat',r.category);setValue('f_cuisine',r.cuisine);
   if(/^data:image\//.test(r.photo||'')){setValue('f_photo','');pendingPhotoData=r.photo;}
   previewPhoto();
@@ -1590,7 +2074,7 @@ function openEdit(id){
   document.getElementById('addOverlay').scrollTop=0;
 }
 function clearForm(){
-  ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings','f_sourceUrl'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings','f_tags','f_sourceUrl'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['f_cat','f_cuisine'].forEach(function(id){var el=document.getElementById(id);if(el)el.selectedIndex=0;});
   document.getElementById('ingList').innerHTML='';
   document.getElementById('stepList').innerHTML='';
@@ -1629,6 +2113,7 @@ async function saveRecipe(){
   var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
   var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
   var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),sourceUrl:document.getElementById('f_sourceUrl').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
+  data.tags=parseTags(document.getElementById('f_tags').value);
   if(!editingId){
     var dup=findDuplicate(data);
     if(dup&&!confirm('"'+dup.name+'" looks like it is already in the cookbook. Save this as a separate recipe anyway?'))return;
@@ -1651,11 +2136,11 @@ async function deleteRecipe(){
 }
 
 function setImportTab(t){
-  var u=t==='url';
-  document.getElementById('impPaneUrl').style.display=u?'':'none';
-  document.getElementById('impPanePaste').style.display=u?'none':'';
-  document.getElementById('impTabUrl').classList.toggle('active',u);
-  document.getElementById('impTabPaste').classList.toggle('active',!u);
+  [['clip','Clip'],['url','Url'],['paste','Paste']].forEach(function(x){
+    var on=t===x[0];
+    document.getElementById('impPane'+x[1]).style.display=on?'':'none';
+    document.getElementById('impTab'+x[1]).classList.toggle('active',on);
+  });
 }
 function findDuplicate(r){
   var uk=r.sourceUrl?WFC.urlKey(r.sourceUrl):'',nk=WFC.nameKey(r.name);
@@ -1996,11 +2481,11 @@ checkForClippedRecipe();
 document.querySelector('.main').addEventListener('click',function(){
   if(window.innerWidth<768)closeSidebarMobile();
 });
+guideInit();
 try{
-  if(localStorage.getItem('wfc_ref_collapsed')==='1'){
-    document.getElementById('refNavItems').classList.add('collapsed');
-    document.getElementById('refChev').classList.add('collapsed');
-  }
+  [['refNavItems','refChev','wfc_ref_collapsed'],['guideNavItems','guideChev','wfc_guide_collapsed']].forEach(function(g){
+    if(localStorage.getItem(g[2])==='1'){document.getElementById(g[0]).classList.add('collapsed');document.getElementById(g[1]).classList.add('collapsed');}
+  });
 }catch(e){}
 
 if('serviceWorker' in navigator){
