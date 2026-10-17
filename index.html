@@ -401,6 +401,11 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .toolbar .search-wrap{flex:1 1 calc(240px*var(--fs))}
 .toolbar .filter-select{width:auto;flex:0 1 calc(190px*var(--fs))}
 .btn-lg{font-size:calc(15.5px*var(--fs));padding:.85rem 1.8rem;min-height:48px;border-radius:11px;font-weight:800;letter-spacing:.2px}
+.shop-add{display:flex;gap:8px;margin:.1rem 0 1.1rem;align-items:stretch}
+.shop-add input{flex:1;min-width:0}
+.shop-add .btn{flex-shrink:0;white-space:nowrap}
+.shop-add input:disabled{opacity:.6;cursor:not-allowed}
+.shop-add input,.shop-add .btn{min-height:44px}
 /* cook mode */
 .cook-step-text{font-size:calc(20px*var(--fs))}
 .cook-nav .btn{font-size:calc(14px*var(--fs));padding:.65rem 1.3rem}
@@ -612,7 +617,11 @@ body.locked .tabbar{display:none!important}
   <div class="container">
     <div class="chip-bar" id="listBar"></div>
     <div class="grp-meta" id="listMeta"></div>
-    <p style="color:var(--ink3);font-size:calc(13px*var(--fs));margin-bottom:1rem">Open a recipe and tap <strong>🛒 Add to Shopping List</strong> to send its ingredients here. Everyone on a list sees changes live. Start your own list (<strong>＋ New list</strong>) for a trip or a party — anyone in the family can join it and add what they need.</p>
+    <div class="shop-add">
+      <input type="text" id="shopAddInput" placeholder="Add items, e.g. milk, 3 limes" autocomplete="off" enterkeyhint="done" onkeydown="if(event.key==='Enter')addManualItems()" onpaste="shopAddPaste(event)">
+      <button class="btn btn-primary" id="shopAddBtn" onclick="addManualItems()">＋ Add</button>
+    </div>
+    <p style="color:var(--ink3);font-size:calc(13px*var(--fs));margin-bottom:1rem">Open a recipe and tap <strong>🛒 Add to Shopping List</strong> to send its ingredients here, or just type what you need in the box above. Everyone on a list sees changes live. Start your own list (<strong>＋ New list</strong>) for a trip or a party — anyone in the family can join it and add what they need.</p>
     <div id="shoppingListBody"></div>
   </div>
 </div>
@@ -1672,6 +1681,11 @@ function renderGrpBar(kind){
   }
   if(kind==='list')m+='<span class="grp-view"><button class="btn btn-sm'+(shopView==='aisle'?' btn-primary':'')+'" onclick="setShopView(\'aisle\')">By aisle</button><button class="btn btn-sm'+(shopView==='person'?' btn-primary':'')+'" onclick="setShopView(\'person\')">By person</button></span>';
   meta.innerHTML=m;
+  if(kind==='list'){
+    var ai=document.getElementById('shopAddInput'),ab=document.getElementById('shopAddBtn'),can=grpIsMember('list',G.sel);
+    if(ai){ai.disabled=!can;ai.placeholder=can?'Add items, e.g. milk, 3 limes':'Join this list to add items';}
+    if(ab)ab.disabled=!can;
+  }
 }
 async function grpCreate(kind){
   var G=GRP[kind],f=window._fns;
@@ -1859,6 +1873,31 @@ async function clearShoppingList(){
   var ids=shoppingList.map(function(i){return i.id;});
   try{await Promise.all(ids.map(function(id){return window._fns.deleteDoc(grpDocRef('list',GRP.list.sel,id));}));}
   catch(e){console.error(e);showToast('❌ Could not clear — check your connection');}
+}
+/* pasting a list with one item per line keeps every item (a one-line box would otherwise glue the lines together) */
+function shopAddPaste(ev){
+  var t=((ev.clipboardData||window.clipboardData).getData('text'))||'';
+  if(!/[\r\n]/.test(t))return;
+  ev.preventDefault();
+  var box=ev.target,v=t.split(/\r?\n/).map(function(x){return x.replace(/^[\s\u2022*\-\u2610\u2611\[\]]+/,'').trim();}).filter(Boolean).join(', ');
+  box.setRangeText(v,box.selectionStart,box.selectionEnd,'end');
+}
+async function addManualItems(){
+  var box=document.getElementById('shopAddInput'),raw=(box.value||'').trim();
+  if(!raw){box.focus();return;}
+  if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return;}
+  if(!canEdit('list'))return;
+  var entries=raw.split(/[\n;,]+/).map(function(x){return x.trim();}).filter(Boolean).map(function(t){
+    var q=WFC.parseIngredient(t);return{name:q.name,qty:q.qty,unit:q.unit,from:''};
+  }).filter(function(e){return e.name;});
+  if(!entries.length)return;
+  var btn=document.getElementById('shopAddBtn');btn.disabled=true;
+  try{
+    await mergeShoppingEntries(entries,'',GRP.list.sel);
+    box.value='';
+    showToast('🛒 Added '+entries.length+' item'+(entries.length!==1?'s':'')+' to “'+grpName('list',GRP.list.sel)+'”');
+  }catch(e){console.error(e);showToast('❌ Could not add — check your connection');}
+  btn.disabled=false;box.focus();
 }
 function printShoppingList(){
   if(!shoppingList.length){showToast('⚠️ List is empty');return;}
