@@ -406,6 +406,12 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .shop-add .btn{flex-shrink:0;white-space:nowrap}
 .shop-add input:disabled{opacity:.6;cursor:not-allowed}
 .shop-add input,.shop-add .btn{min-height:44px}
+.shop-allset{padding:1.1rem;text-align:center;color:var(--green,#3d6b4f);font-weight:700;background:var(--warm);border:1.5px dashed var(--border);border-radius:var(--r);margin-bottom:1rem}
+.shop-done{margin-top:1.8rem;padding-top:1rem;border-top:2px dashed var(--border)}
+.shop-done-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:.7rem;font-family:'Lora',serif;font-size:calc(15.5px*var(--fs));font-weight:700;color:var(--ink3)}
+.shop-done-head small{font-weight:600}
+.shop-done .shop-group h3{opacity:.6}
+.shop-done .shop-item{opacity:.75}
 /* cook mode */
 .cook-step-text{font-size:calc(20px*var(--fs))}
 .cook-nav .btn{font-size:calc(14px*var(--fs));padding:.65rem 1.3rem}
@@ -1822,9 +1828,9 @@ function shopSmall(item){
   if(who.length)parts.push(who.join(', '));
   return parts.join(' · ');
 }
-function groupedShopping(){
+function groupedShopping(checked){
   var groups={},me=myName();
-  shoppingList.forEach(function(item){
+  shoppingList.filter(function(i){return !!i.checked===!!checked;}).forEach(function(item){
     var key=shopView==='person'?((item.by&&item.by[0])||'Someone'):WFC.aisleFor(item.name);
     (groups[key]=groups[key]||[]).push({item:item});
   });
@@ -1833,18 +1839,24 @@ function groupedShopping(){
     :WFC.aisleOrder.filter(function(a){return groups[a];});
   return order.map(function(k){return{aisle:k,items:groups[k]};});
 }
+function shopGroupHtml(g,me){
+  var title=h(g.aisle)+(shopView==='person'&&g.aisle===me?' <small style="font-weight:400;color:var(--ink3)">(you)</small>':'');
+  return'<div class="shop-group"><h3>'+title+'</h3>'+g.items.map(function(e){
+    var item=e.item,sm=shopSmall(item);
+    return'<div class="shop-item'+(item.checked?' checked':'')+'"><input type="checkbox" '+(item.checked?'checked':'')+' onchange="toggleShoppingItem(\''+item.id+'\')"><span>'+h(shoppingLine(item))+(sm?' <small style="color:var(--ink3)">— '+h(sm)+'</small>':'')+'</span><button onclick="removeShoppingItem(\''+item.id+'\')">✕</button></div>';
+  }).join('')+'</div>';
+}
 function renderShoppingList(){
   var body=document.getElementById('shoppingListBody');
   if(!body)return;
   if(!shoppingList.length){body.innerHTML='<div class="empty"><div class="big">🛒</div><h3>This list is empty</h3><p>Open a recipe and add its ingredients, or plan your week and add it all at once.</p></div>';updateShopBadge();return;}
-  var me=myName();
-  body.innerHTML=groupedShopping().map(function(g){
-    var title=h(g.aisle)+(shopView==='person'&&g.aisle===me?' <small style="font-weight:400;color:var(--ink3)">(you)</small>':'');
-    return'<div class="shop-group"><h3>'+title+'</h3>'+g.items.map(function(e){
-      var item=e.item,sm=shopSmall(item);
-      return'<div class="shop-item'+(item.checked?' checked':'')+'"><input type="checkbox" '+(item.checked?'checked':'')+' onchange="toggleShoppingItem(\''+item.id+'\')"><span>'+h(shoppingLine(item))+(sm?' <small style="color:var(--ink3)">— '+h(sm)+'</small>':'')+'</span><button onclick="removeShoppingItem(\''+item.id+'\')">✕</button></div>';
-    }).join('')+'</div>';
-  }).join('');
+  var me=myName(),todo=groupedShopping(false),done=groupedShopping(true);
+  var nDone=shoppingList.filter(function(i){return i.checked;}).length;
+  // still to buy: grouped by aisle / person exactly as before
+  var html=todo.length?todo.map(function(g){return shopGroupHtml(g,me);}).join(''):'<div class="shop-allset">🎉 Everything is checked off!</div>';
+  // checked-off items drop to the bottom, keeping the same grouping and order
+  if(nDone)html+='<div class="shop-done"><div class="shop-done-head"><span>✓ Checked off <small>('+nDone+')</small></span><button class="btn btn-sm" onclick="clearCheckedShopping()">🗑 Clear checked</button></div>'+done.map(function(g){return shopGroupHtml(g,me);}).join('')+'</div>';
+  body.innerHTML=html;
   updateShopBadge();
 }
 async function toggleShoppingItem(id){
@@ -1901,8 +1913,10 @@ async function addManualItems(){
 }
 function printShoppingList(){
   if(!shoppingList.length){showToast('⚠️ List is empty');return;}
+  var gs=groupedShopping(false);
+  if(!gs.length){showToast('✅ Nothing left to buy');return;}
   var w=window.open('','_blank');
-  var body=groupedShopping().map(function(g){return'<h2>'+h(g.aisle)+'</h2><ul>'+g.items.map(function(e){return'<li>☐ '+h(shoppingLine(e.item))+'</li>';}).join('')+'</ul>';}).join('');
+  var body=gs.map(function(g){return'<h2>'+h(g.aisle)+'</h2><ul>'+g.items.map(function(e){return'<li>☐ '+h(shoppingLine(e.item))+'</li>';}).join('')+'</ul>';}).join('');
   w.document.write('<html><head><title>Shopping List</title><style>body{font-family:Georgia,serif;padding:30px}h2{font-size:15px;margin:18px 0 6px;border-bottom:1px solid #ccc}ul{list-style:none;padding:0}li{margin-bottom:6px;font-size:15px}</style></head><body><h1>🛒 '+h(grpName('list',GRP.list.sel))+'</h1>'+body+'</body></html>');
   w.document.close();w.print();
 }
