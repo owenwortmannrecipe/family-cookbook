@@ -1,0 +1,128 @@
+--- a/index.html	2026-10-17 22:59:08.594356089 +0000
++++ b/index.html	2026-10-18 06:14:36.733122875 +0000
+@@ -412,6 +412,15 @@
+ .shop-done-head small{font-weight:600}
+ .shop-done .shop-group h3{opacity:.6}
+ .shop-done .shop-item{opacity:.75}
++.imp-head{font-size:calc(13.5px*var(--fs));margin:.8rem 0 .6rem}
++.imp-row{display:flex;gap:10px;align-items:flex-start;padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:8px;margin-bottom:6px;background:var(--parchment);cursor:pointer}
++.imp-row small{display:block;color:var(--ink3);font-size:calc(12px*var(--fs));margin-top:2px}
++.imp-row .imp-dup{display:block;font-style:normal;color:var(--rust);font-size:calc(12px*var(--fs));margin-top:3px;font-weight:700}
++.imp-row input{margin-top:4px}
++.imp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:.8rem}
++.imp-msg{margin-top:.8rem;padding:.8rem 1rem;border-radius:8px;font-size:calc(13.5px*var(--fs));line-height:1.6}
++.imp-msg.ok{background:var(--green-pale);color:var(--green)}
++.imp-msg.err{background:#FEF2F2;color:#B91C1C}
+ /* cook mode */
+ .cook-step-text{font-size:calc(20px*var(--fs))}
+ .cook-nav .btn{font-size:calc(14px*var(--fs));padding:.65rem 1.3rem}
+@@ -516,9 +525,11 @@
+ <div class="page" id="page-preface">
+   <div class="topbar"><div class="topbar-title">📜 Preface</div></div>
+   <div class="container"><div class="static-page">
+-    <h1>Our Family Cookbook</h1><p class="page-sub">A collection of recipes passed down through generations and created with love.</p><hr>
+-    <h2>Welcome</h2><p>This is a placeholder preface — you'll write this! Here you can share the story of your family's cooking traditions, where certain recipes came from, and what food means to the Wortmann family.</p>
+-    <p>Consider including: how this cookbook was created, which family members contributed recipes, special memories tied to certain dishes, and any cooking wisdom passed down through generations.</p>
++    <h1>Recipes from the Wortmann Kitchen Table</h1><p class="page-sub">A Collection of Family Recipes</p><hr>
++    <h2>Dedication</h2><p style="font-style:italic">To my loving family, where there is food, there are memories, and where there are memories, there is love.</p>
++    <h2>Preface</h2><p>Here lie family secrets, not meant to be opened by anyone outside those we call our family. Food has always been at the center of our family—bringing us together time and time again. These recipes have been passed down, stolen, adapted, and shared, with the hope that they become a generational lifeline.</p>
++    <p>Every dish holds a story, from loud family gatherings, to quiet Sunday dinners, and the curiosity to try new things and be adventurous. Each recipe carries a memory, creating a time capsule of our heritage and ancestry.</p>
++    <p>May this book bring warmth to your home, just as these meals have always brought warmth to ours. Enjoy, and as you turn these pages, know that you are continuing a tradition—a legacy that stretches far beyond the kitchen table.</p>
+     <h2>How to Use This Cookbook</h2><p>Browse all recipes on the main page. Search by name, ingredient, or cuisine. Filter by dietary preference. Click any recipe to view it, scale servings with the slider, toggle between metric and imperial, and use Cook Mode to follow step-by-step instructions.</p>
+     <h2>A Note on Measurements</h2><p>Recipes use both imperial and metric. Switch between them in any recipe view. See the Unit Conversions page for a complete reference.</p><hr>
+     <p style="font-style:italic;color:var(--ink3);font-family:'Lora',serif;font-size:calc(16px*var(--fs))">"The secret ingredient is always love."</p>
+@@ -819,6 +830,13 @@
+       </div>
+     </div>
+ 
++    <h2 id="importFromFile">📥 Bring recipes in from a file</h2>
++    <p>Choose a recipe file — a <strong>backup you downloaded here</strong>, or a file of recipes someone prepared for you. You'll see a list to check before anything is added, and recipes you already have are left alone unless you tick them.</p>
++    <div class="exp-card" style="margin-bottom:1.6rem">
++      <input type="file" id="importFile" accept=".json,application/json" onchange="loadImportFile(this)">
++      <div id="importPreview"></div>
++    </div>
++
+     <h2>📱 Put it on your phone</h2>
+     <p>The cookbook is already set up to install like a normal app — it gets its own icon, opens full-screen, and keeps working with a weak connection. It's free and takes ten seconds:</p>
+     <div class="step-list">
+@@ -2130,6 +2148,80 @@
+     else showToast('🗑 Trash emptied');
+   });
+ }
++/* ===== Import recipes from a file (also restores a backup) ===== */
++var importRows=[];
++function cleanText(v,max){return String(v==null?'':v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g,'').trim().slice(0,max);}
++function allowedValues(sel){return Array.prototype.map.call(document.querySelectorAll(sel),function(o){return o.value;}).filter(Boolean);}
++function firstNum(v){var m=/(\d+(?:\.\d+)?)/.exec(String(v==null?'':v));return m?String(Math.round(parseFloat(m[1])*100)/100):'';}
++/* never trust a file: keep only the fields a recipe has, with sane types and sizes */
++function sanitizeRecipe(r){
++  if(!r||typeof r!=='object'||Array.isArray(r)||r.deleted)return null;
++  var name=cleanText(r.name,120);if(!name)return null;
++  var cats=allowedValues('#f_cat option'),cuis=allowedValues('#f_cuisine option'),dietsOk=allowedValues('.diet-check input');
++  var ing=(Array.isArray(r.ingredients)?r.ingredients:[]).slice(0,100).map(function(i){
++    if(typeof i==='string')i=WFC.parseIngredient(i);
++    if(!i||typeof i!=='object')return null;
++    var n=cleanText(i.name,200);if(!n)return null;
++    return{name:n,qty:cleanText(i.qty,20),unit:cleanText(i.unit,20)};
++  }).filter(Boolean);
++  var steps=(Array.isArray(r.steps)?r.steps:[]).slice(0,80).map(function(x){return cleanText(x,2000);}).filter(Boolean);
++  var photo=cleanText(r.photo,400000);
++  if(!(/^https?:\/\//i.test(photo)&&photo.length<=2000)&&!/^data:image\/(jpeg|png|webp|gif);base64,/i.test(photo))photo='';
++  var src=cleanText(r.sourceUrl,1000);if(!/^https?:\/\//i.test(src))src='';
++  return{name:name,category:cats.indexOf(r.category)>=0?r.category:'',cuisine:cuis.indexOf(r.cuisine)>=0?r.cuisine:'',
++    author:cleanText(r.author,60),servings:firstNum(r.servings),active:firstNum(r.active),passive:firstNum(r.passive),
++    photo:photo,description:cleanText(r.description,2000),cal:firstNum(r.cal),protein:firstNum(r.protein),carbs:firstNum(r.carbs),fat:firstNum(r.fat),
++    pairings:cleanText(r.pairings,300),sourceUrl:src,diets:(Array.isArray(r.diets)?r.diets:[]).filter(function(d){return dietsOk.indexOf(d)>=0;}),
++    tags:parseTags(Array.isArray(r.tags)?r.tags.join(','):r.tags),ingredients:ing,steps:steps};
++}
++function importMsg(kind,html){document.getElementById('importPreview').innerHTML='<div class="imp-msg '+kind+'">'+html+'</div>';}
++async function loadImportFile(input){
++  var file=input.files&&input.files[0];if(!file)return;
++  importRows=[];
++  if(file.size>8*1024*1024){importMsg('err','❌ That file is too large to be a recipe file.');return;}
++  var data;
++  try{data=JSON.parse(await file.text());}
++  catch(e){importMsg('err','❌ That doesn’t look like a recipe file. Choose a <strong>.json</strong> file — a backup from this cookbook, or one you were given.');return;}
++  var list=Array.isArray(data)?data:(data&&Array.isArray(data.recipes)?data.recipes:null);
++  if(!list){importMsg('err','❌ I couldn’t find any recipes in that file.');return;}
++  var skipped=0;
++  list.forEach(function(r){
++    var c=sanitizeRecipe(r);
++    if(!c){skipped++;return;}
++    var dup=findDuplicate(c);
++    importRows.push({data:c,dup:dup?dup.name:'',on:!dup});
++  });
++  renderImportPreview(skipped);
++}
++function renderImportPreview(skipped){
++  var box=document.getElementById('importPreview');
++  if(!importRows.length){importMsg('err','❌ No usable recipes in that file'+(skipped?' ('+skipped+' skipped: no name, or already in the Trash)':'')+'.');return;}
++  var n=importRows.filter(function(r){return r.on;}).length;
++  box.innerHTML='<div class="imp-head">Found <strong>'+importRows.length+'</strong> recipe'+(importRows.length!==1?'s':'')+(skipped?' <span style="color:var(--ink3)">('+skipped+' skipped)</span>':'')+'. Untick any you don’t want.</div>'+
++    importRows.map(function(r,i){
++      var d=r.data;
++      return'<label class="imp-row"><input type="checkbox" '+(r.on?'checked':'')+' onchange="toggleImportRow('+i+')"><span><strong>'+h(d.name)+'</strong><small>'+[d.category,d.ingredients.length+' ingredient'+(d.ingredients.length!==1?'s':''),d.steps.length+' step'+(d.steps.length!==1?'s':'')].filter(Boolean).map(h).join(' · ')+'</small>'+(r.dup?'<em class="imp-dup">Already in your cookbook (“'+h(r.dup)+'”) — unticked so it isn’t doubled</em>':'')+'</span></label>';
++    }).join('')+
++    '<div class="imp-actions"><button class="btn btn-primary" id="importGo" onclick="runImport()"'+(n?'':' disabled')+'>Import '+n+' recipe'+(n!==1?'s':'')+'</button><button class="btn" onclick="cancelImport()">Cancel</button></div>';
++}
++function toggleImportRow(i){importRows[i].on=!importRows[i].on;renderImportPreview(0);}
++function cancelImport(){importRows=[];document.getElementById('importFile').value='';document.getElementById('importPreview').innerHTML='';}
++async function runImport(){
++  var todo=importRows.filter(function(r){return r.on;});
++  if(!todo.length)return;
++  if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return;}
++  var f=window._fns,btn=document.getElementById('importGo'),ok=0,failed=0;
++  btn.disabled=true;
++  for(var i=0;i<todo.length;i++){
++    btn.textContent='Importing… '+(i+1)+' of '+todo.length;
++    var d=Object.assign({},todo[i].data);
++    d.author=d.author||myName();d.addedByUid=window._myUid||'';d.createdAt=f.serverTimestamp();
++    try{await f.addDoc(window._col,d);ok++;}catch(e){console.error(e);failed++;}
++  }
++  importRows=[];document.getElementById('importFile').value='';
++  importMsg(failed&&!ok?'err':'ok',(ok?'✅ Imported <strong>'+ok+'</strong> recipe'+(ok!==1?'s':'')+'. ':'')+(failed?'❌ '+failed+' could not be saved — check your connection and try again. ':'')+(ok?'<a href="#" onclick="showPage(\'recipes\');return false" style="color:inherit;font-weight:700">See them in All Recipes →</a>':''));
++  showToast(ok?'✅ Imported '+ok+' recipe'+(ok!==1?'s':''):'❌ Import failed');
++}
+ function backupJSON(){
+   if(!recipes.length){showToast('⚠️ No recipes to back up');return;}
+   var blob=new Blob([JSON.stringify(recipes,null,2)],{type:'application/json'});

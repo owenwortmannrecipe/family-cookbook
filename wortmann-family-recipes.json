@@ -1,0 +1,345 @@
+[
+  {
+    "name": "Tomato Noodle Pasta",
+    "category": "Dinner",
+    "cuisine": "Italian",
+    "author": "",
+    "servings": "",
+    "active": "",
+    "passive": "",
+    "photo": "",
+    "description": "",
+    "cal": "",
+    "protein": "",
+    "carbs": "",
+    "fat": "",
+    "pairings": "",
+    "sourceUrl": "",
+    "diets": [],
+    "tags": [
+      "family recipe"
+    ],
+    "ingredients": [
+      {
+        "name": "baskets of cherry tomatoes",
+        "qty": "4",
+        "unit": ""
+      },
+      {
+        "name": "garlic",
+        "qty": "3-4",
+        "unit": "clove"
+      },
+      {
+        "name": "butter",
+        "qty": "1/2",
+        "unit": "stick"
+      },
+      {
+        "name": "Basil",
+        "qty": "",
+        "unit": ""
+      },
+      {
+        "name": "Angel pasta",
+        "qty": "",
+        "unit": ""
+      },
+      {
+        "name": "White wine",
+        "qty": "",
+        "unit": ""
+      },
+      {
+        "name": "Salt for flavor",
+        "qty": "",
+        "unit": ""
+      },
+      {
+        "name": "Parmesan cheese",
+        "qty": "",
+        "unit": ""
+      }
+    ],
+    "steps": [
+      "Pan with butter and garlic to cook.",
+      "Add cherry tomatoes.",
+      "White wine added and let simmer.",
+      "Add basil.",
+      "Boil pasta.",
+      "Ready to serve."
+    ]
+  },
+  {
+    "name": "Beef Teriyaki",
+    "category": "Dinner",
+    "cuisine": "Japanese",
+    "author": "",
+    "servings": "",
+    "active": "",
+    "passive": "",
+    "photo": "",
+    "description": "",
+    "cal": "",
+    "protein": "",
+    "carbs": "",
+    "fat": "",
+    "pairings": "",
+    "sourceUrl": "",
+    "diets": [],
+    "tags": [
+      "family recipe"
+    ],
+    "ingredients": [
+      {
+        "name": "Flank steak",
+        "qty": "",
+        "unit": ""
+      },
+      {
+        "name": "beef consomme (or ½ cup consomme plus ½ cup red or white wine)",
+        "qty": "1",
+        "unit": "cup"
+      },
+      {
+        "name": "soy sauce",
+        "qty": "1/3",
+        "unit": "cup"
+      },
+      {
+        "name": "Lawry's salt",
+        "qty": "1 1/2",
+        "unit": "cup"
+      },
+      {
+        "name": "green onions",
+        "qty": "1/4",
+        "unit": "cup"
+      },
+      {
+        "name": "garlic, minced",
+        "qty": "1",
+        "unit": "clove"
+      },
+      {
+        "name": "lemon juice",
+        "qty": "3",
+        "unit": "tbsp"
+      },
+      {
+        "name": "brown sugar or honey",
+        "qty": "2",
+        "unit": "tbsp"
+      }
+    ],
+    "steps": [
+      "Cut flank steak into strips.",
+      "Add all ingredients to bowl and marinate steak 4-6 hours or overnight."
+    ]
+  },
+  {
+    "name": "Grandpa's Wortmann Pineapple Upside-Down Cake",
+    "category": "Dessert",
+    "cuisine": "American",
+    "author": "",
+    "servings": "",
+    "active": "",
+    "passive": "",
+    "photo": "",
+    "description": "",
+    "cal": "",
+    "protein": "",
+    "carbs": "",
+    "fat": "",
+    "pairings": "",
+    "sourceUrl": "",
+    "diets": [],
+    "tags": [
+      "family recipe",
+      "grandpa"
+    ],
+    "ingredients": [
+      {
+        "name": "sifted cake flour",
+        "qty": "1 1/4",
+        "unit": "cup"
+      },
+      {
+        "name": "baking powder",
+        "qty": "1 1/4",
+        "unit": "tsp"
+      },
+      {
+        "name": "salt",
+        "qty": "1/4",
+        "unit": "tsp"
+      },
+      {
+        "name": "sugar",
+        "qty": "3/4",
+        "unit": ""
+      },
+      {
+        "name": "softened butter",
+        "qty": "4",
+        "unit": "tbsp"
+      },
+      {
+        "name": "egg",
+        "qty": "1",
+        "unit": ""
+      },
+      {
+        "name": "vanilla",
+        "qty": "1",
+        "unit": "tsp"
+      },
+      {
+        "name": "butter (for topping)",
+        "qty": "4",
+        "unit": "tbsp"
+      },
+      {
+        "name": "sliced pineapples (for topping)",
+        "qty": "4",
+        "unit": ""
+      },
+      {
+        "name": "brown sugar (for topping)",
+        "qty": "1/2",
+        "unit": ""
+      },
+      {
+        "name": "walnuts (for topping)",
+        "qty": "1",
+        "unit": "cup"
+      }
+    ],
+    "steps": [
+      "Sift flour then add salt and baking powder.",
+      "Beat egg and butter then add milk and vanilla and add flour mixture. Stir until coated then beat vigorously for 1 min.",
+      "Melt butter in a pan and add sugar, nuts and pineapple in an 8x8x2 pan. Flip over while warm.",
+      "Bake at 350°F for 50 mins."
+    ]
+  },
+  {
+    "name": "Original Nestle Toll House Cookies",
+    "category": "Dessert",
+    "cuisine": "American",
+    "author": "",
+    "servings": "",
+    "active": "",
+    "passive": "",
+    "photo": "",
+    "description": "",
+    "cal": "",
+    "protein": "",
+    "carbs": "",
+    "fat": "",
+    "pairings": "",
+    "sourceUrl": "",
+    "diets": [],
+    "tags": [
+      "family recipe"
+    ],
+    "ingredients": [
+      {
+        "name": "all-purpose flour",
+        "qty": "2 1/4",
+        "unit": "cup"
+      },
+      {
+        "name": "baking soda",
+        "qty": "1",
+        "unit": "tsp"
+      },
+      {
+        "name": "salt",
+        "qty": "1",
+        "unit": "tsp"
+      },
+      {
+        "name": "butter, softened",
+        "qty": "1",
+        "unit": "cup"
+      },
+      {
+        "name": "sugar",
+        "qty": "3/4",
+        "unit": "cup"
+      },
+      {
+        "name": "firmly packed brown sugar",
+        "qty": "3/4",
+        "unit": "cup"
+      },
+      {
+        "name": "vanilla",
+        "qty": "1",
+        "unit": "tsp"
+      },
+      {
+        "name": "eggs",
+        "qty": "2",
+        "unit": ""
+      }
+    ],
+    "steps": [
+      "Add dry ingredients.",
+      "Mix wet ingredients.",
+      "Add dry to the wet.",
+      "Add chocolate chips.",
+      "Bake at 375°F for 8-10 mins."
+    ]
+  },
+  {
+    "name": "Grandpa's Brown Rice",
+    "category": "Side Dish",
+    "cuisine": "American",
+    "author": "",
+    "servings": "",
+    "active": "",
+    "passive": "",
+    "photo": "",
+    "description": "",
+    "cal": "",
+    "protein": "",
+    "carbs": "",
+    "fat": "",
+    "pairings": "",
+    "sourceUrl": "",
+    "diets": [],
+    "tags": [
+      "family recipe",
+      "grandpa"
+    ],
+    "ingredients": [
+      {
+        "name": "butter",
+        "qty": "1",
+        "unit": "cup"
+      },
+      {
+        "name": "rice",
+        "qty": "1",
+        "unit": "cup"
+      },
+      {
+        "name": "beef bouillon soup",
+        "qty": "1",
+        "unit": "cup"
+      },
+      {
+        "name": "water",
+        "qty": "1",
+        "unit": "can"
+      }
+    ],
+    "steps": [
+      "Melt 1 cube of butter and 1 c rice brown lightly.",
+      "Add the beef bouillon soup and water.",
+      "Bake at 30 for 1 hour until all liquid is absorbed.",
+      "If doubled, bake for 1 ½ hour."
+    ]
+  }
+]
