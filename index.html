@@ -421,6 +421,45 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .imp-msg{margin-top:.8rem;padding:.8rem 1rem;border-radius:8px;font-size:calc(13.5px*var(--fs));line-height:1.6}
 .imp-msg.ok{background:var(--green-pale);color:var(--green)}
 .imp-msg.err{background:#FEF2F2;color:#B91C1C}
+.ing-alt{margin-left:7px;font-size:calc(11.5px*var(--fs));opacity:.7;font-weight:600}
+.mass-note{font-size:calc(12.5px*var(--fs));color:var(--ink3);background:var(--parchment2);border-radius:8px;padding:.55rem .8rem;margin:.1rem 0 .7rem;line-height:1.55}
+.mass-note a{color:var(--rust);font-weight:700}
+.conv-wide{grid-column:1/-1}
+.cups-table th{padding:6px 10px;font-size:calc(11.5px*var(--fs));text-transform:uppercase;letter-spacing:.6px;color:var(--ink3);text-align:right;border-bottom:1.5px solid var(--border);white-space:nowrap}
+.cups-table th:first-child{text-align:left}
+.cups-table td{text-align:right;white-space:nowrap}
+.cups-table td:first-child{text-align:left;white-space:normal}
+.cups-table td:nth-child(2){color:var(--ink);text-align:right}
+.cups-table td:last-child{color:var(--ink3);text-align:right}
+.cups-note{display:block;font-size:calc(11.5px*var(--fs));color:var(--ink3);font-weight:400}
+.conv-foot{font-size:calc(12.5px*var(--fs));color:var(--ink3);padding:.7rem .9rem;line-height:1.6;margin:0}
+.conv-foot a{color:var(--rust);font-weight:700}
+.bs-levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(210px*var(--fs)),1fr));gap:.9rem;margin:1rem 0 1.2rem}
+.bs-level{border:1.5px solid var(--border);border-radius:var(--r);padding:.9rem 1rem;background:var(--warm)}
+.bs-level h3{margin:0 0 .25rem;font-family:'Lora',serif;font-size:calc(16px*var(--fs))}
+.bs-level p{margin:0;font-size:calc(13px*var(--fs));line-height:1.55;color:var(--ink2)}
+.bs-swatch{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:7px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
+.toolbar .filter-select{flex:0 1 calc(150px*var(--fs))}
+#browseToggle{white-space:nowrap;flex-shrink:0}
+.recipe-rows{display:block}
+.rrow{margin:0 0 calc(26px*var(--sz))}
+.rrow-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 2px .45rem}
+.rrow-head h2{font-family:'Lora',serif;font-size:calc(20px*var(--fs));margin:0}
+.rrow-head h2 small{font-family:'Nunito',sans-serif;font-size:calc(13px*var(--fs));color:var(--ink3);font-weight:700;margin-left:8px}
+.rrow-all{background:none;border:none;color:var(--rust);font-weight:800;font-size:calc(13px*var(--fs));cursor:pointer;font-family:inherit;padding:4px 2px}
+.rrow-wrap{position:relative}
+.rrow-strip{display:flex;gap:calc(15px*var(--sz));overflow-x:auto;scroll-snap-type:x proximity;padding:6px 2px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.rrow-strip::-webkit-scrollbar{display:none}
+.rrow-strip .recipe-card{flex:0 0 calc(262px*var(--sz));scroll-snap-align:start;animation:none}
+.rrow-arrow{position:absolute;top:calc(50% - 30px);z-index:5;width:46px;height:46px;border-radius:50%;border:1.5px solid var(--border);background:var(--warm);box-shadow:0 5px 16px rgba(44,36,22,.22);font-size:28px;line-height:1;cursor:pointer;color:var(--ink2);opacity:0;transition:opacity .15s,transform .15s;padding:0 0 3px}
+.rrow-wrap:hover .rrow-arrow{opacity:1}
+.rrow-arrow:hover{transform:scale(1.08);color:var(--rust)}
+.rrow-arrow.left{left:-12px}.rrow-arrow.right{right:-12px}
+.rrow-wrap.at-start .rrow-arrow.left,.rrow-wrap.at-end .rrow-arrow.right{display:none}
+.rrow.open .rrow-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(262px*var(--sz)),1fr));overflow:visible}
+.rrow.open .rrow-strip .recipe-card{flex:none}
+.rrow.open .rrow-arrow{display:none}
+@media(hover:none),(max-width:768px){.rrow-arrow{display:none!important}.rrow-strip .recipe-card{flex-basis:min(74vw,290px)}}
 /* cook mode */
 .cook-step-text{font-size:calc(20px*var(--fs))}
 .cook-nav .btn{font-size:calc(14px*var(--fs));padding:.65rem 1.3rem}
@@ -484,6 +523,7 @@ body.locked .tabbar{display:none!important}
     <div class="nav-sec-row" onclick="toggleRefNav()"><div class="nav-sec">Reference</div><span class="chev" id="refChev">▾</span></div>
     <div class="nav-group" id="refNavItems">
     <div class="nav-item" id="nav-conversions" onclick="showPage('conversions')"><span class="ic">⚖️</span>Unit Conversions</div>
+    <div class="nav-item" id="nav-brownsugar" onclick="showPage('brownsugar')"><span class="ic">🟤</span>Brown Sugar Blends</div>
     <div class="nav-item" id="nav-doneness" onclick="showPage('doneness')"><span class="ic">🥩</span>Meat Doneness</div>
     </div>
     <div class="nav-sec">Backup &amp; App</div>
@@ -513,11 +553,11 @@ body.locked .tabbar{display:none!important}
       <select class="filter-select" id="catFilter" onchange="renderCards()"><option value="">All Categories</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select>
       <select class="filter-select" id="cuisineFilter" onchange="renderCards()"><option value="">All Cuisines</option><option>American</option><option>Southern</option><option>Italian</option><option>Mexican</option><option>Asian</option><option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option><option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option><option>Middle Eastern</option><option>Other</option></select>
       <select class="filter-select" id="sortFilter" onchange="renderCards()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="az">Name A–Z</option><option value="cal_asc">Calories ↑</option><option value="cal_desc">Calories ↓</option></select>
-      <span class="recipe-count" id="recipeCount">Loading…</span>
+      <span class="recipe-count" id="recipeCount">Loading…</span><button class="btn btn-sm" id="browseToggle" onclick="toggleBrowseGrid()" title="Switch between sliding rows and one big grid">▦ Grid view</button>
     </div>
     <div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
     <div class="chip-bar" id="tagBar" style="display:none"></div>
-    <div class="recipe-grid" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
+    <div class="recipe-rows" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
   </div>
 </div>
 
@@ -560,6 +600,14 @@ body.locked .tabbar{display:none!important}
         <tr><td>8 oz (½ lb)</td><td>=</td><td>227 g</td></tr><tr><td>12 oz (¾ lb)</td><td>=</td><td>340 g</td></tr>
         <tr><td>16 oz (1 lb)</td><td>=</td><td>454 g</td></tr><tr><td>2.2 lbs</td><td>=</td><td>1 kg / 1000 g</td></tr>
       </table></div>
+      <div class="conv-card conv-wide" id="cupsCard"><div class="conv-card-head">Common Ingredients — Cups to Grams</div>
+        <div style="overflow-x:auto"><table class="conv-table cups-table"><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th><th>1 Tbsp</th></tr></thead><tbody id="cupsTableBody"></tbody></table></div>
+        <p class="conv-foot">These are the same numbers the <strong>By weight</strong> button uses in every recipe — ingredients not listed here stay in metric volume. Need brown sugar? See <a href="#" onclick="showPage('brownsugar');return false">Brown Sugar Blends</a>.</p></div>
+      <div class="conv-card"><div class="conv-card-head">Butter &amp; Sticks</div><table class="conv-table">
+        <tr><td>¼ stick</td><td>=</td><td>2 Tbsp / 1 oz / 28 g</td></tr><tr><td>½ stick</td><td>=</td><td>¼ cup / 4 Tbsp / 2 oz / 57 g</td></tr>
+        <tr><td>1 stick</td><td>=</td><td>½ cup / 8 Tbsp / 4 oz / 113 g</td></tr><tr><td>2 sticks</td><td>=</td><td>1 cup / 16 Tbsp / 8 oz / 227 g</td></tr>
+        <tr><td>4 sticks (1 lb)</td><td>=</td><td>2 cups / 32 Tbsp / 16 oz / 454 g</td></tr><tr><td>1 Tbsp</td><td>=</td><td>14 g</td></tr>
+      </table></div>
       <div class="conv-card"><div class="conv-card-head">Oven Temperature</div><table class="conv-table">
         <tr><td>250°F</td><td>=</td><td>120°C / Gas ½</td></tr><tr><td>300°F</td><td>=</td><td>150°C / Gas 2</td></tr>
         <tr><td>325°F</td><td>=</td><td>165°C / Gas 3</td></tr><tr><td>350°F</td><td>=</td><td>175°C / Gas 4</td></tr>
@@ -567,22 +615,33 @@ body.locked .tabbar{display:none!important}
         <tr><td>425°F</td><td>=</td><td>220°C / Gas 7</td></tr><tr><td>450°F</td><td>=</td><td>230°C / Gas 8</td></tr>
         <tr><td>475°F</td><td>=</td><td>245°C / Gas 9</td></tr>
       </table></div>
-      <div class="conv-card"><div class="conv-card-head">Common Ingredients by Cup</div><table class="conv-table">
-        <tr><td>All-purpose flour</td><td>=</td><td>120 g</td></tr><tr><td>Bread flour</td><td>=</td><td>130 g</td></tr>
-        <tr><td>Cake flour</td><td>=</td><td>100 g</td></tr><tr><td>Granulated sugar</td><td>=</td><td>200 g</td></tr>
-        <tr><td>Brown sugar (packed)</td><td>=</td><td>220 g</td></tr><tr><td>Powdered sugar</td><td>=</td><td>120 g</td></tr>
-        <tr><td>Butter</td><td>=</td><td>227 g / 2 sticks</td></tr><tr><td>Rice (dry)</td><td>=</td><td>185 g</td></tr>
-        <tr><td>Rolled oats</td><td>=</td><td>90 g</td></tr><tr><td>Honey / syrup</td><td>=</td><td>340 g</td></tr>
-        <tr><td>Milk / water</td><td>=</td><td>240 g / 240 ml</td></tr><tr><td>Cream</td><td>=</td><td>238 g</td></tr>
-      </table></div>
-      <div class="conv-card"><div class="conv-card-head">Pan Sizes &amp; Quick Ref</div><table class="conv-table">
+      <div class="conv-card"><div class="conv-card-head">Pan Sizes &amp; Small Measures</div><table class="conv-table">
         <tr><td>8" round</td><td>=</td><td>20 cm</td></tr><tr><td>9" round</td><td>=</td><td>23 cm</td></tr>
         <tr><td>9×13" pan</td><td>=</td><td>23×33 cm</td></tr><tr><td>8×8" square</td><td>=</td><td>20×20 cm</td></tr>
         <tr><td>9×5" loaf</td><td>=</td><td>23×13 cm</td></tr><tr><td>Pinch</td><td>=</td><td>~1/16 tsp</td></tr>
         <tr><td>Dash</td><td>=</td><td>~1/8 tsp</td></tr><tr><td>Smidge</td><td>=</td><td>~1/32 tsp</td></tr>
-        <tr><td>1 stick butter</td><td>=</td><td>8 Tb / ½ cup / 113 g</td></tr>
       </table></div>
     </div>
+  </div></div>
+</div>
+
+<!-- BROWN SUGAR BLENDS -->
+<div class="page" id="page-brownsugar">
+  <div class="topbar"><div class="topbar-title">🟤 Brown Sugar Blends</div></div>
+  <div class="container"><div class="static-page">
+    <h1>Make Your Own Brown Sugar</h1>
+    <p class="page-sub">Brown sugar is just white sugar with molasses. Out of it? Mix your own — here is exactly how much, in cups and in grams.</p>
+    <div class="bs-levels" id="bsLevels"></div>
+    <div class="conv-grid" id="bsTables"></div>
+    <h2>How to use these tables</h2>
+    <ul>
+      <li><strong>Find how much packed brown sugar your recipe wants</strong> (left column), then measure the white sugar and molasses beside it.</li>
+      <li><strong>Mix until no streaks remain</strong> — a mixer, food processor or fork all work — then measure and use it as brown sugar. Store airtight.</li>
+      <li><strong>Use light (mild) molasses.</strong> Blackstrap is very strong and bitter.</li>
+      <li><strong>Weigh it if you can.</strong> The gram columns use this cookbook's Cups to Grams table: white sugar is 200 g per cup and molasses is about 7 g per teaspoon.</li>
+      <li><strong>It's to taste.</strong> More molasses makes a darker, stronger sugar; less makes it milder.</li>
+    </ul>
+    <p class="conv-foot" style="padding:0;margin-top:1rem">Where the numbers come from: Light uses King Arthur Baking's 2 teaspoons of molasses per cup of white sugar. Regular uses 1 tablespoon per cup (King Arthur's ratio for dark, and the most common home recipe). Dark uses 2 tablespoons per cup, a popular ratio for deep-dark sugar. Store-bought brown sugar is white sugar with up to 10% molasses added back by weight. Molasses weight: 2 tsp = 14 g and 1 Tbsp = 21 g (King Arthur). See also <a href="#" onclick="showPage('conversions');return false">Unit Conversions</a>.</p>
   </div></div>
 </div>
 
@@ -1312,6 +1371,91 @@ function attribution(r){
 }
 var cookSteps=[],cookIngs=[],cookIdx=0,cookTimer=null,cookTimerSecs=0,cookTimerTotal=0;
 var viewScale=1,viewMetric=false,viewingId=null;
+
+/* ===== Cups -> grams: ONE table feeds the recipe "By weight" view, Cook Mode, the Unit Conversions
+   page and the Brown Sugar page, so they can never disagree. Values are grams per US cup. ===== */
+var WEIGHTS=[
+ {id:'ap',label:'All-purpose flour',g:120,re:/\b(?:all[- ]?purpose|plain|white) flour\b|^flour\b/},
+ {id:'bread',label:'Bread flour',g:130,re:/\bbread flour\b/},
+ {id:'cake',label:'Cake flour',g:100,re:/\bcake flour\b/},
+ {id:'gran',label:'Granulated sugar',g:200,re:/\b(?:granulated|white|caster|superfine|table) sugar\b|^sugar\b/},
+ {id:'brown',label:'Brown sugar (packed)',g:220,re:/\bbrown sugar\b/},
+ {id:'powd',label:'Powdered sugar',g:120,re:/\b(?:powdered|confectioners'?|icing) sugar\b/},
+ {id:'butter',label:'Butter',g:226.8,note:'1 stick = ½ cup',re:/\bbutter\b/,ex:/peanut|almond|nut butter|apple butter|cocoa butter|shea|buttermilk|butterscotch|butter bean|butternut|butter lettuce|butterfly/},
+ {id:'rice',label:'Rice (dry)',g:185,re:/\brice\b/,ex:/cooked|vinegar|flour|wine|noodle|paper|cereal|krispie|milk|pudding/},
+ {id:'oats',label:'Rolled oats',g:90,re:/\boats\b/,ex:/steel|oat milk|oat flour/},
+ {id:'honey',label:'Honey / maple syrup',g:340,re:/\b(?:honey|maple syrup|golden syrup|agave)\b/},
+ {id:'molasses',label:'Molasses',g:340,re:/\bmolasses\b/},
+ {id:'cornsyrup',label:'Light corn syrup',g:312,re:/\bcorn syrup\b/},
+ {id:'milk',label:'Milk / water',g:240,re:/\b(?:milk|water|buttermilk)\b/,ex:/coconut|evaporated|condensed|almond|soy|oat milk|chestnut|melon|cress|sparkling/},
+ {id:'cream',label:'Cream',g:238,re:/\b(?:heavy|whipping|double|light|single) cream\b|^cream$/}
+];
+var UNIT_CUPS={tsp:1/48,tbsp:1/16,cup:1,'fl oz':1/8,pint:2,quart:4,gallon:16};
+var OZ_G=28.3495;
+function weightFor(name){
+  var n=String(name||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/\s+/g,' ').trim();
+  if(!n||/\bor\b/.test(n))return null;
+  for(var i=0;i<WEIGHTS.length;i++){var w=WEIGHTS[i];if(w.re.test(n)&&!(w.ex&&w.ex.test(n)))return w;}
+  return null;
+}
+function toGrams(ing,factor){
+  var q=WFC.parseQty(ing.qty);if(!q)return null;
+  var u=WFC.canonUnit(ing.unit||''),w=weightFor(ing.name);if(!w)return null;
+  var cups=UNIT_CUPS[u];
+  if(u==='stick'&&w.id==='butter')cups=0.5;
+  if(cups==null)return null;
+  return{min:q.min*factor*cups*w.g,max:q.max*factor*cups*w.g,w:w};
+}
+function fmtGrams(g,noUnit){
+  var t=g>=1000?(Math.round(g/10)/100)+' kg':(g<10?(Math.round(g*10)/10):Math.round(g))+' g';
+  return noUnit?t.replace(/ (g|kg)$/,''):t;
+}
+function fmtOz(g){
+  var oz=g/OZ_G;
+  if(oz>=16){var lb=Math.floor(oz/16),r=Math.round((oz-16*lb)*2)/2;if(r>=16){lb++;r=0;}return lb+' lb'+(r?' '+r+' oz':'');}
+  return(Math.round(oz*10)/10)+' oz';
+}
+function massResult(w){
+  var single=Math.abs(w.max-w.min)<1e-6;
+  return{qty:single?fmtGrams(w.min):fmtGrams(w.min,true)+'–'+fmtGrams(w.max),unit:'',alt:single?fmtOz(w.min):fmtOz(w.min)+'–'+fmtOz(w.max),mass:true};
+}
+/* mode: false = imperial, true = metric, 'mass' = grams for known ingredients (everything else stays metric) */
+var BS_LEVELS=[
+ {id:'light',name:'Light',tsp:2,color:'#C9A27A',blurb:'The mildest flavor and lightest color.'},
+ {id:'regular',name:'Regular',tsp:3,color:'#A9743F',blurb:'In between — a rounder caramel flavor. The one to choose if a recipe just says “brown sugar”.'},
+ {id:'dark',name:'Dark',tsp:6,color:'#7A4A22',blurb:'The deepest color and strongest molasses flavor — great for gingerbread, baked beans and barbecue sauce.'}
+];
+var BS_AMOUNTS=[1/4,1/3,1/2,2/3,3/4,1,1.5,2];
+var MOLASSES_G_PER_TSP=7;   /* King Arthur: 2 tsp = 14 g, 1 Tbsp = 21 g */
+function fmtCupsText(c){var t=WFC.formatQty({min:c,max:c},'pretty');return t+' cup'+(c>1?'s':'');}
+function fmtSpoons(tsp){
+  if(tsp>=12-1e-9)return fmtCupsText(tsp/48);
+  if(tsp>=3-1e-9){var tb=Math.floor(tsp/3+1e-9),rem=tsp-3*tb;return tb+' Tbsp'+(rem>0.04?' + '+WFC.formatQty({min:rem,max:rem},'pretty')+' tsp':'');}
+  return WFC.formatQty({min:tsp,max:tsp},'pretty')+' tsp';
+}
+function renderConversionRefs(){
+  var tb=document.getElementById('cupsTableBody');
+  if(tb)tb.innerHTML=WEIGHTS.map(function(w){
+    return'<tr><td>'+h(w.label)+(w.note?'<small class="cups-note">'+h(w.note)+'</small>':'')+'</td><td><strong>'+fmtGrams(w.g)+'</strong><small class="cups-note">'+fmtOz(w.g)+'</small></td><td>'+fmtGrams(w.g/2)+'</td><td>'+fmtGrams(w.g/4)+'</td><td>'+fmtGrams(w.g/16)+'</td></tr>';
+  }).join('');
+  var white=weightFor('granulated sugar').g,lv=document.getElementById('bsLevels'),tbs=document.getElementById('bsTables');
+  if(lv)lv.innerHTML=BS_LEVELS.map(function(l){
+    return'<div class="bs-level"><h3><span class="bs-swatch" style="background:'+l.color+'"></span>'+l.name+'</h3><p><strong>Per 1 cup:</strong> 1 cup ('+fmtGrams(white)+') white sugar + '+fmtSpoons(l.tsp)+' ('+fmtGrams(l.tsp*MOLASSES_G_PER_TSP)+') molasses.</p><p style="margin-top:.35rem;color:var(--ink3)">'+h(l.blurb)+'</p></div>';
+  }).join('');
+  if(tbs)tbs.innerHTML=BS_LEVELS.map(function(l){
+    return'<div class="conv-card" id="bs-'+l.id+'"><div class="conv-card-head">'+l.name+' brown sugar</div><table class="conv-table cups-table"><thead><tr><th>You need</th><th>White sugar</th><th>Molasses</th></tr></thead><tbody>'+
+      BS_AMOUNTS.map(function(c){return'<tr><td>'+fmtCupsText(c)+'</td><td>'+fmtCupsText(c)+'<small class="cups-note">'+fmtGrams(white*c)+'</small></td><td>'+fmtSpoons(l.tsp*c)+'<small class="cups-note">'+fmtGrams(l.tsp*c*MOLASSES_G_PER_TSP)+'</small></td></tr>';}).join('')+'</tbody></table></div>';
+  }).join('');
+}
+function convertIng(ing,factor,mode){
+  var q=WFC.parseQty(ing.qty),unit=ing.unit||'';
+  if(!q)return{qty:ing.qty||'',unit:unit};
+  if(mode==='mass'){var w=toGrams(ing,factor);if(w)return massResult(w);}
+  var f=factor,fmt='pretty',mc=null;
+  if(mode){mc=WFC.metric(unit);if(mc){f*=mc.f;unit=mc.u;fmt='decimal';}}
+  var qs=WFC.scaleQty(ing.qty,f,fmt);
+  return{qty:qs,unit:mc?unit:WFC.displayUnit(unit,qs)};
+}
 var shoppingList=[],mealPlan=[],_shopMigrated=false,activeTags=new Set(),shopView='aisle';
 try{shopView=localStorage.getItem('wfc_shop_view')==='person'?'person':'aisle';}catch(e){}
 function updateShopBadge(){
@@ -1430,6 +1574,47 @@ function toggleDiet(el){
   renderCards();
 }
 
+/* ===== Netflix-style browsing: one sliding row per category ===== */
+var CAT_ORDER=['Breakfast','Lunch','Dinner','Appetizer','Soup','Salad','Side Dish','Baking','Dessert','Snack','Drink','Other'];
+var rowOpen={},browseGrid=false;
+try{browseGrid=localStorage.getItem('wfc_browse_grid')==='1';}catch(e){}
+function rowIsOpen(id,catChosen){var v=rowOpen[id];return v!==undefined?v:(browseGrid||catChosen);}
+function cardHtml(r,i){
+    var diets=(isMine(r)?'<span class="diet-tag mine-tag">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
+    return '<div class="recipe-card" data-id="'+r.id+'" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
+      (r.photo?'<img class="card-img" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
+      '<div class="card-ph" style="'+(r.photo?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
+      '<div class="card-body"><div class="card-top"><div class="card-cat">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div><div class="card-top-right"><div class="diet-chips">'+diets+'</div><button class="heart-btn'+(isFav(r)?' on':'')+'" onclick="toggleFavorite(\''+r.id+'\',event)" title="Favorite">'+HEART+'</button></div></div>'+
+      '<div class="card-title">'+h(r.name)+'</div>'+
+      '<div class="card-meta">'+(r.servings?'<span>👤 '+r.servings+'</span>':'')+(r.active?'<span>👐 '+r.active+'m</span>':'')+(r.passive?'<span>⏳ '+r.passive+'m</span>':'')+(r.ingredients&&r.ingredients.length?'<span>🧂 '+r.ingredients.length+'</span>':'')+'</div>'+
+      (r.lastCooked?'<div class="last-cooked">🍳 Last cooked '+formatLastCooked(r.lastCooked)+'</div>':'')+
+      '<div class="badges">'+(r.cal?'<span class="badge b-cal">'+r.cal+' kcal</span>':'')+(r.protein?'<span class="badge b-protein">'+r.protein+'g P</span>':'')+(r.carbs?'<span class="badge b-carbs">'+r.carbs+'g C</span>':'')+(r.fat?'<span class="badge b-fat">'+r.fat+'g F</span>':'')+'</div></div></div>';
+}
+function rowHtml(row,open){
+  var n=row.items.length;
+  return'<section class="rrow'+(open?' open':'')+'" data-row="'+h(row.id)+'"><div class="rrow-head"><h2>'+h(row.title)+'<small>'+n+'</small></h2>'+(n>1?'<button class="rrow-all" onclick="toggleRow(this)">'+(open?'Show less':'See all')+' ›</button>':'')+'</div>'+
+    '<div class="rrow-wrap at-start"><button class="rrow-arrow left" aria-label="Scroll left" onclick="rowScroll(this,-1)">‹</button><div class="rrow-strip" onscroll="rowArrows(this.parentElement)">'+row.items.map(cardHtml).join('')+'</div><button class="rrow-arrow right" aria-label="Scroll right" onclick="rowScroll(this,1)">›</button></div></section>';
+}
+function toggleRow(btn){
+  var id=btn.closest('.rrow').dataset.row,cat=!!document.getElementById('catFilter').value;
+  rowOpen[id]=!rowIsOpen(id,cat);renderCards();
+}
+function toggleBrowseGrid(){
+  browseGrid=!browseGrid;rowOpen={};
+  try{localStorage.setItem('wfc_browse_grid',browseGrid?'1':'0');}catch(e){}
+  renderCards();
+}
+function rowScroll(btn,dir){
+  var st=btn.parentElement.querySelector('.rrow-strip');
+  st.scrollBy({left:dir*Math.max(220,st.clientWidth*.85),behavior:'smooth'});
+}
+function rowArrows(wrap){
+  var st=wrap.querySelector('.rrow-strip');if(!st)return;
+  wrap.classList.toggle('at-start',st.scrollLeft<4);
+  wrap.classList.toggle('at-end',st.scrollLeft+st.clientWidth>=st.scrollWidth-4);
+}
+function updateRowArrows(){document.querySelectorAll('.rrow-wrap').forEach(rowArrows);}
+window.addEventListener('resize',updateRowArrows);
 function renderCards(){
   renderTagBar();
   var q=document.getElementById('searchInput').value.toLowerCase();
@@ -1463,17 +1648,21 @@ function renderCards(){
     grid.innerHTML='<div class="empty"><div class="big">📖</div><h3>'+(total===0?'Your cookbook is empty':'No recipes found')+'</h3><p style="margin-bottom:15px">'+(total===0?'Add your first family recipe!':'Try a different search or filter.')+'</p>'+(total===0?'<button class="btn btn-primary" onclick="openAdd()">＋ Add First Recipe</button>':'')+'</div>';
     return;
   }
-  grid.innerHTML=list.map(function(r,i){
-    var diets=(isMine(r)?'<span class="diet-tag mine-tag">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
-    return '<div class="recipe-card" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
-      (r.photo?'<img class="card-img" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
-      '<div class="card-ph" style="'+(r.photo?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
-      '<div class="card-body"><div class="card-top"><div class="card-cat">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div><div class="card-top-right"><div class="diet-chips">'+diets+'</div><button class="heart-btn'+(isFav(r)?' on':'')+'" onclick="toggleFavorite(\''+r.id+'\',event)" title="Favorite">'+HEART+'</button></div></div>'+
-      '<div class="card-title">'+h(r.name)+'</div>'+
-      '<div class="card-meta">'+(r.servings?'<span>👤 '+r.servings+'</span>':'')+(r.active?'<span>👐 '+r.active+'m</span>':'')+(r.passive?'<span>⏳ '+r.passive+'m</span>':'')+(r.ingredients&&r.ingredients.length?'<span>🧂 '+r.ingredients.length+'</span>':'')+'</div>'+
-      (r.lastCooked?'<div class="last-cooked">🍳 Last cooked '+formatLastCooked(r.lastCooked)+'</div>':'')+
-      '<div class="badges">'+(r.cal?'<span class="badge b-cal">'+r.cal+' kcal</span>':'')+(r.protein?'<span class="badge b-protein">'+r.protein+'g P</span>':'')+(r.carbs?'<span class="badge b-carbs">'+r.carbs+'g C</span>':'')+(r.fat?'<span class="badge b-fat">'+r.fat+'g F</span>':'')+'</div></div></div>';
-  }).join('');
+  var filtersOn=!!(q||cat||cui||activeDiets.size||activeTags.size||favOnly||mineOnly);
+  var rows=[];
+  if(!filtersOn){   /* the "front page" rows only appear when you are just browsing */
+    var favs=list.filter(isFav);
+    if(favs.length)rows.push({id:'__fav',title:'❤️ My Favorites',items:favs});
+    if(list.length>6)rows.push({id:'__new',title:'🆕 Recently Added',items:list.slice().sort(function(a,b){return(b.createdAt&&b.createdAt.seconds||0)-(a.createdAt&&a.createdAt.seconds||0);}).slice(0,12)});
+  }
+  var groups={};
+  list.forEach(function(r){var k=r.category||'Other';(groups[k]=groups[k]||[]).push(r);});
+  Object.keys(groups).sort(function(a,b){var ia=CAT_ORDER.indexOf(a),ib=CAT_ORDER.indexOf(b);return(ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);}).forEach(function(k){
+    rows.push({id:k,title:(EMOJIS[k]||'🍴')+' '+(k==='Other'?'More Recipes':k),items:groups[k]});
+  });
+  grid.innerHTML=rows.map(function(row){return rowHtml(row,rowIsOpen(row.id,!!cat));}).join('');
+  var bt=document.getElementById('browseToggle');if(bt)bt.textContent=browseGrid?'▤ Rows':'▦ Grid view';
+  setTimeout(updateRowArrows,0);
 }
 
 function viewRecipe(id,scale,metric){
@@ -1485,14 +1674,9 @@ function viewRecipe(id,scale,metric){
   var m=metric||false;
   viewScale=s;viewMetric=m;
 
-  function scaleIng(ing){
-    var q=WFC.parseQty(ing.qty),unit=ing.unit||'';
-    if(!q)return{name:ing.name,qty:ing.qty||'',unit:unit};
-    var f=s,mode='pretty',mc=null;
-    if(m){mc=WFC.metric(unit);if(mc){f*=mc.f;unit=mc.u;mode='decimal';}}
-    var qs=WFC.scaleQty(ing.qty,f,mode);
-    return{name:ing.name,qty:qs,unit:mc?unit:WFC.displayUnit(unit,qs)};
-  }
+  function scaleIng(ing){var c=convertIng(ing,s,m);c.name=ing.name;return c;}
+  var siList=(r.ingredients||[]).map(scaleIng),massN=siList.filter(function(x){return x.mass;}).length;
+  var mArg=(m==='mass')?"'mass'":String(!!m);
 
   var diets=(isMine(r)?'<span class="diet-tag mine-tag" style="font-size:calc(11.5px*var(--fs));padding:2px 8px">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:calc(11.5px*var(--fs));padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
   var tagPills=(r.tags||[]).length?'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">'+r.tags.map(function(t){return'<span class="tag-pill" data-tag="'+h(t)+'" onclick="filterByTag(this.dataset.tag)">#'+h(t)+'</span>';}).join('')+'</div>':'';
@@ -1519,15 +1703,16 @@ function viewRecipe(id,scale,metric){
     '</div>'+
     (r.lastCooked?'<p style="font-size:calc(12px*var(--fs));color:var(--ink3);margin:-.6rem 0 .85rem">Last cooked '+formatLastCooked(r.lastCooked)+'</p>':'')+
     '<div class="slider-row"><label>Servings</label>'+
-    '<input type="range" min="0.25" max="10" step="0.25" value="'+s+'" oninput="viewRecipe(\''+r.id+'\',+this.value,'+m+')">'+
+    '<input type="range" min="0.25" max="10" step="0.25" value="'+s+'" oninput="viewRecipe(\''+r.id+'\',+this.value,'+mArg+')">'+
     '<span class="slider-val">'+scaledServings+'</span>'+
     '<div class="unit-toggle">'+
     '<button class="unit-btn '+((!m)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',false)">Imperial</button>'+
-    '<button class="unit-btn '+((m)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',true)">Metric</button>'+
+    '<button class="unit-btn '+((m===true)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',true)">Metric</button>'+
+    '<button class="unit-btn '+((m==='mass')?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',\'mass\')" title="Cups of common ingredients become grams">By weight</button>'+
     '</div></div>'+
     '<div class="view-meta">'+(r.servings?'<span>👤 '+scaledServings+' servings</span>':'')+(r.active?'<span>👐 Active: '+r.active+' min</span>':'')+(r.passive?'<span>⏳ Passive: '+r.passive+' min</span>':'')+((+r.active||0)+(+r.passive||0)?'<span>⏱ Total: '+((+r.active||0)+(+r.passive||0))+' min</span>':'')+'</div>'+
     ((r.cal||r.protein||r.carbs||r.fat)?'<div class="nutri-cards">'+(r.cal?'<div class="nc"><div class="val" style="color:var(--rust)">'+r.cal+'</div><div class="lbl">kcal</div></div>':'')+(r.protein?'<div class="nc"><div class="val" style="color:var(--blue)">'+r.protein+'g</div><div class="lbl">Protein</div></div>':'')+(r.carbs?'<div class="nc"><div class="val" style="color:var(--green)">'+r.carbs+'g</div><div class="lbl">Carbs</div></div>':'')+(r.fat?'<div class="nc"><div class="val" style="color:var(--red)">'+r.fat+'g</div><div class="lbl">Fat</div></div>':'')+'</div>':'')+
-    ((r.ingredients||[]).length?'<div class="view-subhead">Ingredients</div><ul class="ing-list">'+r.ingredients.map(function(ing){var si=scaleIng(ing);return'<li><span>'+h(si.name)+'</span><span style="color:var(--ink3)">'+h(si.qty)+(si.unit?' '+h(si.unit):'')+'</span></li>';}).join('')+'</ul>':'')+
+    ((r.ingredients||[]).length?'<div class="view-subhead">Ingredients</div>'+(m==='mass'?'<p class="mass-note">⚖️ '+(massN?massN+' of '+siList.length+' ingredients shown by weight from our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'conversions\');return false">Cups to Grams table</a>. The rest are in metric.':'None of these ingredients are on our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'conversions\');return false">Cups to Grams table</a>, so they are shown in metric.')+'</p>':'')+'<ul class="ing-list">'+siList.map(function(si){return'<li><span>'+h(si.name)+'</span><span style="color:var(--ink3)">'+h(si.qty)+(si.unit?' '+h(si.unit):'')+(si.alt?'<small class="ing-alt">'+h(si.alt)+'</small>':'')+'</span></li>';}).join('')+'</ul>':'')+
     ((r.steps||[]).length?'<div class="view-subhead">Instructions</div><ol class="steps-ol">'+r.steps.map(function(st,i){return'<li><div class="sc">'+(i+1)+'</div><div class="st">'+h(st)+'</div></li>';}).join('')+'</ol>':'')+
     (pairs.length?'<div class="view-subhead" style="margin-top:1.1rem">Serves Well With</div><div class="pair-chips">'+pairs.map(function(p){var m2=recipes.find(function(rx){return rx.name.toLowerCase()===p.toLowerCase();});return'<div class="pair-chip" onclick="'+(m2?'closeOverlay(\'viewOverlay\');viewRecipe(\''+m2.id+'\')':'showToast(\'Recipe not in cookbook yet\')')+'">'+h(p)+(m2?' 👀':'')+'</div>';}).join('')+'</div>':'')+
     '<div class="view-subhead" style="margin-top:1.1rem">Family Notes</div>'+
@@ -1540,11 +1725,10 @@ function viewRecipe(id,scale,metric){
   document.getElementById('viewOverlay').scrollTop=0;
 }
 
-var cookFactor=1,cookDone={},cookIngsOpen=true;
+var cookFactor=1,cookDone={},cookIngsOpen=true,cookUnits=false;
 function cookIngLine(i){
-  var qs=i.qty?WFC.scaleQty(i.qty,cookFactor,'pretty'):'';
-  var u=qs?WFC.displayUnit(i.unit||'',qs):(i.unit||'');
-  return((qs?qs+' ':'')+(u?u+' ':'')+(i.name||'')).replace(/\s+/g,' ').trim();
+  var c=convertIng(i,cookFactor,cookUnits),qs=c.qty||'',u=c.unit||'';
+  return((qs?qs+' ':'')+(u?u+' ':'')+(c.alt?'('+c.alt+') ':'')+(i.name||'')).replace(/\s+/g,' ').trim();
 }
 function renderCookIngs(){
   var box=document.getElementById('cookIngs'),n=cookIngs.length;
@@ -1574,7 +1758,7 @@ function startCook(id){
   var r=recipes.find(function(x){return x.id===id;});
   if(!r||(r.steps||[]).length===0){showToast('No steps to cook!');return;}
   cookSteps=r.steps;cookIngs=r.ingredients||[];cookIdx=0;
-  cookFactor=(viewingId===id&&viewScale)?viewScale:1;cookDone={};cookIngsOpen=true;
+  cookFactor=(viewingId===id&&viewScale)?viewScale:1;cookUnits=(viewingId===id)?viewMetric:false;cookDone={};cookIngsOpen=true;
   document.getElementById('cookTitle').textContent=r.name;
   renderCookIngs();renderCookStep();closeOverlay('viewOverlay');openOverlay('cookOverlay');
 }
@@ -2734,7 +2918,7 @@ checkForClippedRecipe();
 document.querySelector('.main').addEventListener('click',function(){
   if(window.innerWidth<768)closeSidebarMobile();
 });
-guideInit();
+guideInit();renderConversionRefs();
 try{
   [['refNavItems','refChev','wfc_ref_collapsed'],['guideNavItems','guideChev','wfc_guide_collapsed']].forEach(function(g){
     if(localStorage.getItem(g[2])==='1'){document.getElementById(g[0]).classList.add('collapsed');document.getElementById(g[1]).classList.add('collapsed');}
