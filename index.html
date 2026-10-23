@@ -460,6 +460,11 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .rrow.open .rrow-strip .recipe-card{flex:none}
 .rrow.open .rrow-arrow{display:none}
 @media(hover:none),(max-width:768px){.rrow-arrow{display:none!important}.rrow-strip .recipe-card{flex-basis:min(74vw,290px)}}
+.weights-table td:nth-child(2){text-align:left;color:var(--ink3)}
+.weights-table td:nth-child(3){text-align:right}
+.weights-table th:nth-child(2){text-align:left}
+.weights-table .cat-row td{background:var(--parchment2);font-family:'Lora',serif;font-weight:700;font-size:calc(13px*var(--fs));color:var(--ink2);text-align:left;padding:8px 10px}
+.weights-table tr[hidden]{display:none}
 /* cook mode */
 .cook-step-text{font-size:calc(20px*var(--fs))}
 .cook-nav .btn{font-size:calc(14px*var(--fs));padding:.65rem 1.3rem}
@@ -523,7 +528,7 @@ body.locked .tabbar{display:none!important}
     <div class="nav-sec-row" onclick="toggleRefNav()"><div class="nav-sec">Reference</div><span class="chev" id="refChev">▾</span></div>
     <div class="nav-group" id="refNavItems">
     <div class="nav-item" id="nav-conversions" onclick="showPage('conversions')"><span class="ic">⚖️</span>Unit Conversions</div>
-    <div class="nav-item" id="nav-brownsugar" onclick="showPage('brownsugar')"><span class="ic">🟤</span>Brown Sugar Blends</div>
+    <div class="nav-item" id="nav-weights" onclick="showPage('weights')"><span class="ic">🥣</span>Ingredient Weights</div>
     <div class="nav-item" id="nav-doneness" onclick="showPage('doneness')"><span class="ic">🥩</span>Meat Doneness</div>
     </div>
     <div class="nav-sec">Backup &amp; App</div>
@@ -581,6 +586,7 @@ body.locked .tabbar{display:none!important}
   <div class="topbar"><div class="topbar-title">⚖️ Unit Conversions</div></div>
   <div class="container"><div class="static-page">
     <h1>Unit Conversions</h1><p class="page-sub">A complete reference for cooking measurements — volume, weight, temperature, and more.</p>
+    <p style="font-size:calc(13px*var(--fs));color:var(--ink3);margin:-.3rem 0 1.1rem">Looking for cups to grams for flour, sugar and other ingredients? See <a href="#" onclick="showPage('weights');return false" style="color:var(--rust);font-weight:700">Ingredient Weights</a>.</p>
     <div class="conv-grid">
       <div class="conv-card"><div class="conv-card-head">Volume — Spoons &amp; Cups</div><table class="conv-table">
         <tr><td>1 teaspoon (tsp)</td><td>=</td><td>5 ml</td></tr><tr><td>1 tablespoon (Tb)</td><td>=</td><td>3 tsp / 15 ml / ½ fl oz</td></tr>
@@ -600,9 +606,6 @@ body.locked .tabbar{display:none!important}
         <tr><td>8 oz (½ lb)</td><td>=</td><td>227 g</td></tr><tr><td>12 oz (¾ lb)</td><td>=</td><td>340 g</td></tr>
         <tr><td>16 oz (1 lb)</td><td>=</td><td>454 g</td></tr><tr><td>2.2 lbs</td><td>=</td><td>1 kg / 1000 g</td></tr>
       </table></div>
-      <div class="conv-card conv-wide" id="cupsCard"><div class="conv-card-head">Common Ingredients — Cups to Grams</div>
-        <div style="overflow-x:auto"><table class="conv-table cups-table"><thead><tr><th>Ingredient</th><th>1 cup</th><th>½ cup</th><th>¼ cup</th><th>1 Tbsp</th></tr></thead><tbody id="cupsTableBody"></tbody></table></div>
-        <p class="conv-foot">These are the same numbers the <strong>By weight</strong> button uses in every recipe — ingredients not listed here stay in metric volume. Need brown sugar? See <a href="#" onclick="showPage('brownsugar');return false">Brown Sugar Blends</a>.</p></div>
       <div class="conv-card"><div class="conv-card-head">Butter &amp; Sticks</div><table class="conv-table">
         <tr><td>¼ stick</td><td>=</td><td>2 Tbsp / 1 oz / 28 g</td></tr><tr><td>½ stick</td><td>=</td><td>¼ cup / 4 Tbsp / 2 oz / 57 g</td></tr>
         <tr><td>1 stick</td><td>=</td><td>½ cup / 8 Tbsp / 4 oz / 113 g</td></tr><tr><td>2 sticks</td><td>=</td><td>1 cup / 16 Tbsp / 8 oz / 227 g</td></tr>
@@ -625,23 +628,17 @@ body.locked .tabbar{display:none!important}
   </div></div>
 </div>
 
-<!-- BROWN SUGAR BLENDS -->
-<div class="page" id="page-brownsugar">
-  <div class="topbar"><div class="topbar-title">🟤 Brown Sugar Blends</div></div>
+<!-- INGREDIENT WEIGHTS -->
+<div class="page" id="page-weights">
+  <div class="topbar"><div class="topbar-title">🥣 Ingredient Weights</div></div>
   <div class="container"><div class="static-page">
-    <h1>Make Your Own Brown Sugar</h1>
-    <p class="page-sub">Brown sugar is just white sugar with molasses. Out of it? Mix your own — here is exactly how much, in cups and in grams.</p>
-    <div class="bs-levels" id="bsLevels"></div>
+    <h1>Ingredient Weights</h1>
+    <p class="page-sub">Grams and ounces for common ingredients — the same numbers the <strong>By weight</strong> button uses in every recipe. Measurements follow <a href="https://www.kingarthurbaking.com/learn/ingredient-weight-chart" target="_blank" rel="noopener" style="color:var(--rust);font-weight:700">King Arthur Baking’s Ingredient Weight Chart ↗</a>, which lists hundreds more.</p>
+    <div class="search-wrap guide-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input class="search-input" id="weightSearch" placeholder="Find an ingredient — try “flour”, “butter” or “honey”…" oninput="filterWeights()" autocomplete="off"></div>
+    <div class="guide-count" id="weightCount"></div>
+    <div style="overflow-x:auto"><table class="conv-table cups-table weights-table"><thead><tr><th>Ingredient</th><th>Measure</th><th>Grams</th><th>Ounces</th></tr></thead><tbody id="weightsBody"></tbody></table></div>
+    <h2 style="margin-top:2rem">Brown sugar from white sugar + molasses</h2>
     <div class="conv-grid" id="bsTables"></div>
-    <h2>How to use these tables</h2>
-    <ul>
-      <li><strong>Find how much packed brown sugar your recipe wants</strong> (left column), then measure the white sugar and molasses beside it.</li>
-      <li><strong>Mix until no streaks remain</strong> — a mixer, food processor or fork all work — then measure and use it as brown sugar. Store airtight.</li>
-      <li><strong>Use light (mild) molasses.</strong> Blackstrap is very strong and bitter.</li>
-      <li><strong>Weigh it if you can.</strong> The gram columns use this cookbook's Cups to Grams table: white sugar is 200 g per cup and molasses is about 7 g per teaspoon.</li>
-      <li><strong>It's to taste.</strong> More molasses makes a darker, stronger sugar; less makes it milder.</li>
-    </ul>
-    <p class="conv-foot" style="padding:0;margin-top:1rem">Where the numbers come from: Light uses King Arthur Baking's 2 teaspoons of molasses per cup of white sugar. Regular uses 1 tablespoon per cup (King Arthur's ratio for dark, and the most common home recipe). Dark uses 2 tablespoons per cup, a popular ratio for deep-dark sugar. Store-bought brown sugar is white sugar with up to 10% molasses added back by weight. Molasses weight: 2 tsp = 14 g and 1 Tbsp = 21 g (King Arthur). See also <a href="#" onclick="showPage('conversions');return false">Unit Conversions</a>.</p>
   </div></div>
 </div>
 
@@ -1374,37 +1371,112 @@ var viewScale=1,viewMetric=false,viewingId=null;
 
 /* ===== Cups -> grams: ONE table feeds the recipe "By weight" view, Cook Mode, the Unit Conversions
    page and the Brown Sugar page, so they can never disagree. Values are grams per US cup. ===== */
+function W(cat,label,per,v,g,re,o){return Object.assign({cat:cat,label:label,per:per,v:v,g:g,re:re},o||{});}
+/* Grams for the measure shown (v = that measure in US cups). Measurements follow King Arthur Baking's published
+   Ingredient Weight Chart; re = how an ingredient name in a recipe is matched; eg = a name that should match;
+   a row with re:null is for reading only. */
 var WEIGHTS=[
- {id:'ap',label:'All-purpose flour',g:120,re:/\b(?:all[- ]?purpose|plain|white) flour\b|^flour\b/},
- {id:'bread',label:'Bread flour',g:130,re:/\bbread flour\b/},
- {id:'cake',label:'Cake flour',g:100,re:/\bcake flour\b/},
- {id:'gran',label:'Granulated sugar',g:200,re:/\b(?:granulated|white|caster|superfine|table) sugar\b|^sugar\b/},
- {id:'brown',label:'Brown sugar (packed)',g:220,re:/\bbrown sugar\b/},
- {id:'powd',label:'Powdered sugar',g:120,re:/\b(?:powdered|confectioners'?|icing) sugar\b/},
- {id:'butter',label:'Butter',g:226.8,note:'1 stick = ½ cup',re:/\bbutter\b/,ex:/peanut|almond|nut butter|apple butter|cocoa butter|shea|buttermilk|butterscotch|butter bean|butternut|butter lettuce|butterfly/},
- {id:'rice',label:'Rice (dry)',g:185,re:/\brice\b/,ex:/cooked|vinegar|flour|wine|noodle|paper|cereal|krispie|milk|pudding/},
- {id:'oats',label:'Rolled oats',g:90,re:/\boats\b/,ex:/steel|oat milk|oat flour/},
- {id:'honey',label:'Honey / maple syrup',g:340,re:/\b(?:honey|maple syrup|golden syrup|agave)\b/},
- {id:'molasses',label:'Molasses',g:340,re:/\bmolasses\b/},
- {id:'cornsyrup',label:'Light corn syrup',g:312,re:/\bcorn syrup\b/},
- {id:'milk',label:'Milk / water',g:240,re:/\b(?:milk|water|buttermilk)\b/,ex:/coconut|evaporated|condensed|almond|soy|oat milk|chestnut|melon|cress|sparkling/},
- {id:'cream',label:'Cream',g:238,re:/\b(?:heavy|whipping|double|light|single) cream\b|^cream$/}
+ W('Flours & starches','All-purpose flour','1 cup',1,120,/\b(?:all[- ]?purpose|plain|white) flour\b|^(?:sifted |unsifted )?flour\b|\bflour$/,{ex:/cake|bread|pastry|self|whole|rye|almond|oat|coconut|rice|corn|potato|semolina|gluten|keto|paleo|chickpea|buckwheat|spelt|teff|sorghum|tapioca|quinoa|amaranth|millet|barley|masa|wheat/,eg:'all-purpose flour'}),
+ W('Flours & starches','Bread flour','1 cup',1,120,/\bbread flour\b/),
+ W('Flours & starches','Cake flour','1 cup',1,120,/\bcake flour\b/),
+ W('Flours & starches','Pastry flour','1 cup',1,106,/\bpastry flour\b/,{ex:/whole|graham/}),
+ W('Flours & starches','Whole wheat flour','1 cup',1,113,/\b(?:whole[- ]?wheat|wholemeal) flour\b/,{ex:/pastry/}),
+ W('Flours & starches','Self-rising flour','1 cup',1,113,/\bself[- ]?rising flour\b/),
+ W('Flours & starches','Rye flour','1 cup',1,106,/\brye flour\b/),
+ W('Flours & starches','Almond flour','1 cup',1,96,/\balmond (?:flour|meal)\b/),
+ W('Flours & starches','Oat flour','1 cup',1,92,/\boat flour\b/),
+ W('Flours & starches','Coconut flour','1 cup',1,128,/\bcoconut flour\b/),
+ W('Flours & starches','Rice flour (white)','1 cup',1,142,/\brice flour\b/),
+ W('Flours & starches','Cornmeal','1 cup',1,156,/\bcornmeal\b/),
+ W('Flours & starches','Cornstarch','1/4 cup',0.25,28,/\b(?:corn ?starch|cornflour)\b/),
+ W('Flours & starches','Potato starch','1 cup',1,152,/\bpotato starch\b/),
+ W('Flours & starches','Semolina flour','1 cup',1,163,/\bsemolina\b/),
+ W('Sugars & sweeteners','Granulated sugar','1 cup',1,198,/\b(?:granulated|white|table) sugar\b|^sugar\b|\bsugar$/,{ex:/snap|pea|cane|free|substitute|pumpkin|brown|powder|confection|icing|caster|castor|superfine|raw|turbinado|demerara|coconut|maple|cinnamon|vanilla|beet/,eg:'granulated sugar'}),
+ W('Sugars & sweeteners','Brown sugar (light or dark, packed)','1 cup',1,213,/\bbrown sugar\b/),
+ W('Sugars & sweeteners','Powdered sugar (unsifted)','1 cup',1,113,/\b(?:powdered|confectioners'?|icing) sugar\b/,{eg:'powdered sugar'}),
+ W('Sugars & sweeteners','Superfine (caster) sugar','1 cup',1,190,/\b(?:superfine|caster|castor) sugar\b/,{eg:'superfine sugar'}),
+ W('Sugars & sweeteners','Turbinado (raw) sugar','1 cup',1,180,/\b(?:turbinado|raw) sugar\b/,{eg:'turbinado sugar'}),
+ W('Sugars & sweeteners','Demerara sugar','1 cup',1,220,/\bdemerara\b/),
+ W('Sugars & sweeteners','Coconut sugar','1/2 cup',0.5,77,/\bcoconut sugar\b/),
+ W('Sugars & sweeteners','Maple sugar','1/2 cup',0.5,78,/\bmaple sugar\b/),
+ W('Sugars & sweeteners','Honey','1 Tbsp',1/16,21,/\bhoney\b/),
+ W('Sugars & sweeteners','Maple syrup','1/2 cup',0.5,156,/\bmaple syrup\b/),
+ W('Sugars & sweeteners','Molasses','1/4 cup',0.25,85,/\bmolasses\b/),
+ W('Sugars & sweeteners','Corn syrup (light or dark)','1 cup',1,312,/\bcorn syrup\b/),
+ W('Sugars & sweeteners','Agave syrup','1/4 cup',0.25,84,/\bagave\b/),
+ W('Sugars & sweeteners','Jam or preserves','1/4 cup',0.25,85,/\b(?:jam|jelly|preserves)\b/,{eg:'jam'}),
+ W('Fats & oils','Butter','1/2 cup',0.5,113.4,/\bbutter\b/,{id:'butter',note:'1 stick = ½ cup',ex:/peanut|almond|nut butter|apple butter|cocoa butter|shea|buttermilk|butterscotch|butter bean|butternut|butter lettuce|butterfly/}),
+ W('Fats & oils','Vegetable oil','1 cup',1,198,/\b(?:vegetable|canola|sunflower|safflower|corn) oil\b|^oil\b/,{eg:'vegetable oil'}),
+ W('Fats & oils','Olive oil','1/4 cup',0.25,50,/\bolive oil\b/),
+ W('Fats & oils','Coconut oil','1/2 cup',0.5,113,/\bcoconut oil\b/),
+ W('Fats & oils','Lard','1/2 cup',0.5,113,/\blard\b/),
+ W('Fats & oils','Vegetable shortening','1/4 cup',0.25,46,/\bshortening\b/),
+ W('Fats & oils','Mayonnaise','1/2 cup',0.5,113,/\bmayonnaise\b/),
+ W('Fats & oils','Peanut butter','1/2 cup',0.5,135,/\bpeanut butter\b/),
+ W('Dairy, eggs & liquids','Milk or buttermilk','1 cup',1,227,/\b(?:butter)?milk\b/,{ex:/coconut|evaporated|condensed|almond|soy|oat|dried|powder|malted|chocolate|rice milk/,eg:'milk'}),
+ W('Dairy, eggs & liquids','Cream (heavy, light, half & half)','1 cup',1,227,/\b(?:heavy|whipping|double|light|single) cream\b|half[- ]and[- ]half|^cream$/,{eg:'heavy cream'}),
+ W('Dairy, eggs & liquids','Sour cream, yogurt or cream cheese','1 cup',1,227,/\b(?:sour cream|yogurt|yoghurt|cream cheese)\b/,{eg:'sour cream'}),
+ W('Dairy, eggs & liquids','Ricotta or mascarpone','1 cup',1,227,/\b(?:ricotta|mascarpone)\b/,{eg:'ricotta'}),
+ W('Dairy, eggs & liquids','Cottage cheese','1/2 cup',0.5,113,/\bcottage cheese\b/),
+ W('Dairy, eggs & liquids','Shredded cheddar, jack, mozzarella or Swiss','1 cup',1,113,/\b(?:cheddar|mozzarella|swiss|monterey jack|jack cheese)\b/,{eg:'cheddar'}),
+ W('Dairy, eggs & liquids','Grated Parmesan','1/2 cup',0.5,50,/\b(?:parmesan|parmigiano)\b/),
+ W('Dairy, eggs & liquids','Water','1 cup',1,227,/\bwater\b/,{ex:/chestnut|melon|cress|sparkling|bath/}),
+ W('Dairy, eggs & liquids','Applesauce','1 cup',1,255,/\bapplesauce\b/),
+ W('Dairy, eggs & liquids','Pumpkin purée','1 cup',1,227,/\bpumpkin pur(?:e|é)e\b/,{eg:'pumpkin puree'}),
+ W('Dairy, eggs & liquids','Mashed banana','1 cup',1,227,/\bmashed bananas?\b/),
+ W('Dairy, eggs & liquids','Egg (large)','1 large',1,50,/^(?:large |medium |extra[- ]large )?eggs?$/,{count:true,eg:'large egg'}),
+ W('Nuts, chocolate & pantry','Chocolate chips','1 cup',1,170,/\bchocolate (?:chips|chunks)\b/),
+ W('Nuts, chocolate & pantry','Cocoa (unsweetened)','1/2 cup',0.5,42,/\bcocoa\b/,{ex:/butter|nibs|mix|hot/}),
+ W('Nuts, chocolate & pantry','Walnuts (chopped)','1 cup',1,113,/\bwalnuts?\b/),
+ W('Nuts, chocolate & pantry','Pecans (whole)','1 cup',1,105,/\bpecans?\b/),
+ W('Nuts, chocolate & pantry','Almonds (whole)','1 cup',1,142,/\balmonds?\b/,{ex:/flour|meal|milk|extract|butter|paste|slivered|sliced/}),
+ W('Nuts, chocolate & pantry','Peanuts','1 cup',1,142,/\bpeanuts?\b/,{ex:/butter|oil/}),
+ W('Nuts, chocolate & pantry','Cashews','1 cup',1,113,/\bcashews?\b/),
+ W('Nuts, chocolate & pantry','Shredded coconut (sweetened)','1 cup',1,85,/\bcoconut\b/,{ex:/milk|oil|sugar|cream|flour|water|aminos|extract/,eg:'shredded coconut'}),
+ W('Nuts, chocolate & pantry','Raisins','1 cup',1,149,/\braisins?\b/),
+ W('Nuts, chocolate & pantry','Rolled oats (old-fashioned or quick)','1 cup',1,89,/\boats\b/,{ex:/steel|flour|bran|milk/,eg:'rolled oats'}),
+ W('Nuts, chocolate & pantry','Rice (long-grain, dry)','1/2 cup',0.5,99,/\brice\b/,{ex:/cooked|flour|vinegar|wine|noodle|paper|cereal|krispie|milk|pudding/,eg:'rice'}),
+ W('Nuts, chocolate & pantry','Graham cracker crumbs','1 cup',1,100,/\bgraham (?:cracker )?crumbs?\b/),
+ W('Nuts, chocolate & pantry','Dried breadcrumbs','1/4 cup',0.25,28,/\bbread ?crumbs?\b/,{ex:/panko|fresh|soft/,eg:'breadcrumbs'}),
+ W('Nuts, chocolate & pantry','Panko','1 cup',1,50,/\bpanko\b/),
+ W('Nuts, chocolate & pantry','Mini marshmallows','1 cup',1,43,/\bmarshmallows?\b/,{ex:/fluff|creme|cream|spread|cereal/}),
+ W('Leaveners, salt & flavor','Baking powder','1 tsp',1/48,4,/\bbaking powder\b/),
+ W('Leaveners, salt & flavor','Baking soda','1/2 tsp',1/96,3,/\b(?:baking soda|bicarbonate of soda)\b/),
+ W('Leaveners, salt & flavor','Salt (table)','1 Tbsp',1/16,18,/\bsalt\b/,{ex:/kosher|sea|flaky|pretzel|lawry|himalayan|seasoned|garlic salt|celery salt|onion salt/,eg:'salt'}),
+ W('Leaveners, salt & flavor','Kosher salt (Diamond Crystal)','1 Tbsp',1/16,8,null),
+ W('Leaveners, salt & flavor','Kosher salt (Morton)','1 Tbsp',1/16,16,null),
+ W('Leaveners, salt & flavor','Instant yeast','1 Tbsp',1/16,9,/\byeast\b/,{ex:/nutritional/}),
+ W('Leaveners, salt & flavor','Vanilla extract','1 Tbsp',1/16,14,/\bvanilla\b/,{ex:/bean|sugar|ice cream|pudding|wafer|yogurt|paste|pod|almond|cake mix/,eg:'vanilla'}),
+ W('Leaveners, salt & flavor','Lemon juice','1 Tbsp',1/16,14,/\blemon juice\b/,{ex:/powder/}),
+ W('Leaveners, salt & flavor','Tomato paste','2 Tbsp',1/8,29,/\btomato paste\b/),
+ W('Leaveners, salt & flavor','Minced garlic','2 Tbsp',1/8,28,/\bminced garlic\b|\bgarlic,? minced\b/,{eg:'minced garlic'}),
+ W('Leaveners, salt & flavor','Poppy seeds','2 Tbsp',1/8,18,/\bpoppy seeds?\b/),
+ W('Leaveners, salt & flavor','Sesame seeds','1/2 cup',0.5,71,/\bsesame seeds?\b/),
+ W('Fruit & vegetables','Apples (peeled, sliced)','1 cup',1,113,/\bsliced apples?\b|\bapples?,? (?:peeled,? )?sliced\b/,{eg:'sliced apples'}),
+ W('Fruit & vegetables','Carrots (grated)','1 cup',1,99,/\bgrated carrots?\b|\bcarrots?,? grated\b/,{eg:'grated carrots'}),
+ W('Fruit & vegetables','Onions (diced)','1 cup',1,142,/\b(?:diced|chopped) onions?\b|\bonions?,? (?:diced|chopped)\b/,{eg:'diced onions'}),
+ W('Fruit & vegetables','Celery (diced)','1 cup',1,142,/\b(?:diced|chopped) celery\b|\bcelery,? (?:diced|chopped)\b/,{eg:'diced celery'}),
+ W('Fruit & vegetables','Pineapple (diced)','1 cup',1,170,/\bpineapple\b/,{ex:/juice|crushed|slice|ring/,eg:'diced pineapple'}),
+ W('Fruit & vegetables','Mushrooms (sliced)','1 cup',1,78,/\bsliced mushrooms?\b|\bmushrooms?,? sliced\b/,{eg:'sliced mushrooms'})
 ];
 var UNIT_CUPS={tsp:1/48,tbsp:1/16,cup:1,'fl oz':1/8,pint:2,quart:4,gallon:16};
 var OZ_G=28.3495;
+function perCup(w){return w.g/w.v;}
 function weightFor(name){
   var n=String(name||'').toLowerCase().replace(/\([^)]*\)/g,' ').replace(/\s+/g,' ').trim();
   if(!n||/\bor\b/.test(n))return null;
-  for(var i=0;i<WEIGHTS.length;i++){var w=WEIGHTS[i];if(w.re.test(n)&&!(w.ex&&w.ex.test(n)))return w;}
+  for(var i=0;i<WEIGHTS.length;i++){var w=WEIGHTS[i];if(w.re&&w.re.test(n)&&!(w.ex&&w.ex.test(n)))return w;}
   return null;
 }
 function toGrams(ing,factor){
   var q=WFC.parseQty(ing.qty);if(!q)return null;
   var u=WFC.canonUnit(ing.unit||''),w=weightFor(ing.name);if(!w)return null;
+  if(w.count){if(u!=='')return null;return{min:q.min*factor*w.g,max:q.max*factor*w.g,w:w};}
   var cups=UNIT_CUPS[u];
   if(u==='stick'&&w.id==='butter')cups=0.5;
   if(cups==null)return null;
-  return{min:q.min*factor*cups*w.g,max:q.max*factor*cups*w.g,w:w};
+  var gc=perCup(w);
+  return{min:q.min*factor*cups*gc,max:q.max*factor*cups*gc,w:w};
 }
 function fmtGrams(g,noUnit){
   var t=g>=1000?(Math.round(g/10)/100)+' kg':(g<10?(Math.round(g*10)/10):Math.round(g))+' g';
@@ -1420,13 +1492,9 @@ function massResult(w){
   return{qty:single?fmtGrams(w.min):fmtGrams(w.min,true)+'–'+fmtGrams(w.max),unit:'',alt:single?fmtOz(w.min):fmtOz(w.min)+'–'+fmtOz(w.max),mass:true};
 }
 /* mode: false = imperial, true = metric, 'mass' = grams for known ingredients (everything else stays metric) */
-var BS_LEVELS=[
- {id:'light',name:'Light',tsp:2,color:'#C9A27A',blurb:'The mildest flavor and lightest color.'},
- {id:'regular',name:'Regular',tsp:3,color:'#A9743F',blurb:'In between — a rounder caramel flavor. The one to choose if a recipe just says “brown sugar”.'},
- {id:'dark',name:'Dark',tsp:6,color:'#7A4A22',blurb:'The deepest color and strongest molasses flavor — great for gingerbread, baked beans and barbecue sauce.'}
-];
+var BS_LEVELS=[{id:'light',name:'Light',tsp:2},{id:'regular',name:'Regular',tsp:3},{id:'dark',name:'Dark',tsp:6}];
 var BS_AMOUNTS=[1/4,1/3,1/2,2/3,3/4,1,1.5,2];
-var MOLASSES_G_PER_TSP=7;   /* King Arthur: 2 tsp = 14 g, 1 Tbsp = 21 g */
+var MOLASSES_G_PER_TSP=7;   /* 2 tsp = 14 g, 1 Tbsp = 21 g */
 function fmtCupsText(c){var t=WFC.formatQty({min:c,max:c},'pretty');return t+' cup'+(c>1?'s':'');}
 function fmtSpoons(tsp){
   if(tsp>=12-1e-9)return fmtCupsText(tsp/48);
@@ -1434,18 +1502,31 @@ function fmtSpoons(tsp){
   return WFC.formatQty({min:tsp,max:tsp},'pretty')+' tsp';
 }
 function renderConversionRefs(){
-  var tb=document.getElementById('cupsTableBody');
-  if(tb)tb.innerHTML=WEIGHTS.map(function(w){
-    return'<tr><td>'+h(w.label)+(w.note?'<small class="cups-note">'+h(w.note)+'</small>':'')+'</td><td><strong>'+fmtGrams(w.g)+'</strong><small class="cups-note">'+fmtOz(w.g)+'</small></td><td>'+fmtGrams(w.g/2)+'</td><td>'+fmtGrams(w.g/4)+'</td><td>'+fmtGrams(w.g/16)+'</td></tr>';
-  }).join('');
-  var white=weightFor('granulated sugar').g,lv=document.getElementById('bsLevels'),tbs=document.getElementById('bsTables');
-  if(lv)lv.innerHTML=BS_LEVELS.map(function(l){
-    return'<div class="bs-level"><h3><span class="bs-swatch" style="background:'+l.color+'"></span>'+l.name+'</h3><p><strong>Per 1 cup:</strong> 1 cup ('+fmtGrams(white)+') white sugar + '+fmtSpoons(l.tsp)+' ('+fmtGrams(l.tsp*MOLASSES_G_PER_TSP)+') molasses.</p><p style="margin-top:.35rem;color:var(--ink3)">'+h(l.blurb)+'</p></div>';
-  }).join('');
+  var tb=document.getElementById('weightsBody');
+  if(tb){
+    var html='',cat='';
+    WEIGHTS.forEach(function(w){
+      if(w.cat!==cat){cat=w.cat;html+='<tr class="cat-row"><td colspan="4">'+h(cat)+'</td></tr>';}
+      html+='<tr class="wrow"><td>'+h(w.label)+(w.note?'<small class="cups-note">'+h(w.note)+'</small>':'')+'</td><td>'+h(w.per)+'</td><td><strong>'+fmtGrams(w.g)+'</strong></td><td>'+fmtOz(w.g)+'</td></tr>';
+    });
+    tb.innerHTML=html;
+  }
+  var white=perCup(weightFor('granulated sugar')),tbs=document.getElementById('bsTables');
   if(tbs)tbs.innerHTML=BS_LEVELS.map(function(l){
     return'<div class="conv-card" id="bs-'+l.id+'"><div class="conv-card-head">'+l.name+' brown sugar</div><table class="conv-table cups-table"><thead><tr><th>You need</th><th>White sugar</th><th>Molasses</th></tr></thead><tbody>'+
       BS_AMOUNTS.map(function(c){return'<tr><td>'+fmtCupsText(c)+'</td><td>'+fmtCupsText(c)+'<small class="cups-note">'+fmtGrams(white*c)+'</small></td><td>'+fmtSpoons(l.tsp*c)+'<small class="cups-note">'+fmtGrams(l.tsp*c*MOLASSES_G_PER_TSP)+'</small></td></tr>';}).join('')+'</tbody></table></div>';
   }).join('');
+}
+function filterWeights(){
+  var q=document.getElementById('weightSearch').value.toLowerCase().trim(),rows=document.querySelectorAll('#weightsBody tr'),shown=0,catRow=null,catHas=false;
+  function closeCat(){if(catRow)catRow.hidden=!catHas;}
+  rows.forEach(function(r){
+    if(r.classList.contains('cat-row')){closeCat();catRow=r;catHas=false;return;}
+    var m=!q||r.textContent.toLowerCase().indexOf(q)>=0;
+    r.hidden=!m;if(m){shown++;catHas=true;}
+  });
+  closeCat();
+  document.getElementById('weightCount').textContent=q?(shown?shown+' ingredient'+(shown!==1?'s':'')+' match':'No match — try another word, or check King Arthur’s full chart below'):'';
 }
 function convertIng(ing,factor,mode){
   var q=WFC.parseQty(ing.qty),unit=ing.unit||'';
@@ -1712,7 +1793,7 @@ function viewRecipe(id,scale,metric){
     '</div></div>'+
     '<div class="view-meta">'+(r.servings?'<span>👤 '+scaledServings+' servings</span>':'')+(r.active?'<span>👐 Active: '+r.active+' min</span>':'')+(r.passive?'<span>⏳ Passive: '+r.passive+' min</span>':'')+((+r.active||0)+(+r.passive||0)?'<span>⏱ Total: '+((+r.active||0)+(+r.passive||0))+' min</span>':'')+'</div>'+
     ((r.cal||r.protein||r.carbs||r.fat)?'<div class="nutri-cards">'+(r.cal?'<div class="nc"><div class="val" style="color:var(--rust)">'+r.cal+'</div><div class="lbl">kcal</div></div>':'')+(r.protein?'<div class="nc"><div class="val" style="color:var(--blue)">'+r.protein+'g</div><div class="lbl">Protein</div></div>':'')+(r.carbs?'<div class="nc"><div class="val" style="color:var(--green)">'+r.carbs+'g</div><div class="lbl">Carbs</div></div>':'')+(r.fat?'<div class="nc"><div class="val" style="color:var(--red)">'+r.fat+'g</div><div class="lbl">Fat</div></div>':'')+'</div>':'')+
-    ((r.ingredients||[]).length?'<div class="view-subhead">Ingredients</div>'+(m==='mass'?'<p class="mass-note">⚖️ '+(massN?massN+' of '+siList.length+' ingredients shown by weight from our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'conversions\');return false">Cups to Grams table</a>. The rest are in metric.':'None of these ingredients are on our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'conversions\');return false">Cups to Grams table</a>, so they are shown in metric.')+'</p>':'')+'<ul class="ing-list">'+siList.map(function(si){return'<li><span>'+h(si.name)+'</span><span style="color:var(--ink3)">'+h(si.qty)+(si.unit?' '+h(si.unit):'')+(si.alt?'<small class="ing-alt">'+h(si.alt)+'</small>':'')+'</span></li>';}).join('')+'</ul>':'')+
+    ((r.ingredients||[]).length?'<div class="view-subhead">Ingredients</div>'+(m==='mass'?'<p class="mass-note">⚖️ '+(massN?massN+' of '+siList.length+' ingredients shown by weight from our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'weights\');return false">Ingredient Weights page</a>. The rest are in metric.':'None of these ingredients are on our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'weights\');return false">Ingredient Weights page</a>, so they are shown in metric.')+'</p>':'')+'<ul class="ing-list">'+siList.map(function(si){return'<li><span>'+h(si.name)+'</span><span style="color:var(--ink3)">'+h(si.qty)+(si.unit?' '+h(si.unit):'')+(si.alt?'<small class="ing-alt">'+h(si.alt)+'</small>':'')+'</span></li>';}).join('')+'</ul>':'')+
     ((r.steps||[]).length?'<div class="view-subhead">Instructions</div><ol class="steps-ol">'+r.steps.map(function(st,i){return'<li><div class="sc">'+(i+1)+'</div><div class="st">'+h(st)+'</div></li>';}).join('')+'</ol>':'')+
     (pairs.length?'<div class="view-subhead" style="margin-top:1.1rem">Serves Well With</div><div class="pair-chips">'+pairs.map(function(p){var m2=recipes.find(function(rx){return rx.name.toLowerCase()===p.toLowerCase();});return'<div class="pair-chip" onclick="'+(m2?'closeOverlay(\'viewOverlay\');viewRecipe(\''+m2.id+'\')':'showToast(\'Recipe not in cookbook yet\')')+'">'+h(p)+(m2?' 👀':'')+'</div>';}).join('')+'</div>':'')+
     '<div class="view-subhead" style="margin-top:1.1rem">Family Notes</div>'+
