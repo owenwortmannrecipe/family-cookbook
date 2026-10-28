@@ -379,8 +379,8 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .acct-tab{flex:1;background:none;border:none;padding:8px 6px;font-family:'Nunito',sans-serif;font-size:calc(13px*var(--fs));font-weight:700;color:var(--ink3);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px}
 .acct-tab.active{color:var(--rust);border-bottom-color:var(--rust)}
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(20,15,5,.4);z-index:190}
-@media(max-width:768px){.sidebar-backdrop.show{display:block}}
-@media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.sb-toggle{display:flex}.form-grid{grid-template-columns:1fr}.nutri-grid,.nutri-cards{grid-template-columns:repeat(2,1fr)}.season-grid,.safe-temps{grid-template-columns:repeat(2,1fr)}.ing-row{grid-template-columns:1fr 1fr auto}}
+@media(max-width:899px){.sidebar-backdrop.show{display:block}}
+@media(max-width:899px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:none}.main{margin-left:0}.sb-toggle{display:flex}.form-grid{grid-template-columns:1fr}.nutri-grid,.nutri-cards{grid-template-columns:repeat(2,1fr)}.season-grid,.safe-temps{grid-template-columns:repeat(2,1fr)}.ing-row{grid-template-columns:1fr 1fr auto}}
 body.locked{display:block;background:var(--ink)}
 body.locked .sidebar,body.locked .sb-toggle,body.locked .sidebar-backdrop,body.locked .main>.page{display:none!important}
 .gate-brand{display:none;text-align:center;color:var(--parchment);padding:3rem 1rem 1.25rem}
@@ -393,10 +393,13 @@ body.locked #gateLoading{display:block}
 body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.btn-primary){display:none}
 
 /* ---- scale: text (--fs) and images/layout (--sz) grow with the screen; phones get bigger text only ---- */
+/* BREAKPOINTS (single source of truth): <=899px drawer + bottom tab bar; >=900px sidebar.
+   Scale: <=899 fs1.1/sz1 | 900-999 fs1.08/sz1.05 | >=1000 fs1.12/sz1.12 | >=1400 | >=1800 */
+@media(min-width:900px) and (max-width:999px){:root{--fs:1.08;--sz:1.05}}
 @media(min-width:1000px){:root{--fs:1.12;--sz:1.12}}
 @media(min-width:1400px){:root{--fs:1.2;--sz:1.28}}
 @media(min-width:1800px){:root{--fs:1.28;--sz:1.45}}
-@media(max-width:768px){:root{--fs:1.1;--sz:1}}
+@media(max-width:899px){:root{--fs:1.1;--sz:1}}
 .nav-item{white-space:normal}
 .toolbar .search-wrap{flex:1 1 calc(240px*var(--fs))}
 .toolbar .filter-select{width:auto;flex:0 1 calc(190px*var(--fs))}
@@ -459,7 +462,7 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .rrow.open .rrow-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(262px*var(--sz)),1fr));overflow:visible}
 .rrow.open .rrow-strip .recipe-card{flex:none}
 .rrow.open .rrow-arrow{display:none}
-@media(hover:none),(max-width:768px){.rrow-arrow{display:none!important}.rrow-strip .recipe-card{flex-basis:min(74vw,290px)}}
+@media(hover:none),(max-width:899px){.rrow-arrow{display:none!important}.rrow-strip .recipe-card{flex-basis:min(74vw,290px)}}
 .weights-table td:nth-child(2){text-align:left;color:var(--ink3)}
 .weights-table td:nth-child(3){text-align:right}
 .weights-table th:nth-child(2){text-align:left}
@@ -487,7 +490,7 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 }
 /* bottom tab bar (phones) */
 .tabbar{display:none}
-@media(max-width:768px){
+@media(max-width:899px){
   .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:150;background:var(--warm);border-top:1px solid var(--border);padding:5px 6px calc(5px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(44,36,22,.08)}
   .tab{flex:1;position:relative;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px;border-radius:11px;color:var(--ink3);font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
   .tab .ti{font-size:23px;line-height:1.1}
@@ -501,6 +504,24 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
   .view-actions-row .btn-lg{flex:1 1 100%;justify-content:center}
   .toolbar .filter-select{flex:1 1 calc(50% - 8px)}
   input,select,textarea{font-size:max(16px,calc(14px*var(--fs)))!important}
+}
+/* phone toolbar: search + Filters + view toggle on one row; the rest lives in the Filters sheet (<=599px) */
+.phone-only{display:none}
+.tb-selects{display:contents}
+.fbadge{display:inline-block;margin-left:6px;background:var(--rust);color:#fff;border-radius:10px;font-size:11px;font-weight:800;padding:0 6px;min-width:18px;line-height:18px;text-align:center}
+.fbadge[hidden]{display:none}
+.overlay.sheet.open{display:flex;align-items:flex-end;padding:0}
+.overlay.sheet .modal{width:100%;max-width:none;margin:0;border-radius:16px 16px 0 0;max-height:88vh;overflow-y:auto;animation:none}
+.overlay.sheet .modal-foot{border-radius:0;position:sticky;bottom:0;padding-bottom:calc(1rem + env(safe-area-inset-bottom))}
+#filtersBody .tb-selects{display:grid;gap:8px;margin-bottom:1rem}
+#filtersBody .filter-select{width:100%;flex:none}
+#filtersBody #chipsWrap .chip-bar{margin-bottom:.8rem}
+@media(max-width:599px){
+  .phone-only{display:inline-flex;align-items:center}
+  .toolbar{gap:7px;margin-bottom:.7rem}
+  .toolbar .search-wrap{flex:1 1 0;min-width:0}
+  .toolbar .recipe-count{order:9;flex:1 1 100%;background:none;padding:0 2px;font-size:calc(12px*var(--fs))}
+  .bt-l{display:none}
 }
 body.locked .tabbar{display:none!important}
 </style>
@@ -555,13 +576,14 @@ body.locked .tabbar{display:none!important}
   <div class="container">
     <div class="toolbar">
       <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input class="search-input" id="searchInput" placeholder="Search recipes, ingredients, cuisine…" oninput="renderCards()"></div>
-      <select class="filter-select" id="catFilter" onchange="renderCards()"><option value="">All Categories</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select>
+      <button class="btn btn-sm phone-only" id="filtersBtn" onclick="openFilters()">⚙ Filters<span class="fbadge" id="filtersBadge" hidden>0</span></button>
+      <div class="tb-selects" id="tbSelects"><select class="filter-select" id="catFilter" onchange="renderCards()"><option value="">All Categories</option><option>Breakfast</option><option>Lunch</option><option>Dinner</option><option>Dessert</option><option>Snack</option><option>Soup</option><option>Salad</option><option>Baking</option><option>Drink</option><option>Side Dish</option><option>Appetizer</option><option>Other</option></select>
       <select class="filter-select" id="cuisineFilter" onchange="renderCards()"><option value="">All Cuisines</option><option>American</option><option>Southern</option><option>Italian</option><option>Mexican</option><option>Asian</option><option>French</option><option>Mediterranean</option><option>Indian</option><option>German</option><option>Greek</option><option>Japanese</option><option>Chinese</option><option>Thai</option><option>Middle Eastern</option><option>Other</option></select>
-      <select class="filter-select" id="sortFilter" onchange="renderCards()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="az">Name A–Z</option><option value="cal_asc">Calories ↑</option><option value="cal_desc">Calories ↓</option></select>
-      <span class="recipe-count" id="recipeCount">Loading…</span><button class="btn btn-sm" id="browseToggle" onclick="toggleBrowseGrid()" title="Switch between sliding rows and one big grid">▦ Grid view</button>
+      <select class="filter-select" id="sortFilter" onchange="renderCards()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="az">Name A–Z</option><option value="cal_asc">Calories ↑</option><option value="cal_desc">Calories ↓</option></select></div>
+      <span class="recipe-count" id="recipeCount">Loading…</span><button class="btn btn-sm" id="browseToggle" onclick="toggleBrowseGrid()" title="Switch between sliding rows and one big grid">▦<span class="bt-l"> Grid view</span></button>
     </div>
-    <div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
-    <div class="chip-bar" id="tagBar" style="display:none"></div>
+    <div id="chipsWrap"><div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
+    <div class="chip-bar" id="tagBar" style="display:none"></div></div>
     <div class="recipe-rows" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
   </div>
 </div>
@@ -589,14 +611,14 @@ body.locked .tabbar{display:none!important}
     <p style="font-size:calc(13px*var(--fs));color:var(--ink3);margin:-.3rem 0 1.1rem">Looking for cups to grams for flour, sugar and other ingredients? See <a href="#" onclick="showPage('weights');return false" style="color:var(--rust);font-weight:700">Ingredient Weights</a>.</p>
     <div class="conv-grid">
       <div class="conv-card"><div class="conv-card-head">Volume — Spoons &amp; Cups</div><table class="conv-table">
-        <tr><td>1 teaspoon (tsp)</td><td>=</td><td>5 ml</td></tr><tr><td>1 tablespoon (Tb)</td><td>=</td><td>3 tsp / 15 ml / ½ fl oz</td></tr>
-        <tr><td>2 tablespoons</td><td>=</td><td>1 fl oz / 30 ml</td></tr><tr><td>¼ cup</td><td>=</td><td>4 Tb / 2 fl oz / 60 ml</td></tr>
-        <tr><td>⅓ cup</td><td>=</td><td>5 Tb + 1 tsp / 80 ml</td></tr><tr><td>½ cup</td><td>=</td><td>8 Tb / 4 fl oz / 120 ml</td></tr>
-        <tr><td>⅔ cup</td><td>=</td><td>10 Tb + 2 tsp / 160 ml</td></tr><tr><td>¾ cup</td><td>=</td><td>12 Tb / 6 fl oz / 180 ml</td></tr>
-        <tr><td>1 cup</td><td>=</td><td>16 Tb / 8 fl oz / 240 ml</td></tr>
+        <tr><td>1 teaspoon (tsp)</td><td>=</td><td>5 ml</td></tr><tr><td>1 tablespoon (Tbsp)</td><td>=</td><td>3 tsp / 15 ml / ½ fl oz</td></tr>
+        <tr><td>2 tablespoons</td><td>=</td><td>1 fl oz / 30 ml</td></tr><tr><td>¼ cup</td><td>=</td><td>4 Tbsp / 2 fl oz / 60 ml</td></tr>
+        <tr><td>⅓ cup</td><td>=</td><td>5 Tbsp + 1 tsp / 80 ml</td></tr><tr><td>½ cup</td><td>=</td><td>8 Tbsp / 4 fl oz / 120 ml</td></tr>
+        <tr><td>⅔ cup</td><td>=</td><td>10 Tbsp + 2 tsp / 160 ml</td></tr><tr><td>¾ cup</td><td>=</td><td>12 Tbsp / 6 fl oz / 180 ml</td></tr>
+        <tr><td>1 cup</td><td>=</td><td>16 Tbsp / 8 fl oz / 240 ml</td></tr>
       </table></div>
       <div class="conv-card"><div class="conv-card-head">Volume — Larger Measures</div><table class="conv-table">
-        <tr><td>1 fluid ounce</td><td>=</td><td>2 Tb / 30 ml</td></tr><tr><td>8 fluid ounces</td><td>=</td><td>1 cup / 240 ml</td></tr>
+        <tr><td>1 fluid ounce</td><td>=</td><td>2 Tbsp / 30 ml</td></tr><tr><td>8 fluid ounces</td><td>=</td><td>1 cup / 240 ml</td></tr>
         <tr><td>16 fluid ounces</td><td>=</td><td>1 pint / 2 cups / 480 ml</td></tr><tr><td>32 fluid ounces</td><td>=</td><td>1 quart / 4 cups / 960 ml</td></tr>
         <tr><td>64 fluid ounces</td><td>=</td><td>½ gallon / 8 cups / 1.9 L</td></tr><tr><td>128 fluid ounces</td><td>=</td><td>1 gallon / 16 cups / 3.8 L</td></tr>
         <tr><td>1 liter</td><td>=</td><td>4.2 cups / 33.8 fl oz</td></tr>
@@ -928,7 +950,7 @@ body.locked .tabbar{display:none!important}
 <div class="page" id="page-trash">
   <div class="topbar"><div class="topbar-title">🗑 Trash</div><div class="tb-actions"><button class="btn btn-sm btn-danger" onclick="emptyTrash()">🗑 Empty Trash</button></div></div>
   <div class="container">
-    <p style="color:var(--ink3);font-size:calc(13px*var(--fs));margin-bottom:1rem">Deleted recipes stay here until someone restores or permanently removes them, so an accidental delete never loses a recipe for good. Permanently deleting asks for the family PIN first.</p>
+    <p style="color:var(--ink3);font-size:calc(13px*var(--fs));margin-bottom:1rem">Deleted recipes stay here until someone restores or permanently removes them, so an accidental delete never loses a recipe for good. Permanently deleting asks you to confirm first.</p>
     <div class="recipe-grid" id="trashGrid"></div>
   </div>
 </div>
@@ -1149,20 +1171,12 @@ body.locked .tabbar{display:none!important}
   </div>
 </div>
 
-<!-- PIN / CONFIRM MODAL -->
-<div class="overlay" id="pinOverlay">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-head"><h2>🔒 Confirm</h2><button class="x-btn" onclick="closeOverlay('pinOverlay')">✕</button></div>
-    <div class="modal-body">
-      <p style="font-size:calc(13px*var(--fs));color:var(--ink2);margin-bottom:.8rem" id="pinPromptText">This action can't be undone. Enter the family PIN to confirm.</p>
-      <div class="fg"><label>Family PIN</label><input type="password" id="pinInput" placeholder="••••" onkeydown="if(event.key==='Enter')submitPin()"></div>
-      <label class="diet-check" id="trustLabel" style="margin-top:.7rem;display:inline-flex" onclick="toggleCheck(this)"><input type="checkbox" id="trustDeviceCheck">Trust this device for 30 days</label>
-      <p id="pinError" style="color:var(--red);font-size:calc(12.5px*var(--fs));margin-top:.6rem;display:none">Incorrect PIN — try again.</p>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" onclick="closeOverlay('pinOverlay')">Cancel</button>
-      <button class="btn btn-danger" onclick="submitPin()">🗑 Confirm</button>
-    </div>
+<!-- PHONE FILTERS SHEET (the filter controls are moved in here on phones) -->
+<div class="overlay sheet" id="filtersOverlay" onclick="if(event.target===this)closeOverlay('filtersOverlay')">
+  <div class="modal">
+    <div class="modal-head"><h2>⚙ Filters</h2><button class="x-btn" onclick="closeOverlay('filtersOverlay')">✕</button></div>
+    <div class="modal-body" id="filtersBody"></div>
+    <div class="modal-foot"><button class="btn" onclick="clearAllFilters()">Clear all</button><button class="btn btn-primary" id="filtersShow" onclick="closeOverlay('filtersOverlay')">Show recipes</button></div>
   </div>
 </div>
 
@@ -1171,8 +1185,7 @@ body.locked .tabbar{display:none!important}
 <script>
 var recipes=[],trashedRecipes=[],editingId=null,dbReady=false,activeDiets=new Set(),favOnly=false,mineOnly=false;
 var WFC=wfcParserLib(); // shared recipe parser / quantity helpers (recipe-parser.js)
-var FAMILY_PIN='1234'; // Site owner: change this to your own family PIN.
-var _pendingUnlockAction=null;
+try{localStorage.removeItem('wfc_trust_until');}catch(e){} // one-time cleanup of an old leftover setting
 var _unsubRecipes=null,_unsubUsers=null;
 var USERS={}; // uid -> {name, email} — public directory so everyone can see who added/wrote what
 function isLoggedIn(){return!!(window._authReady&&window._myUid&&!window._isGuest);}
@@ -1327,26 +1340,6 @@ setTimeout(function(){
   if(l&&document.body.classList.contains('locked')&&(!window._authReady||(window._myUid&&window._approved===undefined)))
     l.innerHTML='Can\'t reach the cookbook right now. Check your connection and <a href="">try again</a>.';
 },10000);
-function isTrustedDevice(){var until=0;try{until=+(localStorage.getItem('wfc_trust_until')||0);}catch(e){}return until>Date.now();}
-function requireUnlock(promptText,action){
-  if(isTrustedDevice()){action();return;}
-  _pendingUnlockAction=action;
-  document.getElementById('pinPromptText').textContent=promptText||"This action can't be undone. Enter the family PIN to confirm.";
-  document.getElementById('pinInput').value='';
-  document.getElementById('pinError').style.display='none';
-  document.getElementById('trustDeviceCheck').checked=false;
-  document.getElementById('trustLabel').classList.remove('checked');
-  openOverlay('pinOverlay');
-  setTimeout(function(){document.getElementById('pinInput').focus();},50);
-}
-function submitPin(){
-  var val=document.getElementById('pinInput').value;
-  if(val!==FAMILY_PIN){document.getElementById('pinError').style.display='block';return;}
-  if(document.getElementById('trustDeviceCheck').checked){try{localStorage.setItem('wfc_trust_until',String(Date.now()+30*86400000));}catch(e){}}
-  closeOverlay('pinOverlay');
-  var action=_pendingUnlockAction;_pendingUnlockAction=null;
-  if(action)action();
-}
 function toggleNavGroup(boxId,chevId,key){
   var box=document.getElementById(boxId),chev=document.getElementById(chevId);
   var collapsed=box.classList.toggle('collapsed');
@@ -1575,7 +1568,7 @@ function showPage(name){
   if(name==='trash')renderTrash();
   ['recipes','planner','shopping'].forEach(function(k){var t=document.getElementById('tab-'+k);if(t)t.classList.toggle('active',name===k);});
   var more=document.getElementById('tab-more');if(more)more.classList.toggle('active',['recipes','planner','shopping'].indexOf(name)<0);
-  if(window.innerWidth<768)closeSidebarMobile();
+  if(window.innerWidth<900)closeSidebarMobile();
   window.scrollTo(0,0);
   document.documentElement.scrollTop=0;
   document.body.scrollTop=0;
@@ -1680,6 +1673,36 @@ function toggleRow(btn){
   var id=btn.closest('.rrow').dataset.row,cat=!!document.getElementById('catFilter').value;
   rowOpen[id]=!rowIsOpen(id,cat);renderCards();
 }
+/* ---- phone filters sheet ---- */
+function activeFilterCount(){
+  return (document.getElementById('catFilter').value?1:0)+(document.getElementById('cuisineFilter').value?1:0)+activeDiets.size+activeTags.size+(favOnly?1:0)+(mineOnly?1:0);
+}
+function updateFilterUI(n){
+  var c=activeFilterCount(),b=document.getElementById('filtersBadge');
+  if(b){b.textContent=c;b.hidden=!c;}
+  var sh=document.getElementById('filtersShow');
+  if(sh)sh.textContent='Show '+n+' recipe'+(n!==1?'s':'');
+}
+function openFilters(){openOverlay('filtersOverlay');}
+function clearAllFilters(){
+  document.getElementById('catFilter').value='';document.getElementById('cuisineFilter').value='';
+  favOnly=false;mineOnly=false;activeDiets.clear();activeTags.clear();
+  Array.prototype.forEach.call(document.querySelectorAll('#chipsWrap .chip'),function(c){c.classList.remove('active','fav-on');});
+  renderCards();
+}
+var _filterHome=null;
+function placeFilters(){
+  var phone=window.matchMedia('(max-width:599px)').matches;
+  var sel=document.getElementById('tbSelects'),chips=document.getElementById('chipsWrap'),body=document.getElementById('filtersBody');
+  if(!sel||!chips||!body)return;
+  if(!_filterHome)_filterHome=[{el:sel,parent:sel.parentNode,next:sel.nextSibling},{el:chips,parent:chips.parentNode,next:chips.nextSibling}];
+  if(phone){body.appendChild(sel);body.appendChild(chips);}
+  else{
+    _filterHome.slice().reverse().forEach(function(h){if(h.el.parentNode!==h.parent)h.parent.insertBefore(h.el,h.next);});
+    closeOverlay('filtersOverlay');
+  }
+}
+(function(){var mq=window.matchMedia('(max-width:599px)');if(mq.addEventListener)mq.addEventListener('change',placeFilters);else if(mq.addListener)mq.addListener(placeFilters);placeFilters();})();
 function toggleBrowseGrid(){
   browseGrid=!browseGrid;rowOpen={};
   try{localStorage.setItem('wfc_browse_grid',browseGrid?'1':'0');}catch(e){}
@@ -1723,6 +1746,7 @@ function renderCards(){
   });
   var total=recipes.length;
   document.getElementById('recipeCount').textContent=list.length+(list.length!==total?' of '+total:'')+' recipe'+(total!==1?'s':'');
+  updateFilterUI(list.length);
   var grid=document.getElementById('grid');
   if(!dbReady){grid.innerHTML='<div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Connecting…</p></div>';return;}
   if(!list.length){
@@ -1742,7 +1766,7 @@ function renderCards(){
     rows.push({id:k,title:(EMOJIS[k]||'🍴')+' '+(k==='Other'?'More Recipes':k),items:groups[k]});
   });
   grid.innerHTML=rows.map(function(row){return rowHtml(row,rowIsOpen(row.id,!!cat));}).join('');
-  var bt=document.getElementById('browseToggle');if(bt)bt.textContent=browseGrid?'▤ Rows':'▦ Grid view';
+  var bt=document.getElementById('browseToggle');if(bt)bt.innerHTML=browseGrid?'▤<span class="bt-l"> Rows</span>':'▦<span class="bt-l"> Grid view</span>';
   setTimeout(updateRowArrows,0);
 }
 
@@ -2391,9 +2415,7 @@ async function restoreRecipe(id){
 }
 function permanentlyDelete(id){
   var r=trashedRecipes.find(function(x){return x.id===id;});
-  requireUnlock('Permanently delete "'+((r&&r.name)||'this recipe')+'"? This cannot be undone.',function(){
-    doPermanentDelete(id);
-  });
+  if(confirm('Permanently delete "'+((r&&r.name)||'this recipe')+'"? This cannot be undone.'))doPermanentDelete(id);
 }
 async function doPermanentDelete(id){
   try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',id));showToast('🗑 Permanently deleted');}
@@ -2402,7 +2424,8 @@ async function doPermanentDelete(id){
 function emptyTrash(){
   if(!trashedRecipes.length){showToast('Trash is already empty');return;}
   var n=trashedRecipes.length;
-  requireUnlock('Permanently delete all '+n+' recipe'+(n!==1?'s':'')+' in Trash? This cannot be undone.',async function(){
+  if(!confirm('Permanently delete all '+n+' recipe'+(n!==1?'s':'')+' in Trash? This cannot be undone.'))return;
+  (async function(){
     var ids=trashedRecipes.map(function(r){return r.id;});
     var ok=0,fail=0;
     for(var i=0;i<ids.length;i++){
@@ -2411,7 +2434,7 @@ function emptyTrash(){
     }
     if(fail)showToast('🗑 Deleted '+ok+' — '+fail+' blocked by security rules');
     else showToast('🗑 Trash emptied');
-  });
+  })();
 }
 /* ===== Import recipes from a file (also restores a backup) ===== */
 var importRows=[];
@@ -2773,7 +2796,7 @@ function pairIngredientsToSteps(ings,steps){
   return rows;
 }
 function ingLineHtml(ing){
-  return '<div style="margin-bottom:6px"><strong>'+h(((ing.qty||'')+' '+(ing.unit||'')).trim())+'</strong>'+(ing.qty||ing.unit?' ':'')+h(ing.name||'')+'</div>';
+  return '<div style="margin-bottom:6px"><strong>'+h(((ing.qty||'')+' '+WFC.displayUnit(ing.unit||'',ing.qty||'')).trim())+'</strong>'+(ing.qty||ing.unit?' ':'')+h(ing.name||'')+'</div>';
 }
 
 // Condensed reference chapters — original text, written for this cookbook,
@@ -2806,7 +2829,7 @@ function pdfReferenceChapters(){
     '</table>'});
   chapters.push({title:'Measures & Temperatures',sub:'Mesures et Températures',body:
     '<table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px">'+
-    [['1 Tb','3 tsp / 15 ml'],['¼ cup','4 Tb / 60 ml'],['1 cup','16 Tb / 240 ml'],['1 lb','16 oz / 454 g'],['1 kg','2.2 lb']]
+    [['1 Tbsp','3 tsp / 15 ml'],['¼ cup','4 Tbsp / 60 ml'],['1 cup','16 Tbsp / 240 ml'],['1 lb','16 oz / 454 g'],['1 kg','2.2 lb']]
     .map(function(d,i){return '<tr style="border-bottom:'+(i===4?'none':'1px solid #E0D5C0')+'"><td style="padding:4px 10px 4px 0;font-weight:700">'+d[0]+'</td><td style="padding:4px 0;color:#5C4F38">'+d[1]+'</td></tr>';}).join('')+
     '</table>'+
     '<div style="'+H3+'">Oven Temperatures</div>'+
@@ -2997,7 +3020,7 @@ function checkForClippedRecipe(){
 initBookmarklet();
 checkForClippedRecipe();
 document.querySelector('.main').addEventListener('click',function(){
-  if(window.innerWidth<768)closeSidebarMobile();
+  if(window.innerWidth<900)closeSidebarMobile();
 });
 guideInit();renderConversionRefs();
 try{

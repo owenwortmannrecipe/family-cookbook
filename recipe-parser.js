@@ -114,6 +114,7 @@ var c=canonUnit(u);
 if(!c)return '';
 var q=parseQty(qtyStr);
 if(q&&q.max>1.0001&&PLURAL.hasOwnProperty(c))return PLURAL[c];
+if(c==='tbsp')return 'Tbsp'; // display only; stored/canonical unit stays lowercase
 return c;
 }
 var METRIC={cup:{f:240,u:'ml'},tbsp:{f:15,u:'ml'},tsp:{f:5,u:'ml'},oz:{f:28.35,u:'g'},lb:{f:454,u:'g'},'fl oz':{f:29.57,u:'ml'},pint:{f:473,u:'ml'},quart:{f:946,u:'ml'}};
