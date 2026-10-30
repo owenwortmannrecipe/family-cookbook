@@ -247,6 +247,20 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .tip-text h4{font-weight:700;font-size:calc(13px*var(--fs));margin-bottom:2px}
 .tip-text p{font-size:calc(12.5px*var(--fs));color:var(--ink3);line-height:1.6}
 .season-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:.8rem}
+@media(max-width:700px){.season-grid{grid-template-columns:1fr 1fr}}
+.season-card .s-months{font-size:calc(11px*var(--fs));font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);margin-bottom:4px}
+.season-card.current{box-shadow:0 0 0 2.5px var(--rust2)}
+.season-now{background:var(--green-pale);border:1.5px solid var(--green);border-radius:var(--r);padding:.85rem 1.1rem;margin:0 0 1.1rem}
+.season-now h3{margin:0 0 4px;font-family:'Lora',serif;font-size:calc(16px*var(--fs));color:var(--green)}
+.season-now p{margin:0;font-size:calc(13.5px*var(--fs));line-height:1.65;color:var(--ink2)}
+.month-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin:.6rem 0 1.2rem}
+.month-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:.75rem .95rem}
+.month-card.current{border-color:var(--rust2);background:var(--rust-pale)}
+.month-card h4{font-family:'Lora',serif;font-size:calc(14.5px*var(--fs));margin:0 0 4px;color:var(--ink)}
+.month-card p{font-size:calc(12.5px*var(--fs));line-height:1.6;color:var(--ink2);margin:0}
+@media(max-width:760px){.month-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.month-grid{grid-template-columns:1fr}}
+.season-sec{margin-top:1.6rem}
 .season-card{border-radius:var(--r);padding:.8rem;text-align:center}
 .season-card h3{font-family:'Lora',serif;font-size:calc(15px*var(--fs));font-weight:600;margin:6px 0 5px;color:var(--ink)}
 .season-card p{font-size:calc(12px*var(--fs));line-height:1.6;color:var(--ink2)}
@@ -271,11 +285,11 @@ kbd{background:var(--ink);color:var(--parchment);border-radius:4px;padding:1px 6
 .flavor-body{padding:.75rem 1rem}
 .flavor-body p{font-size:calc(12.5px*var(--fs));color:var(--ink3);margin-bottom:.4rem;line-height:1.5}
 .flavor-body ul{font-size:calc(12.5px*var(--fs));color:var(--ink2);padding-left:1rem;line-height:1.6}
-.glossary-item{border-bottom:1px solid var(--border);padding:.65rem 0}
-.glossary-item:last-child{border-bottom:none}
-.glossary-term{font-family:'Lora',serif;font-weight:700;font-size:calc(14.5px*var(--fs));color:var(--ink)}
-.glossary-fr{font-style:italic;color:var(--rust2);font-weight:400;font-size:calc(13px*var(--fs));margin-left:6px}
-.glossary-def{font-size:calc(13px*var(--fs));color:var(--ink2);line-height:1.6;margin-top:2px}
+.glossary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,calc(300px*var(--sz))),1fr));gap:calc(12px*var(--sz));margin-top:1rem}
+.glossary-item{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:calc(14px*var(--sz)) calc(16px*var(--sz))}
+.glossary-term{font-family:'Lora',serif;font-weight:700;font-size:calc(16px*var(--fs));color:var(--ink)}
+.glossary-fr{font-style:italic;color:var(--rust2);font-weight:400;font-size:calc(13.5px*var(--fs));margin-left:8px;white-space:normal}
+.glossary-def{font-size:calc(13.5px*var(--fs));color:var(--ink2);line-height:1.7;margin-top:6px}
 .app-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(290px*var(--fs)),1fr));gap:1rem;margin-top:.75rem}
 .app-card{background:var(--warm);border:1.5px solid var(--border);border-radius:var(--r);padding:1.1rem 1.3rem}
 .app-card-head{display:flex;align-items:center;gap:10px;margin-bottom:.65rem}
@@ -862,8 +876,7 @@ body.locked .tabbar{display:none!important}
 </section>
 <section class="guide-panel" data-guide="terms"><div class="guide-hit-label">Cooking Terms</div>
     <h1>Cooking Definitions</h1><p class="page-sub">A glossary of classic cooking terms — useful shorthand once you know what they mean.</p>
-    <div class="conv-card" style="max-width:720px">
-      <div id="glossaryList">
+    <div id="glossaryList" class="glossary-grid">
       <div class="glossary-item"><span class="glossary-term">Baste</span><span class="glossary-fr">arroser</span><div class="glossary-def">Spoon melted fat, pan juices, or liquid over food as it cooks, to keep the surface moist and add flavor.</div></div>
       <div class="glossary-item"><span class="glossary-term">Blanch</span><span class="glossary-fr">blanchir</span><div class="glossary-def">Briefly boil food — often vegetables — then usually shock it in ice water. Sets color and texture, par-cooks, or mellows a strong raw flavor.</div></div>
       <div class="glossary-item"><span class="glossary-term">Braise</span><span class="glossary-fr">braiser</span><div class="glossary-def">Brown food in fat, then cook it slowly, covered, in a small amount of liquid. Turns tough cuts tender over time.</div></div>
@@ -884,7 +897,6 @@ body.locked .tabbar{display:none!important}
       <div class="glossary-item"><span class="glossary-term">Whisk / Whip</span><span class="glossary-fr">fouetter</span><div class="glossary-def">Beat vigorously with a wire whisk to mix, aerate, or emulsify — eggs, cream, vinaigrettes, and sauces.</div></div>
       <div class="glossary-item"><span class="glossary-term">Zest</span><span class="glossary-fr">zeste</span><div class="glossary-def">The thin, colored (not white/bitter) outer peel of citrus, removed with a grater or peeler — full of aromatic oil and flavor.</div></div>
       </div>
-    </div>
 </section>
 <section class="guide-panel" data-guide="equip"><div class="guide-hit-label">Equipment</div>
     <h1>Kitchen Equipment</h1><p class="page-sub">Good tools don't make you a better cook, but they take a lot of friction out of trying — this is what actually earns a place in the kitchen.</p>
@@ -898,42 +910,68 @@ body.locked .tabbar{display:none!important}
     <p>Restaurant-supply stores are an underrated source for sturdy, professional-grade equipment at a fraction of the price of "kitchen boutique" retail — the goods are made for daily commercial abuse, so they tend to outlast consumer versions by decades.</p>
 </section>
 <section class="guide-panel" data-guide="season"><div class="guide-hit-label">In Season</div>
-    <h1>Seasonal Cooking Guide</h1><p class="page-sub">Cook with what's fresh — food tastes better and costs less in season.</p>
+    <h1>Seasonal Cooking Guide</h1><p class="page-sub">Cook with what's fresh — food tastes better and costs less in season. A general guide for the northern United States; timing shifts a little with the weather each year.</p>
+    <div class="season-now" id="seasonNow"></div>
     <div class="season-grid">
-      <div class="season-card s-spring"><div style="font-size:calc(32px*var(--fs))">🌸</div><h3>Spring</h3><p>Asparagus, peas, artichokes, spinach, radishes, strawberries, rhubarb, morels, spring onions, fava beans.</p></div>
-      <div class="season-card s-summer"><div style="font-size:calc(32px*var(--fs))">☀️</div><h3>Summer</h3><p>Tomatoes, zucchini, corn, peppers, eggplant, cucumbers, peaches, berries, watermelon, basil, green beans.</p></div>
-      <div class="season-card s-fall"><div style="font-size:calc(32px*var(--fs))">🍂</div><h3>Fall</h3><p>Pumpkin, squash, apples, pears, Brussels sprouts, sweet potatoes, cranberries, chestnuts, kale, mushrooms.</p></div>
-      <div class="season-card s-winter"><div style="font-size:calc(32px*var(--fs))">❄️</div><h3>Winter</h3><p>Root vegetables, citrus, cabbage, leeks, pomegranate, persimmons, turnips, broccoli, cauliflower, endive.</p></div>
+      <div class="season-card s-spring" data-season="spring"><div style="font-size:calc(32px*var(--fs))">🌸</div><h3>Spring</h3><div class="s-months">March – May</div><p>Asparagus, peas, artichokes, spinach, radishes, strawberries, rhubarb, morels, spring onions, fava beans.</p></div>
+      <div class="season-card s-summer" data-season="summer"><div style="font-size:calc(32px*var(--fs))">☀️</div><h3>Summer</h3><div class="s-months">June – August</div><p>Tomatoes, zucchini, corn, peppers, eggplant, cucumbers, peaches, berries, watermelon, basil, green beans.</p></div>
+      <div class="season-card s-fall" data-season="fall"><div style="font-size:calc(32px*var(--fs))">🍂</div><h3>Fall</h3><div class="s-months">September – November</div><p>Pumpkin, squash, apples, pears, Brussels sprouts, sweet potatoes, cranberries, chestnuts, kale, mushrooms.</p></div>
+      <div class="season-card s-winter" data-season="winter"><div style="font-size:calc(32px*var(--fs))">❄️</div><h3>Winter</h3><div class="s-months">December – February</div><p>Root vegetables, citrus, cabbage, leeks, pomegranate, persimmons, turnips, broccoli, cauliflower, endive.</p></div>
     </div>
-    <h2>Southern Cuisine</h2>
-    <p>Southern cooking is one of America's most distinct regional cuisines — rooted in African, Native American, and European traditions. It is defined by slow cooking, bold seasoning, and making extraordinary food from humble ingredients.</p>
-    <h3>The Southern Pantry</h3>
-    <ul>
-      <li><strong>Cornmeal</strong> — backbone of cornbread, hushpuppies, and grits. Use white stone-ground for authentic flavor</li>
-      <li><strong>Cast iron</strong> — the essential Southern vessel. Seasoned over years, it distributes heat perfectly for frying and baking</li>
-      <li><strong>Buttermilk</strong> — for fried chicken, biscuits, and dressings. The acid tenderizes meat and adds tang</li>
-      <li><strong>Smoked pork</strong> — ham hocks, fatback, and bacon are used to season vegetables, beans, and greens</li>
-      <li><strong>Hot sauce</strong> — Crystal, Tabasco, or homemade pepper vinegar on nearly everything</li>
-      <li><strong>Lard</strong> — traditionally used for frying and biscuits; produces incomparable flakiness and flavor</li>
-    </ul>
-    <h3>Key Southern Techniques</h3>
-    <div class="tip-card"><span class="tip-icon">🍗</span><div class="tip-text"><h4>Fried Chicken</h4><p>Brine or marinate in buttermilk for at least 4 hours (overnight is better). Season the flour generously with salt, black pepper, garlic powder, and cayenne. Fry in 350°F lard or shortening, maintaining temperature throughout. Drain on a wire rack — never paper towels, which trap steam and soften the crust.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🫘</span><div class="tip-text"><h4>Low and Slow Beans &amp; Greens</h4><p>Collard greens and dried beans must cook long and slow with smoked meat. Collards need 45–90 minutes; dried beans 2–3 hours. The "pot likker" — the cooking liquid from greens — is prized on its own, served with cornbread for dipping.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🍞</span><div class="tip-text"><h4>Buttermilk Biscuits</h4><p>The secret to flaky biscuits: cold fat and minimal handling. Grate frozen butter into the flour. Mix only until the dough just comes together — overworking develops gluten and makes biscuits tough. Pat, never roll. Fold the dough 2–3 times for distinct layers.</p></div></div>
-    <div class="tip-card"><span class="tip-icon">🌽</span><div class="tip-text"><h4>Cornbread</h4><p>True Southern cornbread is made in a screaming-hot cast iron skillet, uses white cornmeal, buttermilk, and is not sweet (that is Northern cornbread). Heat the greased skillet in a 450°F oven until smoking, pour in the batter, and bake. The sizzle creates the coveted crust.</p></div></div>
-    <h3>Iconic Southern Dishes</h3>
-    <ul>
-      <li>Shrimp and Grits · Gumbo · Jambalaya · Crawfish Étouffée</li>
-      <li>Chicken and Dumplings · Country Fried Steak · Chicken Pot Pie</li>
-      <li>Red Beans and Rice · Hoppin' John · Succotash · Brunswick Stew</li>
-      <li>Banana Pudding · Peach Cobbler · Chess Pie · Pecan Pie · Sweet Potato Pie</li>
-      <li>Deviled Eggs · Pimento Cheese · Boiled Peanuts · Hushpuppies</li>
-    </ul>
-    <h2>Idaho Seasonal Highlights</h2>
-    <p>Living in Boise means access to incredible local produce. Idaho is famous for its potatoes year-round. Treasure Valley farmers markets run May–October with exceptional stone fruits, sweet corn, and peppers in summer. Fall brings local apple orchards with dozens of varieties not found in stores.</p>
-    <h2>Preserving the Harvest</h2>
-    <div class="tip-card"><span class="tip-icon">🫙</span><div class="tip-text"><h4>Canning</h4><p>Water-bath canning for high-acid foods (tomatoes, fruit, pickles). Pressure canner for low-acid vegetables and meats. Always process for the full recommended time — cutting it short risks botulism.</p></div></div>
+    <h2 class="season-sec">🌸 Spring <span style="font-weight:400;font-size:.7em;color:var(--ink3)">· March – May</span></h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#F0FDF4;color:#166534">At the market</div><div class="flavor-body"><ul><li><strong>Asparagus</strong>, <strong>peas</strong> &amp; snap peas, <strong>artichokes</strong></li><li>Spinach, arugula and tender lettuces</li><li>Radishes, spring onions, green garlic, leeks</li><li>New potatoes and fava beans</li><li><strong>Strawberries</strong> and <strong>rhubarb</strong></li><li>Fresh herbs: chives, dill, mint, parsley, tarragon</li><li>Morels (see the safety note)</li><li>Traditional spring foods: eggs, lamb, fresh goat cheese</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F0FDF4;color:#166534">Cook it &amp; keep it</div><div class="flavor-body"><ul><li><strong>Asparagus</strong> — Snap off the woody ends — they break where the stalk turns tender — or peel thick stalks. Roast at 425°F for 8–12 minutes, or blanch for 2–3. Store upright in an inch of water in the fridge.</li><li><strong>Peas</strong> — Their sugar turns to starch quickly after picking. Buy in the pod, shell just before cooking, and cook briefly (1–3 minutes).</li><li><strong>Rhubarb</strong> — Only the stalks are edible — the leaves are poisonous, so discard them. Rhubarb is tart; it loves strawberries and a little sugar.</li><li><strong>Morels</strong> — Never eat wild mushrooms unless you are completely sure of the identification — buy from a trusted source. Morels must always be cooked thoroughly, never eaten raw.</li></ul></div></div>
+    </div>
+    <h2 class="season-sec">☀️ Summer <span style="font-weight:400;font-size:.7em;color:var(--ink3)">· June – August</span></h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#FFFBEB;color:#92400E">At the market</div><div class="flavor-body"><ul><li><strong>Tomatoes</strong>, <strong>sweet corn</strong>, zucchini &amp; summer squash</li><li>Peppers (sweet and hot), eggplant, cucumbers</li><li>Green beans, beets, garlic scapes (June)</li><li>Fresh herbs: basil, cilantro, dill, thyme</li><li><strong>Cherries</strong> (June–July), apricots</li><li><strong>Peaches</strong>, nectarines, plums</li><li>Blueberries, raspberries, blackberries</li><li>Melons, watermelon, and figs late in the season</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FFFBEB;color:#92400E">Cook it &amp; keep it</div><div class="flavor-body"><ul><li><strong>Tomatoes</strong> — Keep them on the counter, stem side down — the fridge dulls flavor and turns the flesh mealy. Only refrigerate once cut or fully ripe and you can't use them in time.</li><li><strong>Sweet corn</strong> — Its sugar starts turning to starch once picked, so cook it the day you buy it. Boil 3–5 minutes, or grill in the husk.</li><li><strong>Stone fruit</strong> — Ripen peaches, plums and nectarines on the counter until they smell sweet and give slightly near the stem; then refrigerate to hold a few days.</li><li><strong>Zucchini &amp; basil</strong> — Smaller zucchini (6–8 inches) are sweeter and less watery. Keep basil on the counter in a glass of water — the fridge blackens it — and add it at the end of cooking.</li></ul></div></div>
+    </div>
+    <h2 class="season-sec">🍂 Fall <span style="font-weight:400;font-size:.7em;color:var(--ink3)">· September – November</span></h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#FEF3C7;color:#78350F">At the market</div><div class="flavor-body"><ul><li><strong>Winter squash</strong>: butternut, acorn, delicata, kabocha; pumpkin</li><li>Sweet potatoes and potatoes</li><li><strong>Brussels sprouts</strong>, cauliflower, broccoli</li><li>Kale, chard, beets, carrots, parsnips, celery root, fennel</li><li>Mushrooms, leeks, freshly harvested onions and garlic</li><li><strong>Apples</strong>, <strong>pears</strong>, grapes, figs (September)</li><li>Cranberries, pomegranates, quince, persimmons (from October)</li><li>Walnuts, hazelnuts and chestnuts</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#FEF3C7;color:#78350F">Cook it &amp; keep it</div><div class="flavor-body"><ul><li><strong>Apples</strong> — Mix varieties for pie. Granny Smith, Braeburn and Jonagold hold their shape when baked; Honeycrisp, Fuji and Gala are best fresh; McIntosh cooks down into sauce.</li><li><strong>Winter squash</strong> — Roast cut-side down at 400°F for 30–45 minutes. Delicata skin is edible. Whole squash keeps for months somewhere cool and dry (about 50–60°F).</li><li><strong>Brussels sprouts</strong> — Halve and roast cut-side down at 425°F for 20–25 minutes until deeply browned and crisp. Boiled sprouts turn sulfurous and soft.</li><li><strong>Pears &amp; cranberries</strong> — Buy pears firm and ripen them on the counter — they're ready when the neck near the stem gives to gentle pressure. Cranberries freeze whole, so buy extra in November.</li></ul></div></div>
+    </div>
+    <h2 class="season-sec">❄️ Winter <span style="font-weight:400;font-size:.7em;color:var(--ink3)">· December – February</span></h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#EFF6FF;color:#1E3A8A">At the market</div><div class="flavor-body"><ul><li><strong>Root vegetables</strong>: carrots, parsnips, turnips, rutabaga, beets, celery root</li><li>Potatoes, onions and stored winter squash</li><li>Green, red and savoy <strong>cabbage</strong></li><li>Kale and leeks; early-winter Brussels sprouts</li><li>Radicchio and endive; cauliflower and broccoli</li><li><strong>Oranges</strong>, mandarins, grapefruit, lemons</li><li>Blood oranges (January–March)</li><li>Pomegranates and persimmons (to about January), kiwi, stored apples and pears</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EFF6FF;color:#1E3A8A">Cook it &amp; keep it</div><div class="flavor-body"><ul><li><strong>Citrus</strong> — Choose fruit that feels heavy for its size. Zest before you juice. A bowl on the counter keeps about a week; the fridge keeps it for weeks.</li><li><strong>Root vegetables</strong> — Cut to a similar size and roast at 425°F with oil and salt to caramelize their natural sugars, or braise them in stock. Perfect for soups and stews.</li><li><strong>Cabbage &amp; hardy greens</strong> — Cabbage keeps for weeks in the fridge. Kale and other cold-hardy greens get sweeter after frost. Citrus and a splash of vinegar balance their bitterness.</li><li><strong>Braise season</strong> — Cold months suit slow cooking — see Braise in Cooking Terms and the Techniques tab for how.</li></ul></div></div>
+    </div>
+    <h2 class="season-sec">📅 Month by Month</h2>
+    <p>What's usually at its best each month. Use it as a shopping cheat-sheet.</p>
+    <div class="month-grid">
+      <div class="month-card" data-m="0"><h4>January</h4><p>Oranges, grapefruit, mandarins, lemons, kale, cabbage, leeks, parsnips, turnips, rutabaga, celery root, pomegranates, kiwi, stored apples and pears.</p></div>
+      <div class="month-card" data-m="1"><h4>February</h4><p>Blood oranges, grapefruit, oranges, kale, cabbage, leeks, radicchio, endive, carrots, beets, broccoli, cauliflower, root vegetables.</p></div>
+      <div class="month-card" data-m="2"><h4>March</h4><p>Spinach, leeks, green garlic, spring onions, radishes, lettuces, artichokes, the last of the winter citrus.</p></div>
+      <div class="month-card" data-m="3"><h4>April</h4><p>Asparagus, peas, artichokes, spinach, radishes, lettuces, spring onions, rhubarb, morels (where they grow).</p></div>
+      <div class="month-card" data-m="4"><h4>May</h4><p>Asparagus, snap peas, rhubarb, strawberries, new potatoes, fava beans, spring onions, fresh herbs, morels.</p></div>
+      <div class="month-card" data-m="5"><h4>June</h4><p>Strawberries, cherries, peas, cucumbers, lettuces, beets, garlic scapes, apricots, zucchini beginning.</p></div>
+      <div class="month-card" data-m="6"><h4>July</h4><p>Tomatoes beginning, zucchini, cucumbers, green beans, peppers, blueberries, raspberries, cherries, apricots, early peaches, corn.</p></div>
+      <div class="month-card" data-m="7"><h4>August</h4><p>Tomatoes, sweet corn, peppers, eggplant, peaches, nectarines, plums, melons, blackberries, basil, summer squash, figs beginning.</p></div>
+      <div class="month-card" data-m="8"><h4>September</h4><p>Tomatoes, peppers, eggplant, apples beginning, pears, grapes, figs, potatoes, onions, winter squash beginning.</p></div>
+      <div class="month-card" data-m="9"><h4>October</h4><p>Apples, pears, pumpkins, winter squash, sweet potatoes, Brussels sprouts, cauliflower, broccoli, kale, beets, mushrooms, cranberries beginning.</p></div>
+      <div class="month-card" data-m="10"><h4>November</h4><p>Cranberries, Brussels sprouts, sweet potatoes, squash, parsnips, pears, apples, pomegranates, persimmons, kale, root vegetables, nuts.</p></div>
+      <div class="month-card" data-m="11"><h4>December</h4><p>Oranges and mandarins arriving, grapefruit, cranberries, pomegranates, persimmons, pears, root vegetables, cabbage, kale, leeks, Brussels sprouts.</p></div>
+    </div>
+    <h2 class="season-sec">🏔️ Idaho &amp; the Treasure Valley</h2>
+    <p>Living around Boise means plenty of local produce. Treasure Valley farmers markets run roughly May through October. Warm days and cool nights make stone fruit especially sweet. Harvest times move a couple of weeks either way with the weather — ask the grower what's best this week.</p>
+    <div class="tip-card"><span class="tip-icon">🌱</span><div class="tip-text"><h4>Spring (April – June)</h4><p>Asparagus, rhubarb, spinach and lettuces are the first local crops. Morels appear in the mountains in late spring — only eat wild mushrooms you can identify with certainty, or buy from a trusted source.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍑</span><div class="tip-text"><h4>Summer (June – August)</h4><p>Cherries first, then apricots and peaches, nectarines, plums, raspberries and melons — the orchards west of Boise are well known for fruit. Sweet corn, tomatoes and peppers come on in August. Wild huckleberries ripen in the mountains from mid-summer into September.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🧅</span><div class="tip-text"><h4>Onions &amp; hops (late summer)</h4><p>The Treasure Valley is a major onion-growing region, with harvest in late summer — mild, sweet onions for grilling and burgers. It is also hop-growing country, with the harvest around late August and September.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🥔</span><div class="tip-text"><h4>Fall (September – November)</h4><p>Potato harvest brings the new crop, and Idaho potatoes are stored and sold all year. Local apples and pears (often varieties you won't find in stores), pumpkins and winter squash fill the stands until the markets close.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🐟</span><div class="tip-text"><h4>Winter &amp; year-round</h4><p>Storage crops carry the season: potatoes, onions, carrots, beets, winter squash and apples. Idaho is also a leading U.S. producer of farmed rainbow trout, and local honey is available all year.</p></div></div>
+    <h2 class="season-sec">🛒 Buying &amp; Storing</h2>
+    <div class="flavor-grid">
+      <div class="flavor-card"><div class="flavor-head" style="background:#F9F4EC;color:#5C4F38">On the counter</div><div class="flavor-body"><ul><li>Tomatoes (stem side down)</li><li>Stone fruit, pears and avocados until ripe</li><li>Melons until ripe, then the fridge</li><li>Basil, in a glass of water</li><li>Bananas</li><li>Citrus, for up to about a week</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#EAF1F6;color:#1F4E6B">In the fridge</div><div class="flavor-body"><ul><li>Berries, unwashed — rinse just before eating</li><li>Cherries and grapes</li><li>Asparagus, upright in an inch of water</li><li>Leafy greens, wrapped in a dry towel</li><li>Broccoli, cauliflower, carrots and beets (trim the tops)</li><li>Apples for long keeping; citrus for weeks</li></ul></div></div>
+      <div class="flavor-card"><div class="flavor-head" style="background:#F3E9DC;color:#7A4A21">Cool, dark &amp; dry</div><div class="flavor-body"><ul><li>Potatoes — not the fridge, and away from onions</li><li>Onions and garlic, with good airflow</li><li>Winter squash (about 50–60°F)</li><li>Sweet potatoes — never the fridge</li><li>Whole pumpkins</li></ul></div></div>
+    </div>
+    <h2 class="season-sec">🫙 Preserving the Harvest</h2>
+    <div class="tip-card"><span class="tip-icon">🫙</span><div class="tip-text"><h4>Canning</h4><p>Water-bath canning for high-acid foods (tomatoes, fruit, pickles). Pressure canner for low-acid vegetables and meats. Always process for the full recommended time — cutting it short risks botulism. Use a tested recipe (USDA or the National Center for Home Food Preservation) rather than improvising times or acidity.</p></div></div>
     <div class="tip-card"><span class="tip-icon">🧊</span><div class="tip-text"><h4>Freezing</h4><p>Blanch vegetables 1–3 minutes before freezing to deactivate enzymes causing texture and color loss. Cool in ice water, dry thoroughly, freeze in a single layer before bagging. Most vegetables last 8–12 months frozen.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🍓</span><div class="tip-text"><h4>Freezing fruit</h4><p>Wash and dry berries, cherries or sliced peaches (a squeeze of lemon keeps peaches bright), spread on a tray in a single layer until solid, then bag so the pieces don't clump. Best within about a year.</p></div></div>
+    <div class="tip-card"><span class="tip-icon">🥒</span><div class="tip-text"><h4>Quick refrigerator pickles</h4><p>Pack sliced cucumbers, carrots, onions or green beans into a jar and cover with a hot brine of equal parts vinegar and water, with 1–2 Tbsp salt per cup of liquid (and a little sugar if you like). Cool, then refrigerate. Ready in a day; keeps about 2–4 weeks. These are not shelf-stable.</p></div></div>
 </section>
     </div>
   </div></div>
@@ -2642,11 +2680,22 @@ function planWeekToShopping(){
 }
 
 /* ===== Kitchen Guide ===== */
-var GUIDE_ITEMS='.flavor-card,.tip-card,.step-list-item,.glossary-item,.season-card,.gs-block';
+var GUIDE_ITEMS='.flavor-card,.tip-card,.step-list-item,.glossary-item,.season-card,.month-card,.gs-block';
 function guideInit(){
   document.querySelectorAll('.guide-panel').forEach(function(p){
     Array.prototype.forEach.call(p.children,function(el){if(/^(P|UL|OL)$/.test(el.tagName)&&!el.classList.contains('page-sub'))el.classList.add('gs-block');});
   });
+}
+function seasonNow(){
+  var box=document.getElementById('seasonNow');if(!box)return;
+  var names=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var m=new Date().getMonth(),season=m>=2&&m<=4?'spring':m<=7&&m>=5?'summer':m<=10&&m>=8?'fall':'winter';
+  Array.prototype.forEach.call(document.querySelectorAll('.month-card'),function(c,i){c.classList.toggle('current',i===m);});
+  Array.prototype.forEach.call(document.querySelectorAll('.season-card'),function(c){c.classList.toggle('current',c.dataset.season===season);});
+  var card=document.querySelectorAll('.month-card')[m];
+  box.innerHTML='<h3></h3><p></p>';
+  box.firstChild.textContent='🌿 Right now: '+names[m]+' ('+season.charAt(0).toUpperCase()+season.slice(1)+')';
+  box.lastChild.textContent=card?card.querySelector('p').textContent:'';
 }
 function openGuide(tab){showPage('guide');guideTab(tab||'tech');}
 function guideTab(tab){
@@ -2654,6 +2703,7 @@ function guideTab(tab){
   if(box&&box.value){box.value='';guideSearch();}
   document.querySelectorAll('.guide-panel').forEach(function(p){p.classList.toggle('active',p.dataset.guide===tab);});
   document.querySelectorAll('.guide-tab').forEach(function(t){t.classList.toggle('active',t.dataset.guide===tab);});
+  if(tab==='season')seasonNow();
   document.querySelectorAll('[id^="nav-guide-"]').forEach(function(n){n.classList.toggle('active',n.id==='nav-guide-'+tab);});
 }
 function guideSearch(){
