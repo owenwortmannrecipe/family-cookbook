@@ -123,3 +123,89 @@ work on recipes that are already in Trash. If you ever need to erase a live reci
 first (or delete it in the console).
 
 **Cost:** Firestore only, so no billing change.
+
+---
+
+## Updating for: offline recipes + faster photos
+
+**What changed:** (1) after one online visit, the cookbook opens and browses with no signal, and edits you make
+offline sync by themselves later; (2) photos no longer slow the recipe list down.
+
+**Do these in order:**
+1. **Publish the new rules** (Firestore Database → Rules → paste the new `firestore.rules` → Publish). The only
+   addition is a `recipePhotos` block. Publish it *before* uploading the site, or saving a recipe with a photo will
+   show "full photo could not be saved".
+2. **Upload** the new `index.html` **and `sw.js`** to GitHub Pages. (`recipe-parser.js` is unchanged this time.)
+3. **Reload once** on each device. The new service worker also keeps the few files the app needs to *start* offline.
+4. **Owner:** open **Backup, Export & Install** and tap **Optimize photos** once (it only appears while some recipes
+   still carry a full-size photo inside the recipe). It is safe to run again if it is interrupted.
+
+### Offline: how it works and where it stops
+- **Open the cookbook once while online** on each device. After that, recipes open offline, and offline edits
+  (new recipes, edits, favorites, shopping list ticks) are saved on the device and sync when you reconnect. A small
+  "📴 Offline" pill shows at the top, and confirmations say "saved on this device, will sync".
+- **First visit while offline** shows a message asking you to connect once. Nothing is downloaded until then.
+- **Signing out removes the local copy** from that device. If another tab of the cookbook is still open the browser may
+  refuse to clear it; close other tabs and sign out again.
+- **Removing someone** locks them out as soon as their device next connects. Until then a device that was already
+  approved can still show its local copy of the recipes. That is the nature of offline access.
+- **Offline changes to the same item** made on two devices are settled by Firestore (last one to sync wins).
+- **Photos offline:** you see the small version of any photo you haven't opened while online; opened ones show full size.
+- Private/incognito windows and some old browsers can't keep a local copy; the app then works online only, as before.
+
+### Photos: what changed
+- Each recipe now holds a tiny thumbnail (about 11 KB). The full photo lives in its own document
+  (`recipePhotos/<recipe id>`) and is loaded only when you open the recipe.
+- **Backups and the Offline copy include the full photos.** Importing a backup rebuilds the thumbnails and photo documents.
+  If a photo can't be read when you make a backup (for example you are offline), you get a warning and the
+  "last backup" reminder is **not** reset.
+- Deleting a recipe for good (Permanently delete / Empty Trash) also deletes its stored photo. Restoring keeps it.
+- Recipes whose photo is a pasted web link are left as they are.
+- Rules: only approved family can read/write `recipePhotos`; a document may hold just the `photo` field, up to 450,000
+  characters.
+
+**Cost:** Firestore only (a handful of extra reads when recipes are opened), so no billing change.
+
+---
+
+## Optional hardening: restrict the Firebase browser key (about 10 minutes, no code change)
+
+**Why:** The `apiKey` in `index.html` is *not a password* — every Firebase website shows it, and it can't be
+hidden. Your recipes are protected by the Firestore rules and the approval list, not by this key. Restricting the key
+is an extra layer: it stops other websites (and unrelated Google APIs) from using *your* key and your quota.
+It is optional, and it's easy to undo if anything misbehaves.
+
+**Do this in a normal browser tab while signed in as the project owner. Don't close your current session until the
+test at the end passes.**
+
+1. Open **console.cloud.google.com**, choose the project **wortmann-family-recipes** (top bar).
+2. Go to **APIs & Services → Credentials**. Under **API Keys**, open the key named something like
+   **"Browser key (auto created by Firebase)"**. (Its value matches the `apiKey` in `index.html`. Don't touch the
+   "Server key" or any other key.)
+3. **Application restrictions:** choose **Websites (HTTP referrers)** and add these entries:
+   - `https://owenwortmannrecipe.github.io/*`
+   - `https://wortmann-family-recipes.firebaseapp.com/*`  *(needed for the password-reset email page, which Firebase
+     hosts on this address)*
+   - Only if you test from your own computer: `http://localhost/*`
+4. **API restrictions:** choose **Restrict key** and tick only:
+   - **Cloud Firestore API**
+   - **Identity Toolkit API**
+   - **Token Service API**
+5. **Save.** It can take up to about 5 minutes to take effect.
+6. **Also check** (Firebase console → Authentication → Settings → **Authorized domains**) that
+   `owenwortmannrecipe.github.io` is listed — sign-in needs it. It normally is.
+
+**Test (use a private/incognito window so nothing is cached):**
+1. Open the cookbook and **sign in** — works.
+2. Recipes load and you can edit one — works.
+3. Request a **password reset** for a test account — the email arrives and its link opens.
+4. If any of these fails with a message about an API key or "referer"/"referrer" not allowed, go back to the key
+   and loosen it: first set API restrictions to **Don't restrict key**; if that fixes it, add the missing API name
+   it complains about. Worst case, set Application restrictions back to **None** — you're back where you started.
+
+**Things this does *not* do:** it doesn't make the key secret, and it can't stop someone who copies your site's
+address in their requests. For stronger protection you can later turn on **Firebase App Check** — that is a bigger
+change and not needed for a family cookbook.
+
+*These are the usual steps for a Firebase web key. Google occasionally renames menu items, so if a label looks
+different, look for the same idea (HTTP referrers; restrict to those three APIs).*

@@ -19,7 +19,7 @@
 <script src="recipe-parser.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, where, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, getDoc, terminate, clearIndexedDbPersistence, collection, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, doc, serverTimestamp, query, orderBy, where, getDocs, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   const firebaseConfig = {
     apiKey:"AIzaSyAj6FYLvnNLAAm-WEmgY0cFTb5FHYX35tI",
@@ -30,7 +30,11 @@
     appId:"1:178316367199:web:d63bc04b8a30dd3b07d2ea"
   };
   const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
+  // OFFLINE: keep a copy of the data on this device (IndexedDB). If the browser can't (private mode,
+  // old browser) fall back to the normal memory-only cache so the app still works online.
+  let db;
+  try{db=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})});}
+  catch(e){console.warn('Offline storage unavailable — using memory cache',e);db=getFirestore(app);}
   const col=collection(db,"recipes");
   const usersCol=collection(db,"users");
   const auth=getAuth(app);
@@ -38,7 +42,13 @@
   // NOTE: query is fetched WITHOUT orderBy on purpose — Firestore silently excludes any
   // document missing the sorted field (e.g. one added by hand in the console), which
   // caused recipes to vanish. Sorting now happens client-side in renderCards() instead.
-  window._fns={collection,getDocs,addDoc,updateDoc,deleteDoc,setDoc,doc,serverTimestamp,query,orderBy,where,onSnapshot,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
+  // Offline, Firestore only confirms a write once the server answers — so a plain `await` would hang.
+  // While offline we let the write queue (it syncs later) and return at once so the screen stays responsive.
+  const isOn=()=>navigator.onLine!==false;
+  const later=p=>{p.catch(e=>console.warn('Queued write failed after reconnect',e));};
+  const wrapW=fn=>function(){const p=fn.apply(null,arguments);if(isOn())return p;later(p);return Promise.resolve();};
+  const wAdd=function(colRef,data){if(isOn())return addDoc(colRef,data);const ref=doc(colRef);later(setDoc(ref,data));return Promise.resolve(ref);};
+  window._fns={getDoc,terminate,clearIndexedDbPersistence,collection,getDocs,addDoc:wAdd,updateDoc:wrapW(updateDoc),deleteDoc:wrapW(deleteDoc),setDoc:wrapW(setDoc),doc,serverTimestamp,query,orderBy,where,onSnapshot,arrayUnion,arrayRemove,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,updateProfile,sendPasswordResetEmail};
   // ACCESS MODEL: the cookbook is private. A visitor must (1) be signed in with a real
   // email+password account AND (2) be on the family approval list (Firestore doc family/<uid>,
   // which only the owner can create, from the Firebase console). Anonymous sessions are never
@@ -554,10 +564,15 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .fam-tag{font-size:calc(10.5px*var(--fs));font-weight:800;text-transform:uppercase;letter-spacing:.6px;padding:2px 7px;border-radius:10px;background:var(--green-pale);color:var(--green);margin-left:6px}
 .fam-tag.you{background:var(--rust-pale);color:var(--rust)}
 .fam-empty{color:var(--ink3);font-size:calc(13px*var(--fs));padding:.4rem 0 .8rem}
+/* offline pill + photo bits */
+#offlinePill{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:900;background:var(--ink);color:var(--parchment);font-size:calc(12px*var(--fs));font-weight:700;padding:5px 14px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.25);pointer-events:none;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#offlinePill[hidden]{display:none}
+#gateLoading[data-off]{line-height:1.7}
 body.locked .tabbar{display:none!important}
 </style>
 </head>
 <body class="locked">
+<div id="offlinePill" hidden>📴 Offline — changes will sync when you’re back</div>
 <div id="gateLoading">📖 Opening the cookbook…</div>
 <nav class="sidebar" id="sidebar">
   <div class="sb-logo"><div class="title">📖 Wortmann<br>Family Cookbook</div><div class="sub">Shared Recipes</div></div>
@@ -920,6 +935,7 @@ body.locked .tabbar{display:none!important}
     <h1>Take your cookbook with you</h1>
     <p class="page-sub">Three ways to keep a copy of your recipes, plus how to put the cookbook on your phone. <span id="exportCount" style="font-style:normal;font-weight:600"></span></p>
     <div class="backup-banner" id="backupBanner"></div>
+    <div class="backup-banner warn" id="optPhotosBox" style="display:none"><span id="optPhotosText"></span> <button class="btn btn-sm btn-primary" id="optPhotosBtn" onclick="optimizePhotos()" style="margin-top:6px">Optimize photos</button><small>Safe to run more than once. Each full photo is copied to its own place first, then the recipe is slimmed down.</small></div>
     <div class="exp-grid">
       <div class="exp-card">
         <h3>💾 Offline copy</h3>
@@ -1249,10 +1265,6 @@ var _unsubRecipes=null,_unsubUsers=null;
 var _usersLoaded=false;
 var USERS={}; // uid -> {name, email} — public directory so everyone can see who added/wrote what
 function isLoggedIn(){return!!(window._authReady&&window._myUid&&!window._isGuest);}
-function myName(){
-  if(isLoggedIn())return window._myDisplayName||(USERS[window._myUid]&&USERS[window._myUid].name)||'';
-  return'';
-}
 function initUsersSync(){
   _unsubUsers=window._fns.onSnapshot(window._usersCol,function(snap){
     USERS={};
@@ -1348,6 +1360,9 @@ async function logOut(){
   closeOverlay('acctMenuOverlay');
   showToast('👋 Signed out');
   renderAcctUI();renderCards();
+  // Also remove the offline copy of the recipes from this device, then reload to a clean sign-in screen.
+  (async function(){try{await window._fns.terminate(window._db);await window._fns.clearIndexedDbPersistence(window._db);}catch(e){console.warn('Could not clear the local copy (another tab may still be open)',e);}
+    try{location.reload();}catch(e){}})();
 }
 /* ===== Family Members (owner only) ===== */
 var FAMILY={},_unsubFamily=null;
@@ -1382,7 +1397,7 @@ function updateOwnerUI(){
   if(nav)nav.style.display=owner?'':'none';
   if(owner&&!_unsubFamily&&window._fns&&window._db){
     try{_unsubFamily=window._fns.onSnapshot(window._fns.collection(window._db,'family'),function(snap){
-      FAMILY={};snap.docs.forEach(function(d){FAMILY[d.id]=d.data();});renderFamilyPage();
+      FAMILY={};snap.docs.forEach(function(d){FAMILY[d.id]=d.data();});renderFamilyPage();updateOptPhotosBox();
     },function(e){console.warn('family list failed (are the new Firestore rules published?)',e);});}catch(e){console.warn(e);}
   }
   if(!owner){
@@ -1422,10 +1437,22 @@ function copyPendingUid(){
   showToast('📋 Code copied');
 }
 /* Shows exactly one of: sign-in screen, waiting-for-approval screen, or the app. */
+function gateOfflineNote(){
+  var l=document.getElementById('gateLoading');if(!l||!document.body.classList.contains('locked'))return;
+  var waiting=!window._authReady||(window._myUid&&window._approved===undefined);
+  if(navigator.onLine===false&&waiting){l.dataset.off='1';l.innerHTML='📴 You’re offline, and this device hasn’t opened the cookbook yet.<br>Connect to the internet once to download your recipes — after that they open without a connection.<br><a href="">Try again</a>';}
+  else if(l.dataset.off){delete l.dataset.off;l.textContent='📖 Opening the cookbook…';}
+}
+function updateOnlineUI(){
+  var off=navigator.onLine===false,pill=document.getElementById('offlinePill');
+  if(pill)pill.hidden=!off||document.body.classList.contains('locked');
+  gateOfflineNote();
+}
+window.addEventListener('online',updateOnlineUI);window.addEventListener('offline',updateOnlineUI);
 function updateGate(){
-  if(!window._authReady)return;
+  if(!window._authReady){gateOfflineNote();return;}
   var signedIn=!!window._myUid&&!window._isGuest;
-  if(signedIn&&window._approved===undefined)return;
+  if(signedIn&&window._approved===undefined){gateOfflineNote();return;}
   var b=document.body,loading=document.getElementById('gateLoading');
   if(loading)loading.style.display='none';
   var acct=document.getElementById('acctOverlay'),pend=document.getElementById('pendingOverlay');
@@ -1454,7 +1481,8 @@ function updateGate(){
     pend.classList.add('open');b.style.overflow='hidden';
   }
 }
-document.addEventListener('wfc-auth-changed',function(){updateGate();renderAcctUI();renderCards();});
+document.addEventListener('wfc-auth-changed',function(){updateGate();renderAcctUI();renderCards();updateOnlineUI();});
+setTimeout(updateOnlineUI,0);
 setTimeout(function(){
   var l=document.getElementById('gateLoading');
   if(l&&document.body.classList.contains('locked')&&(!window._authReady||(window._myUid&&window._approved===undefined)))
@@ -1818,8 +1846,8 @@ function rowIsOpen(id,catChosen){var v=rowOpen[id];return v!==undefined?v:(brows
 function cardHtml(r,i){
     var diets=(isMine(r)?'<span class="diet-tag mine-tag">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
     return '<div class="recipe-card" data-id="'+r.id+'" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
-      (r.photo?'<img class="card-img" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
-      '<div class="card-ph" style="'+(r.photo?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
+      (cardSrc(r)?'<img class="card-img" loading="lazy" decoding="async" src="'+h(cardSrc(r))+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
+      '<div class="card-ph" style="'+(cardSrc(r)?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
       '<div class="card-body"><div class="card-top"><div class="card-cat">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div><div class="card-top-right"><div class="diet-chips">'+diets+'</div><button class="heart-btn'+(isFav(r)?' on':'')+'" onclick="toggleFavorite(\''+r.id+'\',event)" title="Favorite">'+HEART+'</button></div></div>'+
       '<div class="card-title">'+h(r.name)+'</div>'+
       '<div class="card-meta">'+(r.servings?'<span>👤 '+r.servings+'</span>':'')+(r.active?'<span>👐 '+r.active+'m</span>':'')+(r.passive?'<span>⏳ '+r.passive+'m</span>':'')+(r.ingredients&&r.ingredients.length?'<span>🧂 '+r.ingredients.length+'</span>':'')+'</div>'+
@@ -1953,7 +1981,7 @@ function viewRecipe(id,scale,metric){
   var pairs=(r.pairings||'').split(',').map(function(p){return p.trim();}).filter(Boolean);
   var scaledServings=Math.round(base*s*4)/4;
 
-  var html=(r.photo?'<img class="view-hero" src="'+h(r.photo)+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\'">':'<div class="view-hero-ph">'+(EMOJIS[r.category]||'🍴')+'</div>')+
+  var html=(heroSrc(r)?'<img class="view-hero" src="'+h(heroSrc(r))+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\'">':'<div class="view-hero-ph">'+(EMOJIS[r.category]||'🍴')+'</div>')+
     '<div style="padding:0 1.5rem"><div class="modal-head" style="border-radius:0;padding:.9rem 0;background:transparent">'+
     '<div style="flex:1"><div style="font-size:calc(11px*var(--fs));color:var(--rust);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px">'+h(r.category||'')+(r.cuisine?' · '+h(r.cuisine):'')+(attribution(r)?' · '+h(attribution(r)):'')+'</div>'+
     '<h2 style="font-family:\'Lora\',serif;font-size:calc(22px*var(--fs))">'+h(r.name)+'</h2>'+
@@ -1992,6 +2020,7 @@ function viewRecipe(id,scale,metric){
 
   document.getElementById('viewContent').innerHTML=html;
   openOverlay('viewOverlay');
+  loadFullPhoto(r);
   document.getElementById('viewOverlay').scrollTop=0;
 }
 
@@ -2637,7 +2666,7 @@ function recordBackup(){
   updateBackupUI();
 }
 function updateExportInfo(){
-  updateBackupUI();
+  updateBackupUI();updateOptPhotosBox();
   var el=document.getElementById('exportCount');if(!el)return;
   var n=recipes.filter(function(r){return !r.deleted;}).length;
   el.textContent=n?'Your cookbook has '+n+' recipe'+(n!==1?'s':'')+'.':'';
@@ -2684,7 +2713,8 @@ function permanentlyDelete(id){
   if(confirm('Permanently delete "'+((r&&r.name)||'this recipe')+'"? This cannot be undone.'))doPermanentDelete(id);
 }
 async function doPermanentDelete(id){
-  try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',id));showToast('🗑 Permanently deleted');}
+  var hadPhoto=!!(trashedRecipes.find(function(x){return x.id===id;})||{}).hasFullPhoto;
+  try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',id));if(hadPhoto)deletePhotoDoc(id);showToast('🗑 Permanently deleted');}
   catch(e){console.error(e);showToast('❌ Blocked by Firestore security rules — see the note on the Trash page.');}
 }
 function emptyTrash(){
@@ -2692,10 +2722,11 @@ function emptyTrash(){
   var n=trashedRecipes.length;
   if(!confirm('Permanently delete all '+n+' recipe'+(n!==1?'s':'')+' in Trash? This cannot be undone.'))return;
   (async function(){
-    var ids=trashedRecipes.map(function(r){return r.id;});
+    var ids=trashedRecipes.map(function(r){return r.id;}),withPhoto={};
+    trashedRecipes.forEach(function(r){if(r.hasFullPhoto)withPhoto[r.id]=1;});
     var ok=0,fail=0;
     for(var i=0;i<ids.length;i++){
-      try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',ids[i]));ok++;}
+      try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipes',ids[i]));if(withPhoto[ids[i]])deletePhotoDoc(ids[i]);ok++;}
       catch(e){console.error(e);fail++;}
     }
     if(fail)showToast('🗑 Deleted '+ok+' — '+fail+' blocked by security rules');
@@ -2770,16 +2801,25 @@ async function runImport(){
     btn.textContent='Importing… '+(i+1)+' of '+todo.length;
     var d=Object.assign({},todo[i].data);
     d.author=d.author||myName();d.addedByUid=window._myUid||'';d.createdAt=f.serverTimestamp();
-    try{await f.addDoc(window._col,d);ok++;}catch(e){console.error(e);failed++;}
+    try{
+      var full=/^data:image\//.test(d.photo||'')?d.photo:null;
+      if(full){d.thumb=await makeThumb(full);d.photo='';d.hasFullPhoto=true;}
+      var iref=f.doc(window._col);await f.setDoc(iref,d);
+      if(full)await f.setDoc(f.doc(window._db,'recipePhotos',iref.id),{photo:full});
+      ok++;
+    }catch(e){console.error(e);failed++;}
   }
   importRows=[];document.getElementById('importFile').value='';
   importMsg(failed&&!ok?'err':'ok',(ok?'✅ Imported <strong>'+ok+'</strong> recipe'+(ok!==1?'s':'')+'. ':'')+(failed?'❌ '+failed+' could not be saved — check your connection and try again. ':'')+(ok?'<a href="#" onclick="showPage(\'recipes\');return false" style="color:inherit;font-weight:700">See them in All Recipes →</a>':''));
   showToast(ok?'✅ Imported '+ok+' recipe'+(ok!==1?'s':''):'❌ Import failed');
 }
-function backupJSON(){
+async function backupJSON(){
   if(!recipes.length){showToast('⚠️ No recipes to back up');return;}
-  var blob=new Blob([JSON.stringify(recipes,null,2)],{type:'application/json'});
+  showToast('🧰 Preparing backup…');
+  var full=await recipesWithFullPhotos(false);   // backups carry the FULL photos, not the small list versions
+  var blob=new Blob([JSON.stringify(full.list,null,2)],{type:'application/json'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wortmann-recipes-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();
+  if(full.missing){showToast('⚠️ Backup downloaded, but '+full.missing+' photo'+(full.missing!==1?'s':'')+' could not be included — try again when you’re online');return;}
   recordBackup();
   showToast('🧰 Backup downloaded — '+recipes.length+' recipes');
 }
@@ -2836,13 +2876,89 @@ async function handlePhotoFile(input){
   }
 }
 function removePhoto(){
-  pendingPhotoData=null;
+  pendingPhotoData=null;keepUploadedPhoto=false;
   document.getElementById('f_photo').value='';
   var pf=document.getElementById('f_photoFile');if(pf)pf.value='';
   previewPhoto();
 }
 
+/* ---- photo storage: tiny thumbnail rides inside the recipe; the full photo lives in recipePhotos/<recipeId> ---- */
+var THUMB_MAX_CHARS=15000;      // ~11 KB of image per recipe in the list
+var PHOTO_CACHE={};             // recipeId -> full photo (data URL), filled when a recipe is opened
+var keepUploadedPhoto=false,editThumb='';
+function isInlinePhoto(r){return !!r&&/^data:image\//.test(r.photo||'');}
+function cardSrc(r){return r.thumb||r.photo||'';}
+function heroSrc(r){return PHOTO_CACHE[r.id]||r.photo||r.thumb||'';}
+async function makeThumb(dataUrl){
+  var blob=await (await fetch(dataUrl)).blob();
+  var img=await decodeImage(blob),w0=img.width||img.naturalWidth,h0=img.height||img.naturalHeight,best=null;
+  var sizes=[320,280,240,200,160],qs=[0.72,0.62,0.52,0.42];
+  for(var i=0;i<sizes.length;i++){
+    var sc=Math.min(1,sizes[i]/Math.max(w0,h0)),c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(w0*sc));c.height=Math.max(1,Math.round(h0*sc));
+    var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+    for(var j=0;j<qs.length;j++){best=c.toDataURL('image/jpeg',qs[j]);if(best.length<=THUMB_MAX_CHARS){if(img.close)img.close();return best;}}
+  }
+  if(img.close)img.close();
+  return best;
+}
+async function loadFullPhoto(r){
+  if(!r||!r.hasFullPhoto||PHOTO_CACHE[r.id]||!window._fns||!window._db)return;
+  try{
+    var snap=await window._fns.getDoc(window._fns.doc(window._db,'recipePhotos',r.id)),d=snap.exists()?snap.data():null;
+    if(d&&d.photo){PHOTO_CACHE[r.id]=d.photo;if(viewingId===r.id){var im=document.querySelector('#viewOverlay .view-hero');if(im)im.src=d.photo;}}
+  }catch(e){console.warn('Full photo not available right now (showing the small version)',e);}
+}
+async function deletePhotoDoc(id){
+  try{await window._fns.deleteDoc(window._fns.doc(window._db,'recipePhotos',id));}catch(e){console.warn('photo doc cleanup failed',e);}
+  delete PHOTO_CACHE[id];
+}
+/* full-size photos put back into a copy of the recipes (for backups and the offline copy) */
+async function recipesWithFullPhotos(keepThumb){
+  var missing=0;
+  var list=await Promise.all(recipes.map(async function(r){
+    var c=Object.assign({},r);
+    if(r.hasFullPhoto){
+      var ph=PHOTO_CACHE[r.id];
+      if(!ph){try{var sn=await window._fns.getDoc(window._fns.doc(window._db,'recipePhotos',r.id));ph=sn.exists()?sn.data().photo:'';}catch(e){ph='';}}
+      if(ph)c.photo=ph;else missing++;
+    }
+    if(!keepThumb)delete c.thumb;
+    delete c.hasFullPhoto;
+    return c;
+  }));
+  return{list:list,missing:missing};
+}
+async function optimizePhotos(){
+  if(!isOwnerNow())return;
+  if(navigator.onLine===false){showToast('⚠️ Connect to the internet first');return;}
+  var todo=recipes.concat(trashedRecipes).filter(isInlinePhoto);
+  var btn=document.getElementById('optPhotosBtn'),ok=0,fail=0,f=window._fns;
+  if(!todo.length){updateOptPhotosBox();return;}
+  if(btn)btn.disabled=true;
+  for(var i=0;i<todo.length;i++){
+    var r=todo[i];if(btn)btn.textContent='Optimizing '+(i+1)+' of '+todo.length+'…';
+    try{
+      var thumb=await makeThumb(r.photo);
+      await f.setDoc(f.doc(window._db,'recipePhotos',r.id),{photo:r.photo});          // 1) safe copy of the full photo
+      await f.updateDoc(f.doc(window._db,'recipes',r.id),{thumb:thumb,photo:'',hasFullPhoto:true}); // 2) then shrink the recipe
+      ok++;
+    }catch(e){console.error(e);fail++;}
+  }
+  if(btn)btn.disabled=false;
+  showToast(fail?'📷 Optimized '+ok+' — '+fail+' failed, run it again':'📷 Optimized '+ok+' photo'+(ok!==1?'s':''));
+  updateOptPhotosBox();
+}
+function updateOptPhotosBox(){
+  var box=document.getElementById('optPhotosBox');if(!box)return;
+  var n=isOwnerNow()?recipes.concat(trashedRecipes).filter(isInlinePhoto).length:0;
+  box.style.display=n?'':'none';
+  var t=document.getElementById('optPhotosText'),b=document.getElementById('optPhotosBtn');
+  if(t)t.textContent='📷 '+n+' recipe'+(n!==1?'s':'')+' still keep'+(n===1?'s':'')+' a full-size photo inside the recipe, which makes the recipe list slower to load.';
+  if(b&&!b.disabled)b.textContent='Optimize photos';
+}
 function openAdd(prefill){
+  keepUploadedPhoto=false;editThumb='';
   editingId=null;
   document.getElementById('modalTitle').textContent='New Recipe';
   document.getElementById('deleteBtn').style.display='none';
@@ -2872,6 +2988,7 @@ function openEdit(id){
   setValue('f_tags',(r.tags||[]).join(', '));
   setValue('f_cat',r.category);setValue('f_cuisine',r.cuisine);setValue('f_pan',r.pan||'');
   if(/^data:image\//.test(r.photo||'')){setValue('f_photo','');pendingPhotoData=r.photo;}
+  keepUploadedPhoto=!pendingPhotoData&&!!(r.hasFullPhoto||r.thumb)&&!/^https?:/i.test(r.photo||'');editThumb=r.thumb||'';
   previewPhoto();
   (r.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.closest('.diet-check').classList.add('checked');el.checked=true;}});
   (r.ingredients||[]).forEach(function(i){addIng(i.name,i.qty,i.unit);});
@@ -2907,8 +3024,8 @@ function removeStep(btn){btn.closest('.step-row').remove();document.querySelecto
 function toggleCheck(label){setTimeout(function(){label.classList.toggle('checked',label.querySelector('input').checked);},0);}
 function previewPhoto(){
   var url=document.getElementById('f_photo').value.trim();
-  if(url){pendingPhotoData=null;var pf=document.getElementById('f_photoFile');if(pf)pf.value='';}
-  var src=pendingPhotoData||url,img=document.getElementById('photoPreview');
+  if(url){pendingPhotoData=null;keepUploadedPhoto=false;var pf=document.getElementById('f_photoFile');if(pf)pf.value='';}
+  var src=pendingPhotoData||url||(keepUploadedPhoto?(PHOTO_CACHE[editingId]||editThumb):''),img=document.getElementById('photoPreview');
   img.src=src||'';img.style.display=src?'block':'none';
   var rb=document.getElementById('photoRemoveBtn');if(rb)rb.style.display=src?'':'none';
 }
@@ -2929,11 +3046,19 @@ async function saveRecipe(){
   if(!editingId&&window._myUid)data.addedByUid=window._myUid;
   setSyncStatus('syncing');
   try{
-    var fns=window._fns;
-    if(pendingPhotoData)data.photo=pendingPhotoData;
-    if(editingId){await fns.updateDoc(fns.doc(window._db,'recipes',editingId),data);showToast('✅ Recipe updated!');}
-    else{data.createdAt=fns.serverTimestamp();await fns.addDoc(window._col,data);showToast('✅ Recipe saved for the whole family!');}
-    pendingPhotoData=null;
+    var fns=window._fns,fullPhoto=null,rec0=editingId?recipes.find(function(x){return x.id===editingId;}):null,oldHadFull=!!(rec0&&rec0.hasFullPhoto);
+    if(pendingPhotoData){data.thumb=await makeThumb(pendingPhotoData);data.photo='';data.hasFullPhoto=true;fullPhoto=pendingPhotoData;}   // new/changed upload
+    else if(data.photo){data.thumb='';data.hasFullPhoto=false;}                                                                    // a pasted web link
+    else if(editingId&&keepUploadedPhoto){delete data.photo;}                                                                      // keep the uploaded photo as it is
+    else{data.photo='';data.thumb='';data.hasFullPhoto=false;}                                                                     // no photo
+    var rid;
+    if(editingId){rid=editingId;await fns.updateDoc(fns.doc(window._db,'recipes',rid),data);}
+    else{data.createdAt=fns.serverTimestamp();var nref=fns.doc(window._col);rid=nref.id;await fns.setDoc(nref,data);}
+    var photoFailed=false;
+    if(fullPhoto){try{await fns.setDoc(fns.doc(window._db,'recipePhotos',rid),{photo:fullPhoto});PHOTO_CACHE[rid]=fullPhoto;}catch(pe){console.error(pe);photoFailed=true;}}
+    else if(oldHadFull&&data.hasFullPhoto===false){deletePhotoDoc(rid);}
+    showToast(photoFailed?'⚠️ Recipe saved, but the full photo could not be saved — edit it and add the photo again':(editingId?'✅ Recipe updated!':'✅ Recipe saved for the whole family!'));
+    pendingPhotoData=null;keepUploadedPhoto=false;
     closeOverlay('addOverlay');
   }catch(e){console.error(e);showToast('❌ Save failed — check your connection');setSyncStatus('error');}
 }
@@ -3013,11 +3138,12 @@ function importFromPaste(){
   importFromHtml(txt,url);
 }
 
-function downloadSite(){
-  // Clone the page and embed current recipes as JSON so they show offline
+async function downloadSite(){
+  // Clone the page and embed current recipes as JSON so they show offline (small + full photos included)
+  var full=await recipesWithFullPhotos(true);
   var clone=document.documentElement.cloneNode(true);
   var script=document.createElement('script');
-  script.textContent='window._preloadedRecipes='+JSON.stringify(recipes)+';';
+  script.textContent='window._preloadedRecipes='+JSON.stringify(full.list)+';';
   clone.querySelector('head').appendChild(script);
   var patch=document.createElement('script');
   patch.textContent='document.addEventListener("DOMContentLoaded",function(){setTimeout(function(){if(window._preloadedRecipes&&window._preloadedRecipes.length&&!window.dbReady){recipes=window._preloadedRecipes;dbReady=true;window.dbReady=true;renderCards();showToast("📖 Showing "+recipes.length+" saved recipes (offline mode)");}},1500);});';
@@ -3235,7 +3361,9 @@ document.querySelectorAll('.overlay').forEach(function(el){el.addEventListener('
 document.addEventListener('keydown',function(e){if(e.key==='Escape')['viewOverlay','addOverlay','cookOverlay'].forEach(closeOverlay);});
 
 var toastTimer;
-function showToast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},3500);}
+function showToast(msg){var t=document.getElementById('toast');
+  if(navigator.onLine===false&&/^(✅|🛒|🗑|🍳|↺|💬|📅|❤️|⭐|✓)/.test(msg))msg+=' · saved on this device, will sync';
+  t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},3500);}
 function h(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function setValue(id,val){var el=document.getElementById(id);if(el&&val!=null)el.value=val;}
 
