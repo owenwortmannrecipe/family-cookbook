@@ -15,7 +15,6 @@
 <link rel="icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="recipe-parser.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -174,7 +173,7 @@ textarea{resize:vertical;min-height:70px}
 .diet-check{display:flex;align-items:center;gap:4px;font-size:calc(12px*var(--fs));font-weight:600;cursor:pointer;padding:4px 9px;border:1.5px solid var(--border);border-radius:20px;transition:all .15s;user-select:none}
 .diet-check input{display:none}
 .diet-check.checked{border-color:var(--green);background:var(--green-pale);color:var(--green)}
-.ing-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:6px;margin-bottom:6px;align-items:center}
+.ing-row{display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:6px;margin-bottom:6px;align-items:center}
 .step-row{display:grid;grid-template-columns:23px 1fr auto;gap:8px;margin-bottom:6px;align-items:flex-start}
 .step-num{width:23px;height:23px;border-radius:50%;background:var(--rust-pale);color:var(--rust);display:flex;align-items:center;justify-content:center;font-size:calc(11px*var(--fs));font-weight:700;flex-shrink:0;margin-top:8px}
 .icon-btn{width:31px;height:31px;border:1.5px solid var(--border);border-radius:var(--rs);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:calc(13px*var(--fs));flex-shrink:0;transition:all .15s}
@@ -548,8 +547,20 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .backup-nudge{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem;padding:.6rem .9rem;border-radius:var(--rs);background:var(--rust-pale);color:var(--rust);font-size:calc(13px*var(--fs));font-weight:600}
 .backup-nudge[hidden]{display:none}
 .backup-nudge span{flex:1 1 220px}
-.pan-row{display:flex;gap:6px 8px;align-items:center;flex-wrap:wrap;margin:-.2rem 0 .9rem;font-size:calc(12.5px*var(--fs));color:var(--ink2)}
-.pan-row select{padding:4px 8px;border:1.5px solid var(--border);border-radius:var(--rs);background:var(--warm);color:var(--ink2);font-family:inherit;font-size:calc(12.5px*var(--fs));max-width:100%}
+.view-tools{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:-.2rem 0 .9rem}
+.tool-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1.5px solid var(--border);border-radius:20px;background:var(--warm);color:var(--ink2);font-family:inherit;font-size:calc(12.5px*var(--fs));font-weight:600;cursor:pointer;line-height:1.3}
+.tool-btn:hover{border-color:var(--rust2)}
+.tool-btn.on{background:var(--rust-pale);border-color:var(--rust2);color:var(--rust)}
+.tool-btn:disabled{opacity:.45;cursor:not-allowed}
+.tool-btn .caret{font-size:.8em;opacity:.7}
+.pan-panel{flex:1 1 100%;border:1.5px solid var(--border);border-radius:var(--r);background:var(--warm);padding:.8rem .9rem;display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;align-items:end}
+.pan-panel label{display:block;font-size:calc(11.5px*var(--fs));font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
+.pan-panel select{width:100%;padding:7px 9px;border:1.5px solid var(--border);border-radius:var(--rs);background:#fff;color:var(--ink2);font-family:inherit;font-size:calc(13px*var(--fs))}
+.pan-panel .pan-foot{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ing-plus-btn{font-weight:800}
+.ing-plus{grid-column:1/-1;display:grid;grid-template-columns:auto 1fr 1fr;gap:6px;align-items:center;margin:-2px 0 4px;padding-left:2px;font-size:calc(12px*var(--fs));color:var(--ink3)}
+.ing-plus[hidden]{display:none}
+@media(max-width:520px){.pan-panel{grid-template-columns:1fr}}
 .pan-chip{display:inline-flex;align-items:center;gap:6px;background:var(--rust-pale);color:var(--rust);border-radius:20px;padding:3px 6px 3px 11px;font-weight:700}
 .pan-chip button{background:none;border:none;color:inherit;cursor:pointer;font-size:1em;padding:0 4px}
 .pan-note{flex:1 1 100%;font-size:calc(12px*var(--fs));color:var(--ink3)}
@@ -947,7 +958,7 @@ body.locked .tabbar{display:none!important}
       <div class="exp-card">
         <h3>📄 Printable cookbook (PDF)</h3>
         <p>A properly laid-out book — title page, preface, kitchen notes, then every recipe in order. Print it, bind it, or give it as a gift.</p>
-        <div class="exp-meta"><strong>File:</strong> .pdf · <strong>Takes:</strong> a moment to build</div>
+        <div class="exp-meta"><strong>File:</strong> .pdf · <strong>How:</strong> your browser’s print window opens — choose <em>Save as PDF</em></div>
         <button class="btn btn-primary btn-sm" onclick="exportPDF()">📄 Create PDF</button>
       </div>
       <div class="exp-card">
@@ -1539,14 +1550,29 @@ function resetPan(){
   viewPanFrom=(r&&r.pan)||'';viewPanTo='';
   if(viewingId)viewRecipe(viewingId,viewScale,viewMetric);
 }
-function panRowHtml(pan){
-  var chip='';
-  if(pan.active)chip='<span class="pan-chip">Scaled ×'+(Math.round(pan.f*100)/100)+' for '+h(pan.to.l)+'<button onclick="resetPan()" title="Reset pan" aria-label="Reset pan">✕</button></span>';
+var viewPanOpen=false,viewMix=false;
+try{viewMix=localStorage.getItem('wfc_mix')==='1';}catch(e){}
+function togglePanPanel(){viewPanOpen=!viewPanOpen;if(viewingId)viewRecipe(viewingId,viewScale,viewMetric);}
+function toggleMix(){
+  viewMix=!viewMix;try{localStorage.setItem('wfc_mix',viewMix?'1':'0');}catch(e){}
+  if(viewingId)viewRecipe(viewingId,viewScale,viewMetric);
+}
+function panPanelHtml(pan){
   var note='';
   if(pan.err==='from')note='<div class="pan-note err">Pick the pan this recipe is written for, and I’ll scale it.</div>';
   else if(pan.err==='mismatch')note='<div class="pan-note err">Can’t compare these two — flat pans, loaf/Bundt pans and muffin tins are measured differently. Pick two pans of the same kind (loaf and Bundt pans compare by volume).</div>';
   else if(pan.active)note='<div class="pan-note">Tip: a different pan changes depth, so check for doneness earlier than the recipe says in a larger or shallower pan, and be ready to give it longer in a smaller, deeper one.</div>';
-  return'<div class="pan-row" id="panRow"><span>🥘 Recipe is for</span><select id="panFrom" onchange="setPan(\'from\',this.value)" aria-label="Pan the recipe is written for">'+panOptionsHtml(viewPanFrom,'— pan —')+'</select><span>→ I’m using</span><select id="panTo" onchange="setPan(\'to\',this.value)" aria-label="Pan you are using">'+panOptionsHtml(viewPanTo,'— same pan —')+'</select>'+chip+note+'</div>';
+  return'<div class="pan-panel" id="panRow">'+
+    '<div><label for="panFrom">Recipe is written for</label><select id="panFrom" onchange="setPan(\'from\',this.value)">'+panOptionsHtml(viewPanFrom,'— pick a pan —')+'</select></div>'+
+    '<div><label for="panTo">I’m baking in</label><select id="panTo" onchange="setPan(\'to\',this.value)">'+panOptionsHtml(viewPanTo,'— same pan —')+'</select></div>'+
+    '<div class="pan-foot">'+(pan.active?'<span class="pan-chip">Scaled ×'+(Math.round(pan.f*100)/100)+' for '+h(pan.to.l)+'<button onclick="resetPan()" title="Reset pan" aria-label="Reset pan">✕</button></span>':'')+note+'</div></div>';
+}
+function viewToolsHtml(pan,m){
+  var lbl=pan.active?'🥘 '+h(pan.to.l)+' · ×'+(Math.round(pan.f*100)/100):'🥘 Pan size';
+  return'<div class="view-tools">'+
+    '<button class="tool-btn'+(pan.active?' on':'')+'" aria-expanded="'+(viewPanOpen?'true':'false')+'" onclick="togglePanPanel()" title="Baking in a different pan? Scale the recipe to fit">'+lbl+' <span class="caret">'+(viewPanOpen?'▴':'▾')+'</span></button>'+
+    '<button class="tool-btn'+((viewMix&&!m)?' on':'')+'" id="mixBtn" onclick="toggleMix()"'+(m?' disabled':'')+' title="'+(m?'Only for Imperial amounts':'Show amounts as cups + Tbsp, like ¼ cup + 2 Tbsp instead of 6 Tbsp')+'">½ cup + Tbsp</button>'+
+    (viewPanOpen?panPanelHtml(pan):'')+'</div>';
 }
 var cookSteps=[],cookIngs=[],cookIdx=0,cookTimer=null,cookTimerSecs=0,cookTimerTotal=0;
 var viewScale=1,viewMetric=false,viewingId=null;
@@ -1711,9 +1737,26 @@ function filterWeights(){
   document.getElementById('weightCount').textContent=q?(shown?shown+' ingredient'+(shown!==1?'s':'')+' match':'No match — try another word, or check King Arthur’s full chart below'):'';
 }
 function convertIng(ing,factor,mode){
+  ing=WFC.splitCompound(ing);            // also repairs old recipes saved as "1 cup" + name "+ 2 tbsp flour"
+  var c=convertOne(ing,factor,mode);c.name=ing.name;return c;
+}
+function convertOne(ing,factor,mode){
+  var tsp=ing.qty2?WFC.compoundTotalTsp(ing):null;
+  if(tsp!=null){                          // two-part amount, e.g. 1 cup + 2 Tbsp: scale it as ONE amount
+    var T=tsp*factor;
+    if(mode==='mass'){var w=toGrams({qty:String(Math.round(T/48*1e6)/1e6),unit:'cup',name:ing.name},1);if(w)return massResult(w);}
+    if(mode){var mc2=WFC.metric('tsp');return{qty:WFC.scaleQty(String(T*mc2.f),1,'decimal'),unit:mc2.u};}
+    if(Math.abs(factor-1)<1e-9)return{qty:WFC.scaleQty(ing.qty,1,'pretty')+' '+WFC.displayUnit(ing.unit,WFC.scaleQty(ing.qty,1,'pretty'))+' + '+WFC.scaleQty(ing.qty2,1,'pretty')+' '+WFC.displayUnit(ing.unit2,WFC.scaleQty(ing.qty2,1,'pretty')),unit:''};
+    var mx=WFC.mixVolume(T);if(mx)return{qty:mx.qty,unit:''};
+    var qs0=WFC.scaleQty(String(Math.round(T/48*1e6)/1e6),1,'pretty');return{qty:qs0,unit:WFC.displayUnit('cup',qs0)};
+  }
   var q=WFC.parseQty(ing.qty),unit=ing.unit||'';
   if(!q)return{qty:ing.qty||'',unit:unit};
-  if(mode==='mass'){var w=toGrams(ing,factor);if(w)return massResult(w);}
+  if(mode==='mass'){var w2=toGrams(ing,factor);if(w2)return massResult(w2);}
+  if(!mode&&viewMix){                     // optional "½ cup + Tbsp" display
+    var tp=WFC.volTsp(ing.qty,unit);
+    if(tp!=null){var mx2=WFC.mixVolume(tp*factor);if(mx2)return{qty:mx2.qty,unit:''};}
+  }
   var f=factor,fmt='pretty',mc=null;
   if(mode){mc=WFC.metric(unit);if(mc){f*=mc.f;unit=mc.u;fmt='decimal';}}
   var qs=WFC.scaleQty(ing.qty,f,fmt);
@@ -1964,7 +2007,8 @@ function renderCards(){
 function viewRecipe(id,scale,metric){
   var r=recipes.find(function(x){return x.id===id;});
   if(!r)return;
-  if(scale===undefined){viewPanFrom=r.pan||'';viewPanTo='';}
+  var ovEl=document.getElementById('viewOverlay'),prevTop=ovEl?ovEl.scrollTop:0,fresh=(scale===undefined);
+  if(fresh){viewPanFrom=r.pan||'';viewPanTo='';viewPanOpen=false;}
   viewingId=id;
   var base=+(r.servings||1);
   var s=scale||1;
@@ -1972,7 +2016,7 @@ function viewRecipe(id,scale,metric){
   viewScale=s;viewMetric=m;
   var pan=panFactor(viewPanFrom,viewPanTo),pf=pan.f;viewPanF=pf;
 
-  function scaleIng(ing){var c=convertIng(ing,s*pf,m);c.name=ing.name;return c;}
+  function scaleIng(ing){return convertIng(ing,s*pf,m);}
   var siList=(r.ingredients||[]).map(scaleIng),massN=siList.filter(function(x){return x.mass;}).length;
   var mArg=(m==='mass')?"'mass'":String(!!m);
 
@@ -2008,7 +2052,7 @@ function viewRecipe(id,scale,metric){
     '<button class="unit-btn '+((m===true)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',true)">Metric</button>'+
     '<button class="unit-btn '+((m==='mass')?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',\'mass\')" title="Cups of common ingredients become grams">By weight</button>'+
     '</div></div>'+
-    panRowHtml(pan)+'<div class="view-meta">'+(r.servings?'<span>👤 '+scaledServings+' servings</span>':'')+(r.active?'<span>👐 Active: '+r.active+' min</span>':'')+(r.passive?'<span>⏳ Passive: '+r.passive+' min</span>':'')+((+r.active||0)+(+r.passive||0)?'<span>⏱ Total: '+((+r.active||0)+(+r.passive||0))+' min</span>':'')+'</div>'+
+    viewToolsHtml(pan,m)+'<div class="view-meta">'+(r.servings?'<span>👤 '+scaledServings+' servings</span>':'')+(r.active?'<span>👐 Active: '+r.active+' min</span>':'')+(r.passive?'<span>⏳ Passive: '+r.passive+' min</span>':'')+((+r.active||0)+(+r.passive||0)?'<span>⏱ Total: '+((+r.active||0)+(+r.passive||0))+' min</span>':'')+'</div>'+
     ((r.cal||r.protein||r.carbs||r.fat)?'<div class="nutri-cards">'+(r.cal?'<div class="nc"><div class="val" style="color:var(--rust)">'+r.cal+'</div><div class="lbl">kcal</div></div>':'')+(r.protein?'<div class="nc"><div class="val" style="color:var(--blue)">'+r.protein+'g</div><div class="lbl">Protein</div></div>':'')+(r.carbs?'<div class="nc"><div class="val" style="color:var(--green)">'+r.carbs+'g</div><div class="lbl">Carbs</div></div>':'')+(r.fat?'<div class="nc"><div class="val" style="color:var(--red)">'+r.fat+'g</div><div class="lbl">Fat</div></div>':'')+'</div>':'')+
     ((r.ingredients||[]).length?'<div class="view-subhead">Ingredients</div>'+(m==='mass'?'<p class="mass-note">⚖️ '+(massN?massN+' of '+siList.length+' ingredients shown by weight from our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'weights\');return false">Ingredient Weights page</a>. The rest are in metric.':'None of these ingredients are on our <a href="#" onclick="closeOverlay(\'viewOverlay\');showPage(\'weights\');return false">Ingredient Weights page</a>, so they are shown in metric.')+'</p>':'')+'<ul class="ing-list">'+siList.map(function(si){return'<li><span>'+h(si.name)+'</span><span style="color:var(--ink3)">'+h(si.qty)+(si.unit?' '+h(si.unit):'')+(si.alt?'<small class="ing-alt">'+h(si.alt)+'</small>':'')+'</span></li>';}).join('')+'</ul>':'')+
     ((r.steps||[]).length?'<div class="view-subhead">Instructions</div><ol class="steps-ol">'+r.steps.map(function(st,i){return'<li><div class="sc">'+(i+1)+'</div><div class="st">'+h(st)+'</div></li>';}).join('')+'</ol>':'')+
@@ -2021,7 +2065,7 @@ function viewRecipe(id,scale,metric){
   document.getElementById('viewContent').innerHTML=html;
   openOverlay('viewOverlay');
   loadFullPhoto(r);
-  document.getElementById('viewOverlay').scrollTop=0;
+  document.getElementById('viewOverlay').scrollTop=fresh?0:prevTop;   // keep your place when you tweak servings / pan / units
 }
 
 var cookFactor=1,cookDone={},cookIngsOpen=true,cookUnits=false;
@@ -2305,12 +2349,18 @@ async function mergeShoppingEntries(entries,fromLabel,listId){
   await Promise.all(ops);
   return entries.length;
 }
+function shopEntry(i,factor,from){
+  i=WFC.splitCompound(i);
+  var tsp=i.qty2?WFC.compoundTotalTsp(i):null;
+  if(tsp!=null)return{name:i.name,qty:WFC.scaleQty(String(Math.round(tsp*factor/3*1e6)/1e6),1,'ascii'),unit:'tbsp',from:from};   // two-part amount -> one total in Tbsp
+  return{name:i.name,qty:i.qty?WFC.scaleQty(i.qty,factor,'ascii'):'',unit:i.unit||'',from:from};
+}
 function addToShoppingList(id){
   var r=recipes.find(function(x){return x.id===id;});
   if(!r)return;
   if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return;}
   var factor=(viewingId===id&&viewScale)?viewScale*viewPanF:1;
-  var entries=(r.ingredients||[]).filter(function(i){return i.name;}).map(function(i){return{name:i.name,qty:i.qty?WFC.scaleQty(i.qty,factor,'ascii'):'',unit:i.unit||'',from:r.name};});
+  var entries=(r.ingredients||[]).filter(function(i){return i.name;}).map(function(i){return shopEntry(i,factor,r.name);});
   chooseList(async function(listId){
     try{
       await mergeShoppingEntries(entries,r.name,listId);
@@ -2581,7 +2631,7 @@ function planWeekToShopping(){
   mealPlan.filter(function(e){return keys.indexOf(e.date)>=0&&e.recipeId;}).forEach(function(e){
     var r=recipes.find(function(x){return x.id===e.recipeId;});if(!r)return;
     n++;
-    (r.ingredients||[]).filter(function(i){return i.name;}).forEach(function(i){entries.push({name:i.name,qty:i.qty||'',unit:i.unit||'',from:r.name});});
+    (r.ingredients||[]).filter(function(i){return i.name;}).forEach(function(i){var i2=WFC.splitCompound(i);entries.push(i2.qty2?shopEntry(i2,1,r.name):{name:i.name,qty:i.qty||'',unit:i.unit||'',from:r.name});});
   });
   if(!n){showToast('No recipes planned this week yet');return;}
   if(!dbReady){showToast('⚠️ Still connecting — try again in a moment');return;}
@@ -2747,7 +2797,11 @@ function sanitizeRecipe(r){
     if(typeof i==='string')i=WFC.parseIngredient(i);
     if(!i||typeof i!=='object')return null;
     var n=cleanText(i.name,200);if(!n)return null;
-    return{name:n,qty:cleanText(i.qty,20),unit:cleanText(i.unit,20)};
+    var o={name:n,qty:cleanText(i.qty,20),unit:cleanText(i.unit,20)};
+    o=WFC.splitCompound(o);
+    var q2=cleanText(i.qty2,20),u2=cleanText(i.unit2,20);
+    if(!o.qty2&&q2&&u2&&o.qty){o.qty2=q2;o.unit2=u2;}
+    return o;
   }).filter(Boolean);
   var steps=(Array.isArray(r.steps)?r.steps:[]).slice(0,80).map(function(x){return cleanText(x,2000);}).filter(Boolean);
   var photo=cleanText(r.photo,400000);
@@ -2967,7 +3021,7 @@ function openAdd(prefill){
   if(pname)document.getElementById('f_author').value=pname;
   if(prefill){
     Object.keys(prefill).forEach(function(k){if(typeof prefill[k]==='string'){var el=document.getElementById('f_'+k);if(el)el.value=prefill[k];}});
-    (prefill.ingredients||[]).forEach(function(i){addIng(i.name,i.qty||'',i.unit||'');});
+    (prefill.ingredients||[]).forEach(function(i){i=WFC.splitCompound(i);addIng(i.name,i.qty||'',i.unit||'',i.qty2||'',i.unit2||'');});
     (prefill.steps||[]).forEach(function(s){addStep(s);});
     if(prefill.tags&&prefill.tags.length)setValue('f_tags',prefill.tags.join(', '));
     (prefill.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.checked=true;el.closest('.diet-check').classList.add('checked');}});
@@ -2991,7 +3045,7 @@ function openEdit(id){
   keepUploadedPhoto=!pendingPhotoData&&!!(r.hasFullPhoto||r.thumb)&&!/^https?:/i.test(r.photo||'');editThumb=r.thumb||'';
   previewPhoto();
   (r.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.closest('.diet-check').classList.add('checked');el.checked=true;}});
-  (r.ingredients||[]).forEach(function(i){addIng(i.name,i.qty,i.unit);});
+  (r.ingredients||[]).forEach(function(i){i=WFC.splitCompound(i);addIng(i.name,i.qty,i.unit,i.qty2||'',i.unit2||'');});
   if(!(r.ingredients||[]).length)addIng();
   (r.steps||[]).forEach(function(s){addStep(s);});
   if(!(r.steps||[]).length)addStep();
@@ -3007,10 +3061,16 @@ function clearForm(){
   pendingPhotoData=null;previewPhoto();
   document.querySelectorAll('.diet-check').forEach(function(el){el.classList.remove('checked');el.querySelector('input').checked=false;});
 }
-function addIng(name,qty,unit){
-  name=name||'';qty=qty||'';unit=unit||'';
+function toggleIngPlus(btn){var row=btn.closest('.ing-row'),box=row.querySelector('.ing-plus');box.hidden=!box.hidden;if(!box.hidden)row.querySelector('.ing-qty2').focus();}
+function addIng(name,qty,unit,qty2,unit2){
+  name=name||'';qty=qty||'';unit=unit||'';qty2=qty2||'';unit2=unit2||'';
   var d=document.createElement('div');d.className='ing-row';
-  d.innerHTML='<input type="text" placeholder="Ingredient" value="'+h(name)+'" class="ing-name"><input type="text" placeholder="Amount" value="'+h(qty)+'" class="ing-qty"><input type="text" placeholder="Unit" value="'+h(unit)+'" class="ing-unit"><button class="icon-btn" onclick="this.closest(\'.ing-row\').remove()">✕</button>';
+  d.innerHTML='<input type="text" placeholder="Ingredient" value="'+h(name)+'" class="ing-name">'+
+    '<input type="text" placeholder="Amount" value="'+h(qty)+'" class="ing-qty">'+
+    '<input type="text" placeholder="Unit" value="'+h(unit)+'" class="ing-unit">'+
+    '<button class="icon-btn ing-plus-btn" type="button" onclick="toggleIngPlus(this)" title="Add a second amount, like 1 cup + 2 Tbsp" aria-label="Add a second amount">＋</button>'+
+    '<button class="icon-btn" onclick="this.closest(\'.ing-row\').remove()">✕</button>'+
+    '<div class="ing-plus"'+(qty2?'':' hidden')+'><span>plus</span><input type="text" placeholder="Amount" value="'+h(qty2)+'" class="ing-qty2"><input type="text" placeholder="Unit" value="'+h(unit2)+'" class="ing-unit2"></div>';
   document.getElementById('ingList').appendChild(d);
 }
 function addStep(text){
@@ -3034,7 +3094,7 @@ async function saveRecipe(){
   var name=document.getElementById('f_name').value.trim();
   if(!name){document.getElementById('f_name').focus();showToast('⚠️ Please enter a recipe name');return;}
   if(!dbReady){showToast('⚠️ Database not connected');return;}
-  var ingredients=Array.from(document.querySelectorAll('.ing-row')).map(function(r){return{name:r.querySelector('.ing-name').value.trim(),qty:r.querySelector('.ing-qty').value.trim(),unit:r.querySelector('.ing-unit').value.trim()};}).filter(function(i){return i.name;});
+  var ingredients=Array.from(document.querySelectorAll('.ing-row')).map(function(r){var o={name:r.querySelector('.ing-name').value.trim(),qty:r.querySelector('.ing-qty').value.trim(),unit:r.querySelector('.ing-unit').value.trim()},q2=r.querySelector('.ing-qty2').value.trim(),u2=r.querySelector('.ing-unit2').value.trim();if(q2&&o.qty&&u2){o.qty2=q2;o.unit2=u2;}return o;}).filter(function(i){return i.name;});
   var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
   var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
   var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,pan:document.getElementById('f_pan').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),sourceUrl:document.getElementById('f_sourceUrl').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
@@ -3189,7 +3249,10 @@ function pairIngredientsToSteps(ings,steps){
   return rows;
 }
 function ingLineHtml(ing){
-  return '<div style="margin-bottom:6px"><strong>'+h(((ing.qty||'')+' '+WFC.displayUnit(ing.unit||'',ing.qty||'')).trim())+'</strong>'+(ing.qty||ing.unit?' ':'')+h(ing.name||'')+'</div>';
+  ing=WFC.splitCompound(ing);
+  var amt=((ing.qty||'')+' '+WFC.displayUnit(ing.unit||'',ing.qty||'')).trim();
+  if(ing.qty2)amt+=' + '+((ing.qty2||'')+' '+WFC.displayUnit(ing.unit2||'',ing.qty2||'')).trim();
+  return '<div style="margin-bottom:6px"><strong>'+h(amt)+'</strong>'+(ing.qty||ing.unit?' ':'')+h(ing.name||'')+'</div>';
 }
 
 // Condensed reference chapters — original text, written for this cookbook,
@@ -3249,14 +3312,9 @@ function pdfReferenceChapters(){
   return chapters;
 }
 
-function exportPDF(){
-  if(!recipes.length){showToast('⚠️ No recipes to export');return;}
-  showToast('📄 Building PDF — this may take a moment…');
+function buildCookbookHtml(){
   var CAT_ORDER=['Breakfast','Appetizer','Soup','Salad','Side Dish','Dinner','Baking','Dessert','Snack','Drink'];
   var sorted=recipes.slice().sort(function(a,b){return(a.name||'').localeCompare(b.name||'');});
-  var el=document.createElement('div');
-  el.style.cssText='font-family:Georgia,"Times New Roman",serif;padding:8px 6px;max-width:760px;margin:0 auto;color:#2C2416;background:#FFFDF8';
-
   // Title page
   var out='<div style="text-align:center;padding:110px 0 40px;page-break-after:always">'+
     fleuron(16)+
@@ -3343,15 +3401,31 @@ function exportPDF(){
   });
   out+='</div></div>';
 
-  el.innerHTML=out;
-  html2pdf().set({
-    margin:[14,12],filename:'wortmann-family-cookbook.pdf',
-    image:{type:'jpeg',quality:.92},
-    html2canvas:{scale:1.5,useCORS:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['css','avoid-all']}
-  }).from(el).save().then(function(){showToast('✅ PDF exported — '+recipes.length+' recipes!');})
-    .catch(function(e){console.error(e);showToast('❌ PDF export failed — try again, or use a smaller recipe set');});
+  return out;
+}
+/* ---- PDF: opens the cookbook in the browser's print window ("Save as PDF"). Real text, no giant image to build. ---- */
+var PRINT_CSS='@page{size:A4;margin:14mm 12mm}*{box-sizing:border-box;margin:0;padding:0}html,body{background:#fff}body{font-family:Georgia,"Times New Roman",serif;color:#2C2416;-webkit-print-color-adjust:exact;print-color-adjust:exact}#book{max-width:760px;margin:0 auto;padding:8px 6px}ul{list-style:none}table{width:100%;border-collapse:collapse}tr{page-break-inside:avoid}.pbar{position:sticky;top:0;z-index:5;background:#2C2416;color:#F9F4EC;padding:10px 14px;font:14px/1.4 system-ui,-apple-system,sans-serif;display:flex;gap:12px;align-items:center;flex-wrap:wrap}.pbar button{background:#C0622A;color:#fff;border:0;border-radius:8px;padding:8px 14px;font:600 14px system-ui,sans-serif;cursor:pointer}@media print{.pbar{display:none}#book{max-width:none;padding:0}}';
+function printDocHtml(body,autoPrint){
+  return'<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Wortmann Family Cookbook</title><style>'+PRINT_CSS+'</style></head><body>'+
+    '<div class="pbar"><span>📖 Your cookbook is ready. In the print window, choose <b>Save as PDF</b> as the printer.</span><button onclick="window.print()">Print / Save as PDF</button></div>'+
+    '<div id="book">'+body+'</div>'+(autoPrint?'<script>window.addEventListener("load",function(){setTimeout(function(){window.print()},600)})<\/script>':'')+'</body></html>';
+}
+function exportPDF(){
+  if(!recipes.length){showToast('⚠️ No recipes to export');return;}
+  var html;
+  try{html=printDocHtml(buildCookbookHtml(),true);}catch(e){console.error(e);showToast('❌ Could not build the cookbook — try again');return;}
+  var w=null;try{w=window.open('','_blank');}catch(e){}
+  if(w&&w.document){
+    w.document.open();w.document.write(html);w.document.close();
+    showToast('📄 Cookbook ready — choose “Save as PDF” in the print window');return;
+  }
+  // The browser blocked the new window: print from a hidden frame in this page instead.
+  var fr=document.createElement('iframe');
+  fr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  fr.srcdoc=printDocHtml(buildCookbookHtml(),false);
+  fr.onload=function(){try{fr.contentWindow.focus();fr.contentWindow.print();}catch(e){console.error(e);showToast('⚠️ Could not open the print window');}setTimeout(function(){if(fr.parentNode)fr.parentNode.removeChild(fr);},120000);};
+  document.body.appendChild(fr);
+  showToast('📄 Cookbook ready — choose “Save as PDF” in the print window');
 }
 
 

@@ -166,7 +166,54 @@ rest=rest.replace(/^of\s+/i,'');
 var name=rest.replace(/^[\s,;:-]+|[\s,;:]+$/g,'');
 if(!name){return {name:orig,qty:'',unit:''};}
 if(note)name+=' ('+note+')';
-return {name:name,qty:qty,unit:unit};
+return splitCompound({name:name,qty:qty,unit:unit});
+}
+
+/* ---------- mixed amounts: "1 cup + 2 tbsp" ---------- */
+// A volume can be written as two parts ("1 cup + 2 tablespoons"). We keep it as qty/unit + qty2/unit2 so it scales
+// as ONE amount. Measured in teaspoons internally (1 tbsp = 3 tsp, 1 cup = 48 tsp) so the maths stays exact.
+var VOLTSP={tsp:1,tbsp:3,cup:48};
+function volTsp(qty,unit){
+var u=canonUnit(unit||''),q=parseQty(qty);
+if(!q||!VOLTSP.hasOwnProperty(u)||q.max>q.min+1e-9)return null;
+return q.min*VOLTSP[u];
+}
+function compoundTotalTsp(ing){
+if(!ing||!ing.qty2)return null;
+var a=volTsp(ing.qty,ing.unit),b=volTsp(ing.qty2,ing.unit2);
+return(a==null||b==null)?null:a+b;
+}
+// Also repairs older saved recipes whose name starts with "+ 2 tbsp ..." / "plus 2 tbsp ..." / "and 2 tbsp ...".
+function splitCompound(ing){
+if(!ing||ing.qty2||!ing.name||!ing.qty)return ing;
+if(!VOLTSP.hasOwnProperty(canonUnit(ing.unit||'')))return ing;
+var m=/^(?:\+|plus|and|&)\s+(.+)$/i.exec(ing.name);
+if(!m)return ing;
+var p=parseIngredient(m[1]);
+if(!p.qty||p.qty2||!p.name||!VOLTSP.hasOwnProperty(canonUnit(p.unit||'')))return ing;
+var q1=parseQty(ing.qty),q2=parseQty(p.qty);
+if(!q1||!q2||q1.max>q1.min+1e-9||q2.max>q2.min+1e-9)return ing;
+var out={};for(var k in ing)if(Object.prototype.hasOwnProperty.call(ing,k))out[k]=ing[k];
+out.name=p.name;out.qty2=normQty(p.qty);out.unit2=canonUnit(p.unit);
+return out;
+}
+// Express a volume (in teaspoons) the way a cook measures it: cups + tablespoons + teaspoons.
+// Works in quarter-teaspoons so 1/2 tsp, 1/4 tsp etc. stay exact. Returns null if the amount isn't a whole number of
+// quarter-teaspoons (the caller then keeps its normal formatting rather than rounding the amount).
+function mixVolume(totalTsp){
+var t=Math.round(totalTsp*4);
+if(!(t>0)||Math.abs(totalTsp*4-t)>1e-6)return null;
+var n=Math.floor(t/192),R=t%192,best=null;
+[[144,96,48],[128,64],[144,128,96,64,48]].forEach(function(fs){   // 3/4,1/2,1/4 cup | 2/3,1/3 cup | all
+var f=0;for(var i=0;i<fs.length;i++){if(fs[i]<=R){f=fs[i];break;}}
+var L=R-f,tb=Math.floor(L/12),ts=(L%12)/4,parts=((n*192+f)>0?1:0)+(tb?1:0)+(ts?1:0);
+if(!best||parts<best.parts)best={n:n,f:f,tb:tb,ts:ts,parts:parts};
+});
+var cups=best.n+best.f/192,out=[];
+if(cups>0)out.push(fmtNum(cups,'pretty')+' '+(cups>1+1e-9?'cups':'cup'));
+if(best.tb)out.push(best.tb+' Tbsp');
+if(best.ts)out.push(fmtNum(best.ts,'pretty')+' tsp');
+return {qty:out.join(' + '),unit:'',parts:best.parts,tsp:t/4};
 }
 
 /* ---------- shopping helpers ---------- */
@@ -509,6 +556,7 @@ extract:extract,
 parseIngredient:parseIngredient,
 parseQty:parseQty,formatQty:formatQty,scaleQty:scaleQty,normQty:normQty,
 canonUnit:canonUnit,displayUnit:displayUnit,metric:metric,addQuantities:addQuantities,
+splitCompound:splitCompound,compoundTotalTsp:compoundTotalTsp,volTsp:volTsp,mixVolume:mixVolume,
 normalizeKey:normalizeKey,aisleFor:aisleFor,aisleOrder:AISLE_ORDER,
 toMinutes:toMinutes,parseYield:parseYield,
 cleanUrl:cleanUrl,urlKey:urlKey,nameKey:nameKey,
