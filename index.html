@@ -2929,8 +2929,8 @@ async function backupJSON(){
 }
 /* ===== Photos: shrunk in the browser, saved inside the recipe (no Cloud Storage needed) ===== */
 var pendingPhotoData=null;            // data: URL of a chosen/compressed photo, or an existing saved one
-var PHOTO_TARGET=130000;              // aim for <= ~95 KB of image (characters of base64)
-var PHOTO_HARD_MAX=400000;            // never save more than ~300 KB (Firestore docs cap at 1 MB)
+var PHOTO_TARGET=300000;              // aim for <= ~225 KB of image (characters of base64); the photo has its own document
+var PHOTO_HARD_MAX=440000;            // never save more than ~330 KB (rules allow 450,000 characters; Firestore docs cap at 1 MB)
 function decodeImage(file){
   function viaImg(){return new Promise(function(res,rej){
     var url=URL.createObjectURL(file),img=new Image();
@@ -2950,11 +2950,11 @@ async function compressPhoto(file){
   try{
     var w0=src.width||src.naturalWidth,h0=src.height||src.naturalHeight;
     if(!w0||!h0)throw new Error('empty image');
-    var best=null,dims=[800,640,520,420],quals=[0.74,0.64,0.54,0.44];
+    var best=null,dims=[1600,1400,1200,1000,800,640],quals=[0.86,0.8,0.74,0.68,0.6,0.5];   // big & sharp first, shrink only if needed
     for(var i=0;i<dims.length;i++){
       var k=Math.min(1,dims[i]/Math.max(w0,h0)),c=document.createElement('canvas');
       c.width=Math.max(1,Math.round(w0*k));c.height=Math.max(1,Math.round(h0*k));
-      var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(src,0,0,c.width,c.height);
+      var ctx=c.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(src,0,0,c.width,c.height);
       for(var j=0;j<quals.length;j++){
         var url=c.toDataURL('image/jpeg',quals[j]);
         if(!best||url.length<best.length)best=url;
@@ -2987,7 +2987,7 @@ function removePhoto(){
 }
 
 /* ---- photo storage: tiny thumbnail rides inside the recipe; the full photo lives in recipePhotos/<recipeId> ---- */
-var THUMB_MAX_CHARS=15000;      // ~11 KB of image per recipe in the list
+var THUMB_MAX_CHARS=30000;      // ~22 KB of image per recipe in the list (sharp on high-density screens)
 var PHOTO_CACHE={};             // recipeId -> full photo (data URL), filled when a recipe is opened
 var keepUploadedPhoto=false,editThumb='';
 function isInlinePhoto(r){return !!r&&/^data:image\//.test(r.photo||'');}
@@ -2996,11 +2996,11 @@ function heroSrc(r){return PHOTO_CACHE[r.id]||r.photo||r.thumb||'';}
 async function makeThumb(dataUrl){
   var blob=await (await fetch(dataUrl)).blob();
   var img=await decodeImage(blob),w0=img.width||img.naturalWidth,h0=img.height||img.naturalHeight,best=null;
-  var sizes=[320,280,240,200,160],qs=[0.72,0.62,0.52,0.42];
+  var sizes=[480,420,360,320,280,240],qs=[0.78,0.7,0.62,0.54,0.46];
   for(var i=0;i<sizes.length;i++){
     var sc=Math.min(1,sizes[i]/Math.max(w0,h0)),c=document.createElement('canvas');
     c.width=Math.max(1,Math.round(w0*sc));c.height=Math.max(1,Math.round(h0*sc));
-    var ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
+    var ctx=c.getContext('2d');ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);
     for(var j=0;j<qs.length;j++){best=c.toDataURL('image/jpeg',qs[j]);if(best.length<=THUMB_MAX_CHARS){if(img.close)img.close();return best;}}
   }
   if(img.close)img.close();
