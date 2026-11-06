@@ -45,7 +45,7 @@ family-cookbook/
 ├── recipe-parser.js      Recipe import parser + quantity/unit helpers
 ├── sw.js                 Service worker (offline support) — must stay at the root
 ├── manifest.json         "Install to home screen" settings
-├── icon-*.png, favicon*, apple-touch-icon.png   App icons (root, referenced by name)
+├── icons/                App icons (home-screen icon, favicon)
 ├── firestore.rules       Database security rules (the copy published in Firebase)
 ├── data/
 │   └── wortmann-family-recipes.json   Starter recipes (import via Backup & Export)
@@ -56,7 +56,7 @@ family-cookbook/
 └── README.md
 ```
 
-`index.html`, `sw.js`, `manifest.json`, `recipe-parser.js`, and the icons stay together at the root on purpose: the service worker can only control files at or below its own folder, and the paths are written relative to each other.
+`index.html`, `sw.js`, `manifest.json`, and `recipe-parser.js` stay together at the root on purpose: the service worker can only control files at or below its own folder, and the paths are written relative to each other.
 
 ## Making changes
 

@@ -4,7 +4,7 @@
 // needs to START offline (the Firebase SDK, the PDF library, fonts). It never
 // touches Firestore/Storage data requests — those go straight to the network
 // (the recipes themselves are kept for offline use by Firestore's own local copy).
-var CACHE_NAME = 'wfc-shell-v3';
+var CACHE_NAME = 'wfc-shell-v4';
 var CDN_CACHE = 'wfc-cdn-v1';
 // Versioned, effectively immutable files: cache-first. Fonts: stale-while-revalidate.
 var CDN_RE = /^https:\/\/(www\.gstatic\.com\/firebasejs\/|cdnjs\.cloudflare\.com\/ajax\/libs\/html2pdf)/;
@@ -14,8 +14,8 @@ var SHELL_FILES = [
   './index.html',
   './recipe-parser.js',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', function (event) {

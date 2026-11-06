@@ -119,7 +119,7 @@ Pick any of these:
 
 ## Step 11 — Make it yours (optional)
 
-- **Icons:** replace `icon-192.png`, `icon-512.png`, `icon-512-maskable.png`, `apple-touch-icon.png`, `favicon-32.png`, and `favicon.ico` with your own (keep the same names and sizes).
+- **Icons:** replace `icons/icon-192.png`, `icons/icon-512.png`, `icons/icon-512-maskable.png`, `icons/apple-touch-icon.png`, `icons/favicon-32.png`, and `icons/favicon.ico` with your own (keep the same names and sizes).
 - **Colors:** look at `:root{--parchment:…; --ink:…; --rust:…}` at the top of the `<style>` in `index.html`. Change those hex values, and `theme_color` / `background_color` in `manifest.json`.
 - **Fonts:** swap Lora and Nunito in the Google Fonts `<link>` and the CSS.
 - **Categories, cuisines, diets:** search for the lists used by the recipe form in `index.html`.
