@@ -1,8 +1,7 @@
-# 📖 Wortmann Family Cookbook
+# 📖 Family Cookbook
 
 A shared, private family recipe book that works like an app. Everyone in the family can browse, cook from, add to, and plan meals with the same collection — on a phone, tablet, or computer, even without signal.
 
-**Live site:** _add your site address here_ (for example `https://owenwortmannrecipe.github.io/family-cookbook/`)
 
 ---
 
