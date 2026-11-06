@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// STARTER RULES for the family cookbook.
+// Written from the app's data model (docs/HOW-IT-WORKS.md, section 4).
+// If you already run the cookbook, replace this file with the rules currently
+// published in your Firebase console (Firestore Database > Rules) so the repo
+// matches what's live, then keep the two in sync.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Approved = has a document at family/<uid>
+    function isApproved() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/family/$(request.auth.uid));
+    }
+
+    function isOwner() {
+      return isApproved()
+        && get(/databases/$(database)/documents/family/$(request.auth.uid)).data.role == 'owner';
+    }
+
+    // Approval records: you can read your own; the owner reads and manages all.
+    match /family/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isOwner());
+      allow list: if isOwner();
+      allow write: if isOwner();
+    }
+
+    // Public-to-family profile directory (names shown next to recipes and notes).
+    match /users/{uid} {
+      allow read: if isApproved() || (signedIn() && request.auth.uid == uid);
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    match /recipes/{id} {
+      allow read, write: if isApproved();
+    }
+
+    match /recipePhotos/{id} {
+      allow read, write: if isApproved();
+    }
+
+    // Shared shopping lists and meal planners (including their subcollections).
+    match /lists/{id}/{document=**} {
+      allow read, write: if isApproved();
+    }
+    match /planners/{id}/{document=**} {
+      allow read, write: if isApproved();
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

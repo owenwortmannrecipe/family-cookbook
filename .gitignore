@@ -1,0 +1,11 @@
+# OS and editor clutter
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# Never commit secrets
+*.pem
+*serviceAccount*.json
+.env
