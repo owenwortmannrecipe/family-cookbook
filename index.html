@@ -7,13 +7,13 @@
 <meta name="description" content="A shared collection of Wortmann family recipes — browse, cook, and add to it together.">
 <meta property="og:title" content="Wortmann Family Cookbook">
 <meta property="og:description" content="A shared collection of Wortmann family recipes.">
-<meta property="og:image" content="icons/icon-512.png">
+<meta property="og:image" content="icon-512.png">
 <meta property="og:type" content="website">
 <meta name="theme-color" content="#2C2416">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="icon" href="icons/favicon.ico">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
 <script src="recipe-parser.js"></script>
 <script type="module">
@@ -491,6 +491,19 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 .weights-table th:nth-child(2){text-align:left}
 .weights-table .cat-row td{background:var(--parchment2);font-family:'Lora',serif;font-weight:700;font-size:calc(13px*var(--fs));color:var(--ink2);text-align:left;padding:8px 10px}
 .weights-table tr[hidden]{display:none}
+.weights-table tr.wrow{cursor:pointer}
+.weights-table tr.wrow:hover td{background:var(--parchment2)}
+.weights-table tr.wrow td:first-child::after{content:' ⚖️';opacity:.35;font-size:.85em}
+.weights-table tr.wrow:hover td:first-child::after{opacity:1}
+.wcalc-row{display:flex;gap:8px;align-items:flex-end}
+.wcalc-row .fg{flex:1}
+.wcalc-row .fg.unit{flex:0 0 42%}
+.wcalc-chips{display:flex;flex-wrap:wrap;gap:6px;margin:.7rem 0 .2rem}
+.wcalc-out{margin-top:1rem;padding:1rem;border-radius:var(--rs);background:var(--parchment2);border:1.5px solid var(--border);text-align:center}
+.wcalc-big{font-family:'Lora',serif;font-size:calc(34px*var(--fs));font-weight:700;color:var(--rust);line-height:1.1}
+.wcalc-sub{font-size:calc(15px*var(--fs));color:var(--ink2);font-weight:700;margin-top:4px}
+.wcalc-basis{font-size:calc(12px*var(--fs));color:var(--ink3);margin-top:.6rem}
+.wcalc-err{color:var(--ink3);font-size:calc(13px*var(--fs))}
 /* cook mode */
 .cook-step-text{font-size:calc(20px*var(--fs))}
 .cook-nav .btn{font-size:calc(14px*var(--fs));padding:.65rem 1.3rem}
@@ -730,6 +743,7 @@ body.locked .tabbar{display:none!important}
     <h1>Ingredient Weights</h1>
     <p class="page-sub">Grams and ounces for common ingredients — the same numbers the <strong>By weight</strong> button uses in every recipe. Measurements follow <a href="https://www.kingarthurbaking.com/learn/ingredient-weight-chart" target="_blank" rel="noopener" style="color:var(--rust);font-weight:700">King Arthur Baking’s Ingredient Weight Chart ↗</a>, which lists hundreds more.</p>
     <div class="search-wrap guide-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input class="search-input" id="weightSearch" placeholder="Find an ingredient — try “flour”, “butter” or “honey”…" oninput="filterWeights()" autocomplete="off"></div>
+    <p class="page-sub" style="margin:-.2rem 0 .6rem"><strong>Tip:</strong> tap any ingredient to open a calculator — enter cups, tablespoons or teaspoons and get the weight.</p>
     <div class="guide-count" id="weightCount"></div>
     <div style="overflow-x:auto"><table class="conv-table cups-table weights-table"><thead><tr><th>Ingredient</th><th>Measure</th><th>Grams</th><th>Ounces</th></tr></thead><tbody id="weightsBody"></tbody></table></div>
     <h2 style="margin-top:2rem">Brown sugar from white sugar + molasses</h2>
@@ -1232,6 +1246,19 @@ body.locked .tabbar{display:none!important}
   <div class="modal" style="max-width:500px">
     <div class="modal-head"><h2 id="grpJoinTitle">Join</h2><button class="x-btn" onclick="closeOverlay('grpJoinOverlay')">✕</button></div>
     <div class="modal-body" id="grpJoinBody"></div>
+  </div>
+</div>
+<div class="overlay" id="weightCalcOverlay">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head"><h2 id="wcalcTitle">⚖️ Weight calculator</h2><button class="x-btn" onclick="closeOverlay('weightCalcOverlay')">✕</button></div>
+    <div class="modal-body">
+      <div class="wcalc-row">
+        <div class="fg"><label for="wcalcAmt" style="font-size:calc(12px*var(--fs));font-weight:700;color:var(--ink2)">Amount</label><input type="text" id="wcalcAmt" inputmode="text" placeholder="e.g. 3/8" oninput="wcalcUpdate()" autocomplete="off"></div>
+        <div class="fg unit"><label for="wcalcUnit" style="font-size:calc(12px*var(--fs));font-weight:700;color:var(--ink2)">Measure</label><select id="wcalcUnit" onchange="wcalcUpdate()"></select></div>
+      </div>
+      <div class="wcalc-chips" id="wcalcChips"></div>
+      <div class="wcalc-out" id="wcalcOut"></div>
+    </div>
   </div>
 </div>
 <div class="overlay" id="listPickOverlay">
@@ -1751,9 +1778,9 @@ function renderConversionRefs(){
   var tb=document.getElementById('weightsBody');
   if(tb){
     var html='',cat='';
-    WEIGHTS.forEach(function(w){
+    WEIGHTS.forEach(function(w,wi){
       if(w.cat!==cat){cat=w.cat;html+='<tr class="cat-row"><td colspan="4">'+h(cat)+'</td></tr>';}
-      html+='<tr class="wrow"><td>'+h(w.label)+(w.note?'<small class="cups-note">'+h(w.note)+'</small>':'')+'</td><td>'+h(w.per)+'</td><td><strong>'+fmtGrams(w.g)+'</strong></td><td>'+fmtOz(w.g)+'</td></tr>';
+      html+='<tr class="wrow" tabindex="0" role="button" onclick="openWeightCalc('+wi+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWeightCalc('+wi+')}"><td>'+h(w.label)+(w.note?'<small class="cups-note">'+h(w.note)+'</small>':'')+'</td><td>'+h(w.per)+'</td><td><strong>'+fmtGrams(w.g)+'</strong></td><td>'+fmtOz(w.g)+'</td></tr>';
     });
     tb.innerHTML=html;
   }
@@ -1762,6 +1789,48 @@ function renderConversionRefs(){
     return'<div class="conv-card" id="bs-'+l.id+'"><div class="conv-card-head">'+l.name+' brown sugar</div><table class="conv-table cups-table"><thead><tr><th>You need</th><th>White sugar</th><th>Molasses</th></tr></thead><tbody>'+
       BS_AMOUNTS.map(function(c){return'<tr><td>'+fmtCupsText(c)+'</td><td>'+fmtCupsText(c)+'<small class="cups-note">'+fmtGrams(white*c)+'</small></td><td>'+fmtSpoons(l.tsp*c)+'<small class="cups-note">'+fmtGrams(l.tsp*c*MOLASSES_G_PER_TSP)+'</small></td></tr>';}).join('')+'</tbody></table></div>';
   }).join('');
+}
+var wcalcIdx=-1,wcalcLastUnit='cup';
+var WCALC_UNITS=[['cup','cups'],['tbsp','tablespoons'],['tsp','teaspoons']];
+var WCALC_CHIPS=['1/4','1/3','3/8','1/2','2/3','3/4','1','2'];
+function openWeightCalc(i){
+  var w=WEIGHTS[i];if(!w)return;
+  wcalcIdx=i;
+  document.getElementById('wcalcTitle').textContent='⚖️ '+w.label;
+  var sel=document.getElementById('wcalcUnit'),opts=[];
+  if(w.count){opts=[['each','each']];}
+  else{opts=WCALC_UNITS.slice();if(w.id==='butter')opts.push(['stick','sticks']);}
+  sel.innerHTML=opts.map(function(o){return'<option value="'+o[0]+'">'+o[1]+'</option>';}).join('');
+  var keep=opts.some(function(o){return o[0]===wcalcLastUnit;});
+  sel.value=keep?wcalcLastUnit:opts[0][0];
+  sel.disabled=opts.length===1;
+  var amt=document.getElementById('wcalcAmt');
+  amt.value=w.count?'1':'';
+  document.getElementById('wcalcChips').innerHTML=WCALC_CHIPS.map(function(c){return'<button type="button" class="chip" onclick="wcalcSet(\''+c+'\')">'+c+'</button>';}).join('');
+  openOverlay('weightCalcOverlay');
+  wcalcUpdate();
+  setTimeout(function(){try{amt.focus();}catch(e){}},60);
+}
+function wcalcSet(c){document.getElementById('wcalcAmt').value=c;wcalcUpdate();}
+function wcalcUpdate(){
+  var out=document.getElementById('wcalcOut'),w=WEIGHTS[wcalcIdx];
+  if(!w||!out)return;
+  var u=document.getElementById('wcalcUnit').value;
+  if(u!=='each')wcalcLastUnit=u;
+  var raw=document.getElementById('wcalcAmt').value.trim();
+  if(!raw){out.innerHTML='<div class="wcalc-err">Type an amount (like 3/8 or 1 1/2) to see the weight.</div>';return;}
+  var q=WFC.parseQty(raw);
+  if(!q||!(q.max>0)){out.innerHTML='<div class="wcalc-err">Couldn’t read that amount — try something like 3/8, 1 1/2 or 0.75.</div>';return;}
+  var perUnit;
+  if(w.count)perUnit=w.g;
+  else if(u==='stick')perUnit=0.5*perCup(w);
+  else perUnit=UNIT_CUPS[u]*perCup(w);
+  var gMin=q.min*perUnit,gMax=q.max*perUnit,single=Math.abs(gMax-gMin)<1e-6;
+  var big=single?fmtGrams(gMin):fmtGrams(gMin,true)+'–'+fmtGrams(gMax);
+  var oz=single?fmtOz(gMin):fmtOz(gMin)+'–'+fmtOz(gMax);
+  var unitWord={cup:'cup',tbsp:'Tbsp',tsp:'tsp',stick:'stick',each:'each'}[u];
+  var basis=w.count?'1 large egg ≈ '+fmtGrams(w.g):'1 cup ≈ '+fmtGrams(perCup(w))+' · 1 Tbsp ≈ '+fmtGrams(perCup(w)/16)+' · 1 tsp ≈ '+fmtGrams(perCup(w)/48);
+  out.innerHTML='<div class="wcalc-big">'+h(big)+'</div><div class="wcalc-sub">'+h(oz)+'</div><div class="wcalc-basis">'+h(WFC.formatQty(q,'pretty'))+' '+h(unitWord)+' of '+h(w.label.toLowerCase())+'<br>'+h(basis)+'</div>';
 }
 function filterWeights(){
   var q=document.getElementById('weightSearch').value.toLowerCase().trim(),rows=document.querySelectorAll('#weightsBody tr'),shown=0,catRow=null,catHas=false;
