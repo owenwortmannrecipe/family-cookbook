@@ -614,9 +614,16 @@ body.locked .tabbar{display:none!important}
 .step-grip{font-size:calc(13px*var(--fs));line-height:1;color:var(--ink3);letter-spacing:-1px}
 .step-handle:hover .step-num,.step-handle:focus-visible .step-num{background:var(--rust);color:#fff}
 .step-handle:hover .step-grip{color:var(--rust)}
-.step-row.dragging{opacity:.95;background:var(--rust-pale);border-radius:var(--rs);box-shadow:0 6px 18px rgba(44,36,22,.22);position:relative;z-index:2}
-.step-row.dragging textarea{border-color:var(--rust)}
+.step-row{border-radius:var(--rs);transition:translate .2s ease,scale .18s ease,box-shadow .2s ease,opacity .2s ease}
+.step-row:focus-within .step-num{background:var(--rust);color:#fff}
+.step-row.dragging{position:relative;z-index:6;scale:1.035;background:var(--warm);box-shadow:0 0 0 6px var(--warm),0 0 0 9px var(--rust),0 18px 34px rgba(44,36,22,.34);transition:scale .18s ease,box-shadow .18s ease,opacity .2s ease}
+.step-row.dragging .step-num{background:var(--rust);color:#fff}
+.step-row.dragging .step-grip{color:var(--rust)}
+.step-row.dragging textarea{border-color:var(--rust);background:#fff}
+.step-row.dropping{position:relative;z-index:5}
+#stepList.moving .step-row:not(.dragging){opacity:.55}
 #stepList.moving,#stepList.moving *{cursor:grabbing!important}
+@media (prefers-reduced-motion:reduce){.step-row,.step-row.dragging{transition:none}.step-row.dragging{scale:none}}
 .step-actions{display:flex;flex-direction:column;gap:4px}
 .icon-btn.mv:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-pale)}
 .step-hint,.diet-note{font-size:calc(11.5px*var(--fs));color:var(--ink3);line-height:1.5;margin:-.1rem 0 .55rem}
@@ -3414,29 +3421,47 @@ function addStep(text,afterRow){
 function insertStepBelow(btn){var d=addStep('',btn.closest('.step-row'));var ta=d.querySelector('textarea');if(ta)ta.focus();}
 function removeStep(btn){btn.closest('.step-row').remove();renumberSteps();}
 /* press-and-drag reordering (mouse, pen and touch) */
-var dragRow=null,dragY=0,dragRaf=0;
+var dragRow=null,dragY=0,dragGrab=0,dragTy=0,dragRaf=0;
+var STEP_REDUCED=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function startStepDrag(e){
   if(e.pointerType==='mouse'&&e.button!==0)return;
   e.preventDefault();
-  dragRow=e.currentTarget.closest('.step-row');dragY=e.clientY;
+  if(dragRow)endStepDrag();
+  dragRow=e.currentTarget.closest('.step-row');dragY=e.clientY;dragTy=0;
+  dragGrab=dragY-dragRow.getBoundingClientRect().top;     // where inside the step you grabbed it
+  dragRow.style.translate='';dragRow.classList.remove('dropping');
   dragRow.classList.add('dragging');document.getElementById('stepList').classList.add('moving');
   document.addEventListener('pointermove',dragStepMove);
   document.addEventListener('pointerup',endStepDrag);
   document.addEventListener('pointercancel',endStepDrag);
   dragRaf=requestAnimationFrame(dragScrollTick);
 }
-function dragStepMove(e){
-  if(!dragRow)return;
-  dragY=e.clientY;dragPlace();
+function dragStepMove(e){if(!dragRow)return;dragY=e.clientY;dragPlace();}
+function dragFollow(){          // the lifted step stays under your finger / cursor
+  var r=dragRow.getBoundingClientRect(),natural=r.top-dragTy+(r.height-dragRow.offsetHeight)/2;
+  dragTy=(dragY-dragGrab)-natural;
+  dragRow.style.translate='0 '+dragTy+'px';
+}
+function flipStep(el,d){        // slide a neighbour from its old spot to its new one
+  if(STEP_REDUCED||!d)return;
+  el.style.transition='none';el.style.transform='translateY('+d+'px)';
+  void el.offsetHeight;
+  el.style.transition='transform '+(0.25+0.03*Math.min(Math.abs(d)/(el.offsetHeight||40),6))+'s ease-in-out';
+  el.style.transform='';
 }
 function dragPlace(){
   var list=document.getElementById('stepList'),before=null,others=stepRows().filter(function(r){return r!==dragRow;});
   for(var i=0;i<others.length;i++){var b=others[i].getBoundingClientRect();if(dragY<b.top+b.height/2){before=others[i];break;}}
-  if(before){if(dragRow.nextElementSibling!==before)list.insertBefore(dragRow,before);}
-  else if(list.lastElementChild!==dragRow)list.appendChild(dragRow);
-  renumberSteps();
+  var needMove=before?(dragRow.nextElementSibling!==before):(list.lastElementChild!==dragRow);
+  if(needMove){
+    var firsts=others.map(function(o){return o.getBoundingClientRect().top;});
+    if(before)list.insertBefore(dragRow,before);else list.appendChild(dragRow);
+    renumberSteps();
+    others.forEach(function(o,i){flipStep(o,firsts[i]-o.getBoundingClientRect().top);});
+  }
+  dragFollow();
 }
-function dragScrollTick(){      // scroll the form when the finger/mouse is near the top or bottom edge
+function dragScrollTick(){      // scroll the form when you drag near the top or bottom edge
   if(!dragRow)return;
   var ov=document.getElementById('addOverlay'),edge=70,v=0;
   if(dragY<edge)v=-Math.ceil((edge-dragY)/4);else if(dragY>window.innerHeight-edge)v=Math.ceil((dragY-(window.innerHeight-edge))/4);
@@ -3449,7 +3474,11 @@ function endStepDrag(){
   document.removeEventListener('pointercancel',endStepDrag);
   cancelAnimationFrame(dragRaf);
   var l=document.getElementById('stepList');if(l)l.classList.remove('moving');
-  if(dragRow){dragRow.classList.remove('dragging');dragRow=null;}
+  var row=dragRow;dragRow=null;
+  if(row){                      // set the step down gently into its slot
+    row.classList.add('dropping');row.classList.remove('dragging');row.style.translate='0 0';
+    setTimeout(function(){row.classList.remove('dropping');row.style.translate='';},260);
+  }
   renumberSteps();
 }
 function stepHandleKey(e){      // keyboard alternative: focus the grip, then ↑ / ↓
