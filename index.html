@@ -607,6 +607,42 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 #offlinePill[hidden]{display:none}
 #gateLoading[data-off]{line-height:1.7}
 body.locked .tabbar{display:none!important}
+
+/* ===== step reordering ===== */
+.step-num{cursor:pointer;user-select:none;transition:all .15s}
+.step-num:hover,.step-num:focus-visible{background:var(--rust);color:#fff;outline:none}
+.step-row.picked .step-num{background:var(--rust);color:#fff;box-shadow:0 0 0 3px var(--rust2)}
+.step-row.picked textarea{border-color:var(--rust);background:var(--rust-pale)}
+#stepList.moving .step-row:not(.picked) .step-num{border:1.5px dashed var(--rust);animation:stepPulse 1.2s ease-in-out infinite}
+@keyframes stepPulse{50%{box-shadow:0 0 0 4px var(--rust-pale)}}
+.step-actions{display:grid;grid-template-columns:repeat(2,31px);gap:4px}
+.icon-btn.mv:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-pale)}
+.step-hint,.diet-note{font-size:calc(11.5px*var(--fs));color:var(--ink3);line-height:1.5;margin:-.1rem 0 .55rem}
+/* ===== auto diet labels ===== */
+.diet-auto{display:flex;gap:6px;flex-wrap:wrap;margin:.2rem 0 .4rem;min-height:26px}
+.diet-auto .diet-tag{font-size:calc(12px*var(--fs));padding:4px 10px}
+.diet-auto .diet-none{font-size:calc(12px*var(--fs));color:var(--ink3);font-style:italic}
+.dt-nutfree{background:#FFEDD5;color:#9A3412}.dt-eggfree{background:#FEF3C7;color:#92400E}.dt-soyfree{background:#ECFCCB;color:#3F6212}.dt-shellfishfree{background:#E0F2FE;color:#075985}
+/* ===== servings number box ===== */
+.serv-input{width:68px;padding:4px 6px;text-align:center;font-family:'Lora',serif;font-size:calc(16px*var(--fs));font-weight:600;color:var(--rust);background:var(--warm);border:1.5px solid var(--border2);border-radius:var(--rs)}
+.serv-input:focus{outline:none;border-color:var(--rust)}
+/* ===== unit calculator ===== */
+.conv-calc{background:var(--warm);border:1.5px solid var(--rust2);border-radius:var(--r);overflow:hidden;margin:0 0 1.3rem}
+.conv-calc-head{background:var(--rust);color:#fff;padding:.6rem .9rem;font-family:'Lora',serif;font-size:calc(14px*var(--fs));font-weight:600}
+.conv-calc-body{padding:.9rem}
+.conv-calc-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.cc-f{display:flex;flex-direction:column;gap:3px;flex:1 1 150px;min-width:0}
+.cc-f.cc-q{flex:0 1 120px}
+.cc-f label{font-size:calc(11.5px*var(--fs));font-weight:700;color:var(--ink2)}
+.cc-f input,.cc-f select{width:100%;padding:8px 9px;border:1.5px solid var(--border2);border-radius:var(--rs);background:var(--parchment);font-family:'Nunito',sans-serif;font-size:calc(14px*var(--fs));color:var(--ink)}
+.cc-f input:focus,.cc-f select:focus{outline:none;border-color:var(--rust)}
+.cc-swap{width:38px;height:38px;font-size:calc(16px*var(--fs))}
+.conv-calc-out{margin-top:.8rem;padding:.7rem .9rem;background:var(--rust-pale);border-radius:var(--rs);min-height:3.2rem}
+.cc-eq{font-size:calc(12.5px*var(--fs));color:var(--ink3);font-weight:600}
+.cc-big{font-family:'Lora',serif;font-size:calc(24px*var(--fs));font-weight:600;color:var(--rust);line-height:1.25;word-break:break-word}
+.cc-sub{font-size:calc(13px*var(--fs));color:var(--ink2);margin-top:2px}
+.cc-err{font-size:calc(13px*var(--fs));color:var(--red)}
+.cc-note{font-size:calc(12px*var(--fs));color:var(--ink3);margin:.65rem 0 0;line-height:1.5}
 </style>
 </head>
 <body class="locked">
@@ -668,7 +704,7 @@ body.locked .tabbar{display:none!important}
       <select class="filter-select" id="sortFilter" onchange="renderCards()"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="az">Name A–Z</option><option value="cal_asc">Calories ↑</option><option value="cal_desc">Calories ↓</option></select></div>
       <span class="recipe-count" id="recipeCount">Loading…</span><button class="btn btn-sm" id="browseToggle" onclick="toggleBrowseGrid()" title="Switch between sliding rows and one big grid">▦<span class="bt-l"> Grid view</span></button>
     </div>
-    <div id="chipsWrap"><div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div></div>
+    <div id="chipsWrap"><div class="chip-bar"><div class="chip" id="favChip" onclick="toggleFavOnly(this)">⭐ Favorites Only</div><div class="chip" id="mineChip" onclick="toggleMineOnly(this)">👤 Added by Me</div><div class="chip" data-diet="vegan" onclick="toggleDiet(this)">🌱 Vegan</div><div class="chip" data-diet="vegetarian" onclick="toggleDiet(this)">🥦 Vegetarian</div><div class="chip" data-diet="glutenfree" onclick="toggleDiet(this)">🌾 Gluten-Free</div><div class="chip" data-diet="dairyfree" onclick="toggleDiet(this)">🥛 Dairy-Free</div><div class="chip" data-diet="keto" onclick="toggleDiet(this)">🥑 Keto</div><div class="chip" data-diet="nutfree" onclick="toggleDiet(this)" title="No peanuts or tree nuts">🥜 Nut-Free</div><div class="chip" data-diet="eggfree" onclick="toggleDiet(this)">🥚 Egg-Free</div><div class="chip" data-diet="soyfree" onclick="toggleDiet(this)">🫘 Soy-Free</div><div class="chip" data-diet="shellfishfree" onclick="toggleDiet(this)">🦐 Shellfish-Free</div></div>
     <div class="chip-bar" id="tagBar" style="display:none"></div></div>
     <div class="recipe-rows" id="grid"><div class="loading"><div class="spinner"></div><p style="color:var(--ink3)">Loading your cookbook…</p></div></div>
   </div>
@@ -695,6 +731,19 @@ body.locked .tabbar{display:none!important}
   <div class="container"><div class="static-page">
     <h1>Unit Conversions</h1><p class="page-sub">A complete reference for cooking measurements — volume, weight, temperature, and more.</p>
     <p style="font-size:calc(13px*var(--fs));color:var(--ink3);margin:-.3rem 0 1.1rem">Looking for cups to grams for flour, sugar and other ingredients? See <a href="#" onclick="showPage('weights');return false" style="color:var(--rust);font-weight:700">Ingredient Weights</a>.</p>
+    <div class="conv-calc" id="convCalc">
+      <div class="conv-calc-head">🧮 Convert Any Amount</div>
+      <div class="conv-calc-body">
+        <div class="conv-calc-row">
+          <div class="cc-f cc-q"><label for="ccQty">Quantity</label><input id="ccQty" type="text" inputmode="decimal" placeholder="e.g. 1 1/2" value="1" autocomplete="off" oninput="ccUpdate()"></div>
+          <div class="cc-f"><label for="ccFrom">From</label><select id="ccFrom" onchange="ccFromChanged()"></select></div>
+          <button class="icon-btn mv cc-swap" type="button" onclick="ccSwap()" title="Swap the two units" aria-label="Swap units">⇄</button>
+          <div class="cc-f"><label for="ccTo">To</label><select id="ccTo" onchange="ccUpdate()"></select></div>
+        </div>
+        <div class="conv-calc-out" id="ccOut" aria-live="polite"></div>
+        <p class="cc-note">Uses exact US measures (1 cup = 236.6 ml; the tables below round to 240 ml). Fractions like 1/2 or 1 1/2 work. For cups ↔ grams of a particular ingredient, use <a href="#" onclick="showPage('weights');return false" style="color:var(--rust);font-weight:700">Ingredient Weights</a>.</p>
+      </div>
+    </div>
     <div class="conv-grid">
       <div class="conv-card"><div class="conv-card-head">Volume — Spoons &amp; Cups</div><table class="conv-table">
         <tr><td>1 teaspoon (tsp)</td><td>=</td><td>5 ml</td></tr><tr><td>1 tablespoon (Tbsp)</td><td>=</td><td>3 tsp / 15 ml / ½ fl oz</td></tr>
@@ -1146,14 +1195,9 @@ body.locked .tabbar{display:none!important}
         <div class="fg full"><label>Tags <span style="font-weight:400;color:var(--ink3)">(comma-separated — e.g. holiday, grandma, quick)</span></label><input type="text" id="f_tags" list="tagList" placeholder="e.g. holiday, grandma's kitchen, make-ahead" autocomplete="off"><datalist id="tagList"></datalist></div>
         <input type="hidden" id="f_sourceUrl">
       </div>
-      <div class="section-sep">Dietary Labels</div>
-      <div class="diet-checks">
-        <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="vegan">🌱 Vegan</label>
-        <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="vegetarian">🥦 Vegetarian</label>
-        <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="glutenfree">🌾 Gluten-Free</label>
-        <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="dairyfree">🥛 Dairy-Free</label>
-        <label class="diet-check" onclick="toggleCheck(this)"><input type="checkbox" value="keto">🥑 Keto</label>
-      </div>
+      <div class="section-sep">Dietary &amp; Allergy Labels <small style="font-size:calc(11px*var(--fs));font-weight:400;color:var(--ink3)">(automatic)</small></div>
+      <div class="diet-auto" id="dietAuto"></div>
+      <div class="diet-note">Worked out automatically from your ingredient list (and the carbs below, for keto). It is a guide only — the app can't see hidden ingredients in packaged foods, so always read labels when cooking for someone with an allergy.</div>
       <div class="section-sep">Nutrition <small style="font-size:calc(11px*var(--fs));font-weight:400;color:var(--ink3)">(per serving)</small></div>
       <div class="nutri-grid">
         <div class="nutri-wrap"><label>Calories (kcal)</label><input type="number" id="f_cal" placeholder="350" min="0"></div>
@@ -1164,6 +1208,7 @@ body.locked .tabbar{display:none!important}
       <div class="section-sep">Ingredients <button class="add-row-btn" onclick="addIng()">＋ Add</button></div>
       <div id="ingList"></div>
       <div class="section-sep">Steps <button class="add-row-btn" onclick="addStep()">＋ Add</button></div>
+      <div class="step-hint">Tip: click a step's number to pick it up, then click another step's number to move it there. You can also use ▲ ▼, or ＋ to add a new step right below one.</div>
       <div id="stepList"></div>
     </div>
     <div class="modal-foot">
@@ -1869,6 +1914,78 @@ function convertOne(ing,factor,mode){
   var qs=WFC.scaleQty(ing.qty,f,fmt);
   return{qty:qs,unit:mc?unit:WFC.displayUnit(unit,qs)};
 }
+/* ===== unit conversion calculator ===== */
+var CC_UNITS={
+  tsp:{n:'teaspoon (tsp)',s:'tsp',p:'tsp',c:'vol',f:4.92892},tbsp:{n:'tablespoon (Tbsp)',s:'Tbsp',p:'Tbsp',c:'vol',f:14.7868},
+  floz:{n:'fluid ounce (fl oz)',s:'fl oz',p:'fl oz',c:'vol',f:29.5735},cup:{n:'cup',s:'cup',p:'cups',c:'vol',f:236.588},
+  pint:{n:'pint',s:'pint',p:'pints',c:'vol',f:473.176},quart:{n:'quart',s:'quart',p:'quarts',c:'vol',f:946.353},
+  gallon:{n:'gallon',s:'gallon',p:'gallons',c:'vol',f:3785.41},stick:{n:'stick of butter (½ cup)',s:'stick',p:'sticks',c:'vol',f:118.294},
+  pinch:{n:'pinch (1/16 tsp)',s:'pinch',p:'pinches',c:'vol',f:0.308058},dash:{n:'dash (1/8 tsp)',s:'dash',p:'dashes',c:'vol',f:0.616115},
+  ml:{n:'milliliter (ml)',s:'ml',p:'ml',c:'vol',f:1},l:{n:'liter (L)',s:'L',p:'L',c:'vol',f:1000},
+  g:{n:'gram (g)',s:'g',p:'g',c:'wt',f:1},kg:{n:'kilogram (kg)',s:'kg',p:'kg',c:'wt',f:1000},
+  oz:{n:'ounce (oz)',s:'oz',p:'oz',c:'wt',f:28.3495},lb:{n:'pound (lb)',s:'lb',p:'lbs',c:'wt',f:453.592},
+  degF:{n:'°F (Fahrenheit)',s:'°F',p:'°F',c:'temp'},degC:{n:'°C (Celsius)',s:'°C',p:'°C',c:'temp'},
+  inch:{n:'inch (in)',s:'inch',p:'inches',c:'len',f:2.54},cm:{n:'centimeter (cm)',s:'cm',p:'cm',c:'len',f:1},mm:{n:'millimeter (mm)',s:'mm',p:'mm',c:'len',f:0.1}
+};
+var CC_GROUPS={vol:'Volume',wt:'Weight',temp:'Temperature',len:'Length (pans)'};
+var CC_PREF={ml:'cup',l:'cup',g:'oz',kg:'lb',cm:'inch',mm:'inch',degC:'degF',degF:'degC'},CC_DEF={vol:'ml',wt:'g',len:'cm'};
+var CC_FRAC_UNITS={tsp:1,tbsp:1,cup:1,pint:1,quart:1,gallon:1,stick:1,floz:1};
+function ccOpts(keys){return keys.map(function(k){return'<option value="'+k+'">'+CC_UNITS[k].n+'</option>';}).join('');}
+function ccInit(){
+  var from=document.getElementById('ccFrom');if(!from)return;
+  from.innerHTML=Object.keys(CC_GROUPS).map(function(g){return'<optgroup label="'+CC_GROUPS[g]+'">'+ccOpts(Object.keys(CC_UNITS).filter(function(k){return CC_UNITS[k].c===g;}))+'</optgroup>';}).join('');
+  from.value='cup';ccFromChanged('ml');
+}
+function ccFromChanged(prefer){
+  var from=document.getElementById('ccFrom'),to=document.getElementById('ccTo');
+  var f=from.value,cat=CC_UNITS[f].c,prev=(typeof prefer==='string')?prefer:to.value;
+  var keys=Object.keys(CC_UNITS).filter(function(k){return CC_UNITS[k].c===cat&&k!==f;});
+  to.innerHTML=ccOpts(keys);
+  var pick=keys.indexOf(prev)>=0?prev:(keys.indexOf(CC_PREF[f])>=0?CC_PREF[f]:(keys.indexOf(CC_DEF[cat])>=0?CC_DEF[cat]:keys[0]));
+  to.value=pick;ccUpdate();
+}
+function ccSwap(){
+  var from=document.getElementById('ccFrom'),to=document.getElementById('ccTo');
+  var f=from.value,t=to.value;if(!t)return;
+  from.value=t;ccFromChanged(f);
+}
+function ccFmt(x){
+  var a=Math.abs(x);if(a>0&&a<0.001)return'less than 0.001';
+  var d=a>=1000?0:a>=100?1:a>=1?2:3,m=Math.pow(10,d);
+  return(Math.round(x*m)/m).toLocaleString('en-US',{maximumFractionDigits:d});
+}
+function ccFrac(x){      // nearest kitchen fraction, e.g. 1.34 -> "1 ⅓"
+  if(!(x>0))return'';
+  var whole=Math.floor(x),fr=x-whole,C=[[0,''],[1/8,'⅛'],[1/4,'¼'],[1/3,'⅓'],[3/8,'⅜'],[1/2,'½'],[5/8,'⅝'],[2/3,'⅔'],[3/4,'¾'],[7/8,'⅞'],[1,'']],best=null;
+  C.forEach(function(c){var dd=Math.abs(fr-c[0]);if(!best||dd<best.d)best={d:dd,v:c[0],s:c[1]};});
+  if(best.d>0.02)return'';
+  if(best.v===1){whole+=1;best.s='';}
+  if(!whole&&!best.s)return'';
+  return(whole?whole+(best.s?' ':''):'')+best.s;
+}
+function ccUpdate(){
+  var out=document.getElementById('ccOut');if(!out)return;
+  var f=document.getElementById('ccFrom').value,t=document.getElementById('ccTo').value;
+  if(!t)return;
+  var fu=CC_UNITS[f],tu=CC_UNITS[t],raw=document.getElementById('ccQty').value.trim();
+  if(!raw){out.innerHTML='<div class="cc-err">Type a quantity (like 2, 1/2 or 1 1/2) to convert.</div>';return;}
+  var lo,hi;
+  if(fu.c==='temp'){var n=parseFloat(raw.replace('°',''));if(!isFinite(n)){out.innerHTML='<div class="cc-err">Couldn’t read that temperature — try something like 350.</div>';return;}lo=hi=n;}
+  else{var q=WFC.parseQty(raw);if(!q||!(q.max>0)){out.innerHTML='<div class="cc-err">Couldn’t read that quantity — try something like 2, 1/2, 1 1/2 or 0.75.</div>';return;}lo=q.min;hi=q.max;}
+  function cv(v){
+    if(fu.c==='temp')return f==='degF'?(v-32)*5/9:v*9/5+32;
+    return v*fu.f/tu.f;
+  }
+  var a=cv(lo),b=cv(hi),single=Math.abs(hi-lo)<1e-9;
+  var big=single?ccFmt(a):ccFmt(a)+'–'+ccFmt(b);
+  var unit=(single&&Math.abs(a-1)<1e-9)?tu.s:tu.p;
+  var echo=(single?WFC.formatQty(q||{min:lo,max:hi},'pretty'):raw)+' '+((single&&Math.abs(lo-1)<1e-9)?fu.s:fu.p);
+  if(fu.c==='temp')echo=ccFmt(lo)+' '+fu.s;
+  var sub='';
+  if(single&&CC_FRAC_UNITS[t]){var fr=ccFrac(a);if(fr&&fr!==ccFmt(a))sub='about '+fr+' '+(a<=1?tu.s:tu.p);}
+  out.innerHTML='<div class="cc-eq">'+h(echo)+' =</div><div class="cc-big">'+h(big+' '+unit)+'</div>'+(sub?'<div class="cc-sub">'+h(sub)+'</div>':'');
+}
+ccInit();
 var shoppingList=[],mealPlan=[],_shopMigrated=false,activeTags=new Set(),shopView='aisle';
 try{shopView=localStorage.getItem('wfc_shop_view')==='person'?'person':'aisle';}catch(e){}
 function updateShopBadge(){
@@ -1880,8 +1997,87 @@ function updateShopBadge(){
   if(tb){var u=shoppingList.filter(function(i){return!i.checked;}).length;tb.style.display=u?'block':'none';tb.textContent=u;}
 }
 var EMOJIS={Breakfast:"🍳",Lunch:"🥗",Dinner:"🍽️",Dessert:"🍰",Snack:"🧆",Soup:"🍲",Salad:"🥙",Baking:"🍞",Drink:"🥤","Side Dish":"🥦",Appetizer:"🫕",Other:"🍴"};
-var DLABELS={vegan:"🌱 Vegan",vegetarian:"🥦 Veg",glutenfree:"🌾 GF",dairyfree:"🥛 DF",keto:"🥑 Keto"};
-var DCLS={vegan:"dt-vegan",vegetarian:"dt-vegetarian",glutenfree:"dt-glutenfree",dairyfree:"dt-dairyfree",keto:"dt-keto"};
+var DLABELS={vegan:"🌱 Vegan",vegetarian:"🥦 Veg",glutenfree:"🌾 GF",dairyfree:"🥛 DF",keto:"🥑 Keto",nutfree:"🥜 Nut-Free",eggfree:"🥚 Egg-Free",soyfree:"🫘 Soy-Free",shellfishfree:"🦐 Shellfish-Free"};
+var DLONG={vegan:"🌱 Vegan",vegetarian:"🥦 Vegetarian",glutenfree:"🌾 Gluten-Free",dairyfree:"🥛 Dairy-Free",keto:"🥑 Keto",nutfree:"🥜 Nut-Free (peanuts & tree nuts)",eggfree:"🥚 Egg-Free",soyfree:"🫘 Soy-Free",shellfishfree:"🦐 Shellfish-Free"};
+var DCLS={vegan:"dt-vegan",vegetarian:"dt-vegetarian",glutenfree:"dt-glutenfree",dairyfree:"dt-dairyfree",keto:"dt-keto",nutfree:"dt-nutfree",eggfree:"dt-eggfree",soyfree:"dt-soyfree",shellfishfree:"dt-shellfishfree"};
+var DIET_ORDER=['vegan','vegetarian','glutenfree','dairyfree','keto','nutfree','eggfree','soyfree','shellfishfree'];
+var DIET_CARD=['vegan','vegetarian','glutenfree','dairyfree','keto','nutfree'];   // the extra allergy labels show in the recipe view + filters, not on every card
+
+/* ===== AUTOMATIC DIET / ALLERGY DETECTION =====
+   Looks at each ingredient NAME. A recipe only gets a label when none of its ingredients breaks it.
+   Words like "almond milk", "gluten-free flour" or "vegan butter" are understood. Anything the app
+   doesn't recognise is assumed fine, so these labels are a guide, never a guarantee. */
+var DX={
+ meat:{re:/\b(?:beef|steaks?|pork|bacon|hams?|sausages?|chicken|turkey|duck|goose|lamb|veal|mutton|venison|bison|rabbit|chorizo|pepperoni|salami|prosciutto|pancetta|brisket|ribs?|rib[- ]?eye|sirloin|tenderloin|hot ?dogs?|hamburgers?|meatballs?|meatloaf|meat|jerky|lard|tallow|schmaltz|suet|gelatin|gelatine|marshmallows?|jell-?o|oxtail|liver|broth|stock|bouillon|consomm[eé]|bratwurst|kielbasa|mortadella|gizzards?|giblets?|drippings|gravy)\b/,
+        ex:/\b(?:vegetable|veggie|mushroom|miso|kombu)\s+(?:broth|stock|bouillon)\b|celery ribs?|lamb'?s lettuce|\bmeat\s*substitute\b/},
+ fish:{re:/\b(?:fish|salmon|tuna|cod|haddock|tilapia|halibut|trout|sardines?|anchov(?:y|ies)|mackerel|snapper|sea bass|mahi|swordfish|catfish|herring|pollock|flounder|perch|eel|caviar|roe|bonito|katsuobushi|dashi|worcestershire|nam pla|surimi|kippers?|whitefish|monkfish|grouper)\b|\bcaesar\b/},
+ shell:{re:/\b(?:shrimps?|prawns?|crabs?|crabmeat|lobsters?|scallops?|clams?|mussels?|oysters?|crawfish|crayfish|langoustines?|squid|calamari|octopus|cuttlefish|abalone|escargot|krill|seafood|shellfish)\b/,ex:/crab apples?/},
+ egg:{re:/\b(?:eggs?|egg whites?|egg yolks?|yolks?|mayo|mayonnaise|meringue|aioli|hollandaise|eggnog|custard|albumen)\b|\bcaesar\b/,
+      ex:/\b(?:flax|chia|vegan|aquafaba)\s+eggs?\b|\begg\s+(?:replacer|replacement|substitute)\b/},
+ dairy:{re:/\b(?:milk|cream|creamer|butter|buttermilk|ghee|cheeses?|yogh?urt|kefir|whey|casein|lactose|custard|caramel|toffee|fudge|ice cream|gelato|half[- ]and[- ]half|dulce de leche|cottage|quark|skyr|labneh|ricotta|mascarpone|mozzarella|parmesan|parmigiano|cheddar|feta|brie|camembert|gouda|gruy[eè]re|provolone|halloumi|paneer|burrata|pecorino|gorgonzola|fontina|havarti|jack|swiss|alfredo|ranch|tzatziki|queso|b[eé]chamel|panna cotta|margarine|cr[eè]me fra[iî]che)\b|\bcaesar\b|\bpesto\b/,
+        ex:/\b(?:coconut|almond|oat|soy|soya|rice|cashew|hemp|pea|macadamia|hazelnut|plant|nut|non[- ]?dairy|vegan)\s+(?:milk|cream|creamer|cheese|yogh?urt|butter|ice cream)\b|\b(?:peanut|almond|cashew|sunflower|seed|cocoa|shea|apple|cookie)\s+butter\b|cream of (?:tartar|wheat|rice)|butter(?:nut|cup|fly|beans?|lettuce)|swiss chard|monterey|\bjack ?fruit/},
+ honey:{re:/\bhoney\b/,ex:/honeydew/},
+ gluten:{re:/\b(?:wheat|flours?|bread|breadcrumbs?|panko|pasta|spaghetti|macaroni|noodles?|couscous|bulgur|semolina|farro|barley|rye|malt|seitan|orzo|lasagn[ae]|fettuccine|linguine|penne|rigatoni|ravioli|tortellini|gnocchi|tortillas?|pita|naan|bagels?|buns?|rolls?|croutons?|crackers?|pretzels?|cookies?|biscuits?|cake|dough|pastry|puff pastry|phyllo|filo|wonton|dumpling wrappers?|soy sauce|teriyaki|hoisin|beer|ale|stout|lager|graham|cereal|granola|oats?|oatmeal|spelt|kamut|durum|udon|ramen|baguette|ciabatta|brioche|sourdough|muffins?|waffles?|pancake mix|bisquick|self[- ]rising|cake mix|brownie mix)\b/,
+         ex:/\b(?:almond|coconut|rice|corn|chickpea|gram|besan|tapioca|potato|cassava|buckwheat|sorghum|millet|teff|quinoa|amaranth|arrowroot|lupin|hazelnut|cashew|flax|masa)\s+(?:flour|meal)\b|\b(?:rice|glass|cellophane|bean thread|shirataki|zucchini|sweet potato|konjac|kelp)\s+(?:noodles?|paper)\b|\b(?:rice|corn|chickpea|lentil|quinoa)\s+pasta\b|egg rolls?|spring rolls?|rolled oats? gluten/},
+ nuts:{re:/\b(?:peanuts?|almonds?|walnuts?|pecans?|cashews?|pistachios?|hazelnuts?|filberts?|macadamias?|brazil nuts?|pine nuts?|pinenuts?|chestnuts?|marzipan|praline|nutella|amaretto|amaretti|frangelico|gianduja|nougat|nuts?|mixed nuts|trail mix|satay|pesto|marcona|pili)\b/,ex:/water chestnuts?/},
+ soy:{re:/\b(?:soy|soya|soybeans?|tofu|tempeh|edamame|miso|tamari|shoyu|natto|tvp|textured vegetable protein|teriyaki|hoisin)\b/},
+ carb:{re:/\b(?:sugar|brown sugar|powdered sugar|confectioners|icing sugar|honey|maple syrup|syrup|molasses|agave|jam|jelly|preserves|marmalade|flours?|bread|breadcrumbs?|panko|pasta|spaghetti|macaroni|noodles?|rice|quinoa|couscous|oats?|oatmeal|cereal|granola|potato(?:es)?|yams?|corn|cornstarch|corn starch|tapioca|arrowroot|beans?|lentils?|chickpeas?|peas|tortillas?|pita|naan|bagels?|buns?|rolls?|crackers?|chips|cookies?|cake|brownie|candy|banana|bananas|apples?|grapes?|raisins?|dates|mango(?:es)?|pineapple|oranges?|juice|dried fruit|ketchup|barbecue sauce|bbq sauce|hoisin|teriyaki|dough|pastry|wheat|barley|rye|semolina|bulgur|farro|beer)\b/,
+        ex:/\b(?:almond|coconut|flax(?:seed)?|lupin|sunflower seed|hazelnut|pecan|walnut|chia|psyllium|sesame|peanut|cashew)\s+(?:flour|meal)\b|almond meal|cauliflower rice|riced cauliflower|rice vinegar|konjac rice|shirataki|\b(?:lemon|lime)\s+juice|zest|sugar[- ]free|no[- ]sugar|sugar snap|sugar substitute|green beans?|vanilla beans?|coffee beans?|cocoa beans?|apple cider|\b(?:orange|lemon|lime)\s+(?:zest|peel)|egg rolls?/}
+};
+function ingFlags(name){
+  var s=' '+String(name||'').toLowerCase().replace(/[\u2019]/g,"'")+' ';
+  var sup={};
+  if(/\b(?:vegan|plant[- ]based)\b/.test(s)){sup.meat=sup.fish=sup.shell=sup.egg=sup.dairy=sup.honey=1;}
+  if(/\b(?:vegetarian|meat[- ]?less|meat[- ]?free)\b/.test(s)){sup.meat=sup.fish=sup.shell=1;}
+  if(/\b(?:dairy[- ]free|non[- ]?dairy)\b/.test(s))sup.dairy=1;
+  if(/\b(?:egg[- ]free|eggless)\b/.test(s))sup.egg=1;
+  if(/\bgluten[- ]free\b/.test(s))sup.gluten=1;
+  if(/\bnut[- ]free\b/.test(s))sup.nuts=1;
+  if(/\bsoy[- ]free\b/.test(s))sup.soy=1;
+  s=s.replace(/\b(?:vegan|plant[- ]based|vegetarian|meat[- ]?less|meat[- ]?free|dairy[- ]free|non[- ]?dairy|egg[- ]free|eggless|gluten[- ]free|nut[- ]free|soy[- ]free)\b/g,' ');
+  var f={};
+  Object.keys(DX).forEach(function(k){
+    if(sup[k])return;
+    var d=DX[k],x=d.ex?s.replace(new RegExp(d.ex.source,'g'),' '):s;
+    if(d.re.test(x))f[k]=true;
+  });
+  return f;
+}
+function computeDiets(ings,carbs){
+  var names=(ings||[]).map(function(i){return typeof i==='string'?i:(i&&i.name)||'';}).filter(function(n){return String(n).trim();});
+  if(!names.length)return [];                      // no ingredients yet — nothing to judge
+  var any={};
+  names.forEach(function(n){var f=ingFlags(n);Object.keys(f).forEach(function(k){any[k]=true;});});
+  var cb=parseFloat(carbs),hasCarbs=String(carbs==null?'':carbs).trim()!==''&&isFinite(cb);
+  var out=[];
+  if(!(any.meat||any.fish||any.shell||any.egg||any.dairy||any.honey))out.push('vegan');
+  if(!(any.meat||any.fish||any.shell))out.push('vegetarian');
+  if(!any.gluten)out.push('glutenfree');
+  if(!any.dairy)out.push('dairyfree');
+  if(hasCarbs?cb<=10:!any.carb)out.push('keto');   // if you typed carbs per serving, that wins (10 g or less); otherwise judged by ingredients
+  if(!any.nuts)out.push('nutfree');
+  if(!any.egg)out.push('eggfree');
+  if(!any.soy)out.push('soyfree');
+  if(!any.shell)out.push('shellfishfree');
+  return out;
+}
+function dietsOf(r){return r?computeDiets(r.ingredients,r.carbs):[];}
+function dietsShown(r,all){
+  var d=dietsOf(r).filter(function(k){return all||DIET_CARD.indexOf(k)>=0;});
+  if(d.indexOf('vegan')>=0)d=d.filter(function(k){return k!=='vegetarian';});   // vegan already implies vegetarian
+  return d;
+}
+function updateDietPreview(){
+  var box=document.getElementById('dietAuto');if(!box)return;
+  var ings=Array.prototype.map.call(document.querySelectorAll('#ingList .ing-name'),function(el){return el.value;});
+  var d=computeDiets(ings,(document.getElementById('f_carbs')||{}).value);
+  box.innerHTML=d.length?d.map(function(k){return'<span class="diet-tag '+(DCLS[k]||'')+'">'+h(DLONG[k]||k)+'</span>';}).join(''):'<span class="diet-none">Add some ingredients and the labels will appear here.</span>';
+}
+(function(){
+  var il=document.getElementById('ingList');
+  if(il){il.addEventListener('input',updateDietPreview);il.addEventListener('click',function(){setTimeout(updateDietPreview,0);});}
+  var cb=document.getElementById('f_carbs');if(cb)cb.addEventListener('input',updateDietPreview);
+})();
 function formatLastCooked(v){
   var ms=v&&v.seconds?v.seconds*1000:(typeof v==='string'?Date.parse(v):null);
   if(!ms)return'';
@@ -1994,7 +2190,7 @@ var rowOpen={},browseGrid=false;
 try{browseGrid=localStorage.getItem('wfc_browse_grid')==='1';}catch(e){}
 function rowIsOpen(id,catChosen){var v=rowOpen[id];return v!==undefined?v:(browseGrid||catChosen);}
 function cardHtml(r,i){
-    var diets=(isMine(r)?'<span class="diet-tag mine-tag">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
+    var diets=(isMine(r)?'<span class="diet-tag mine-tag">👤 Yours</span>':'')+dietsShown(r,false).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'">'+(DLABELS[d]||d)+'</span>';}).join('');
     return '<div class="recipe-card" data-id="'+r.id+'" style="animation-delay:'+i*.04+'s" onclick="viewRecipe(\''+r.id+'\')">'+
       (cardSrc(r)?'<img class="card-img" loading="lazy" decoding="async" src="'+h(cardSrc(r))+'" alt="'+h(r.name)+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':'')+
       '<div class="card-ph" style="'+(cardSrc(r)?'display:none':'')+'">'+(EMOJIS[r.category]||'🍴')+'</div>'+
@@ -2071,7 +2267,7 @@ function renderCards(){
     if(q&&!terms.some(function(s){return s.toLowerCase().indexOf(q)>=0;}))return false;
     if(cat&&r.category!==cat)return false;
     if(cui&&r.cuisine!==cui)return false;
-    if(activeDiets.size>0){var rd=new Set(r.diets||[]);for(var d of activeDiets)if(!rd.has(d))return false;}
+    if(activeDiets.size>0){var rd=new Set(dietsOf(r));for(var d of activeDiets)if(!rd.has(d))return false;}
     if(activeTags.size>0){var rt=new Set(r.tags||[]);for(var tg of activeTags)if(!rt.has(tg))return false;}
     if(favOnly&&!isFav(r))return false;
     if(mineOnly&&!isMine(r))return false;
@@ -2127,7 +2323,7 @@ function viewRecipe(id,scale,metric){
   var siList=(r.ingredients||[]).map(scaleIng),massN=siList.filter(function(x){return x.mass;}).length;
   var mArg=(m==='mass')?"'mass'":String(!!m);
 
-  var diets=(isMine(r)?'<span class="diet-tag mine-tag" style="font-size:calc(11.5px*var(--fs));padding:2px 8px">👤 Yours</span>':'')+(r.diets||[]).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:calc(11.5px*var(--fs));padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
+  var diets=(isMine(r)?'<span class="diet-tag mine-tag" style="font-size:calc(11.5px*var(--fs));padding:2px 8px">👤 Yours</span>':'')+dietsShown(r,true).map(function(d){return '<span class="diet-tag '+(DCLS[d]||'')+'" style="font-size:calc(11.5px*var(--fs));padding:2px 8px">'+(DLABELS[d]||d)+'</span>';}).join('');
   var tagPills=(r.tags||[]).length?'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:6px">'+r.tags.map(function(t){return'<span class="tag-pill" data-tag="'+h(t)+'" onclick="filterByTag(this.dataset.tag)">#'+h(t)+'</span>';}).join('')+'</div>':'';
   var pairs=(r.pairings||'').split(',').map(function(p){return p.trim();}).filter(Boolean);
   var scaledServings=Math.round(base*s*4)/4;
@@ -2152,8 +2348,8 @@ function viewRecipe(id,scale,metric){
     '</div>'+
     (r.lastCooked?'<p style="font-size:calc(12px*var(--fs));color:var(--ink3);margin:-.6rem 0 .85rem">Last cooked '+formatLastCooked(r.lastCooked)+'</p>':'')+
     '<div class="slider-row"><label>Servings</label>'+
-    '<input type="range" min="0.25" max="10" step="0.25" value="'+s+'" oninput="viewRecipe(\''+r.id+'\',+this.value,'+mArg+')">'+
-    '<span class="slider-val">'+scaledServings+'</span>'+
+    '<input type="range" min="0.25" max="'+Math.max(10,Math.ceil(s))+'" step="0.25" value="'+s+'" oninput="viewRecipe(\''+r.id+'\',+this.value,'+mArg+')" aria-label="Servings slider">'+
+    '<input type="number" class="serv-input" min="0.25" step="any" inputmode="decimal" value="'+scaledServings+'" title="Type any number of servings" aria-label="Number of servings" onchange="setServings(\''+r.id+'\',this.value,'+mArg+')" onkeydown="if(event.key===\'Enter\'){this.blur();}">'+
     '<div class="unit-toggle">'+
     '<button class="unit-btn '+((!m)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',false)">Imperial</button>'+
     '<button class="unit-btn '+((m===true)?'active':'')+'" onclick="viewRecipe(\''+r.id+'\','+s+',true)">Metric</button>'+
@@ -2175,6 +2371,12 @@ function viewRecipe(id,scale,metric){
   document.getElementById('viewOverlay').scrollTop=fresh?0:prevTop;   // keep your place when you tweak servings / pan / units
 }
 
+function setServings(id,val,m){
+  var r=recipes.find(function(x){return x.id===id;});if(!r)return;
+  var base=+(r.servings||1)||1,n=parseFloat(val);
+  if(!(n>0)){showToast('⚠️ Enter a number of servings above 0');viewRecipe(id,viewScale,m);return;}
+  viewRecipe(id,Math.min(n,1000)/base,m);
+}
 var cookFactor=1,cookDone={},cookIngsOpen=true,cookUnits=false;
 function cookIngLine(i){
   var c=convertIng(i,cookFactor,cookUnits),qs=c.qty||'',u=c.unit||'';
@@ -2911,7 +3113,7 @@ function firstNum(v){var m=/(\d+(?:\.\d+)?)/.exec(String(v==null?'':v));return m
 function sanitizeRecipe(r){
   if(!r||typeof r!=='object'||Array.isArray(r)||r.deleted)return null;
   var name=cleanText(r.name,120);if(!name)return null;
-  var cats=allowedValues('#f_cat option'),cuis=allowedValues('#f_cuisine option'),dietsOk=allowedValues('.diet-check input');
+  var cats=allowedValues('#f_cat option'),cuis=allowedValues('#f_cuisine option');
   var ing=(Array.isArray(r.ingredients)?r.ingredients:[]).slice(0,100).map(function(i){
     if(typeof i==='string')i=WFC.parseIngredient(i);
     if(!i||typeof i!=='object')return null;
@@ -2929,7 +3131,7 @@ function sanitizeRecipe(r){
   return{name:name,category:cats.indexOf(r.category)>=0?r.category:'',cuisine:cuis.indexOf(r.cuisine)>=0?r.cuisine:'',
     author:cleanText(r.author,60),servings:firstNum(r.servings),pan:PAN_BY_KEY.hasOwnProperty(r.pan)?r.pan:'',active:firstNum(r.active),passive:firstNum(r.passive),
     photo:photo,description:cleanText(r.description,2000),cal:firstNum(r.cal),protein:firstNum(r.protein),carbs:firstNum(r.carbs),fat:firstNum(r.fat),
-    pairings:cleanText(r.pairings,300),sourceUrl:src,diets:(Array.isArray(r.diets)?r.diets:[]).filter(function(d){return dietsOk.indexOf(d)>=0;}),
+    pairings:cleanText(r.pairings,300),sourceUrl:src,diets:computeDiets(ing,firstNum(r.carbs)),
     tags:parseTags(Array.isArray(r.tags)?r.tags.join(','):r.tags),ingredients:ing,steps:steps};
 }
 function importMsg(kind,html){document.getElementById('importPreview').innerHTML='<div class="imp-msg '+kind+'">'+html+'</div>';}
@@ -3143,10 +3345,10 @@ function openAdd(prefill){
     (prefill.ingredients||[]).forEach(function(i){i=WFC.splitCompound(i);addIng(i.name,i.qty||'',i.unit||'',i.qty2||'',i.unit2||'');});
     (prefill.steps||[]).forEach(function(s){addStep(s);});
     if(prefill.tags&&prefill.tags.length)setValue('f_tags',prefill.tags.join(', '));
-    (prefill.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.checked=true;el.closest('.diet-check').classList.add('checked');}});
   }
   if(!document.querySelectorAll('.ing-row').length){addIng();addIng();addIng();}
   if(!document.querySelectorAll('.step-row').length){addStep();addStep();}
+  updateDietPreview();
   openOverlay('addOverlay');
   document.getElementById('addOverlay').scrollTop=0;
 }
@@ -3163,11 +3365,11 @@ function openEdit(id){
   if(/^data:image\//.test(r.photo||'')){setValue('f_photo','');pendingPhotoData=r.photo;}
   keepUploadedPhoto=!pendingPhotoData&&!!(r.hasFullPhoto||r.thumb)&&!/^https?:/i.test(r.photo||'');editThumb=r.thumb||'';
   previewPhoto();
-  (r.diets||[]).forEach(function(d){var el=document.querySelector('.diet-check input[value="'+d+'"]');if(el){el.closest('.diet-check').classList.add('checked');el.checked=true;}});
   (r.ingredients||[]).forEach(function(i){i=WFC.splitCompound(i);addIng(i.name,i.qty,i.unit,i.qty2||'',i.unit2||'');});
   if(!(r.ingredients||[]).length)addIng();
   (r.steps||[]).forEach(function(s){addStep(s);});
   if(!(r.steps||[]).length)addStep();
+  updateDietPreview();
   openOverlay('addOverlay');
   document.getElementById('addOverlay').scrollTop=0;
 }
@@ -3175,10 +3377,10 @@ function clearForm(){
   ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings','f_tags','f_sourceUrl'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['f_cat','f_cuisine','f_pan'].forEach(function(id){var el=document.getElementById(id);if(el)el.selectedIndex=0;});
   document.getElementById('ingList').innerHTML='';
-  document.getElementById('stepList').innerHTML='';
+  document.getElementById('stepList').innerHTML='';clearStepPick();
   var pf=document.getElementById('f_photoFile');if(pf)pf.value='';
   pendingPhotoData=null;previewPhoto();
-  document.querySelectorAll('.diet-check').forEach(function(el){el.classList.remove('checked');el.querySelector('input').checked=false;});
+  updateDietPreview();
 }
 function toggleIngPlus(btn){var row=btn.closest('.ing-row'),box=row.querySelector('.ing-plus');box.hidden=!box.hidden;if(!box.hidden)row.querySelector('.ing-qty2').focus();}
 function addIng(name,qty,unit,qty2,unit2){
@@ -3192,14 +3394,49 @@ function addIng(name,qty,unit,qty2,unit2){
     '<div class="ing-plus"'+(qty2?'':' hidden')+'><span>plus</span><input type="text" placeholder="Amount" value="'+h(qty2)+'" class="ing-qty2"><input type="text" placeholder="Unit" value="'+h(unit2)+'" class="ing-unit2"></div>';
   document.getElementById('ingList').appendChild(d);
 }
-function addStep(text){
-  text=text||'';
-  var list=document.getElementById('stepList');var n=list.children.length+1;
+var pickedStep=null;
+function stepRows(){return Array.prototype.slice.call(document.querySelectorAll('#stepList .step-row'));}
+function renumberSteps(){stepRows().forEach(function(row,i){row.querySelector('.step-num').textContent=i+1;var ta=row.querySelector('textarea');if(ta)ta.placeholder='Step '+(i+1)+'…';});}
+function clearStepPick(){if(pickedStep)pickedStep.classList.remove('picked');pickedStep=null;var l=document.getElementById('stepList');if(l)l.classList.remove('moving');}
+function addStep(text,afterRow){
+  text=(typeof text==='string')?text:'';
+  var list=document.getElementById('stepList');
   var d=document.createElement('div');d.className='step-row';
-  d.innerHTML='<div class="step-num">'+n+'</div><textarea placeholder="Step '+n+'…" rows="2">'+h(text)+'</textarea><button class="icon-btn" onclick="removeStep(this)">✕</button>';
-  list.appendChild(d);
+  d.innerHTML='<div class="step-num" role="button" tabindex="0" title="Click to pick up this step, then click another step\u2019s number to move it there" onclick="clickStepNum(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();clickStepNum(this);}"></div>'+
+    '<textarea rows="2">'+h(text)+'</textarea>'+
+    '<div class="step-actions">'+
+    '<button type="button" class="icon-btn mv" onclick="moveStep(this,-1)" title="Move up" aria-label="Move step up">▲</button>'+
+    '<button type="button" class="icon-btn mv" onclick="moveStep(this,1)" title="Move down" aria-label="Move step down">▼</button>'+
+    '<button type="button" class="icon-btn mv" onclick="insertStepBelow(this)" title="Add a step below" aria-label="Add a step below">＋</button>'+
+    '<button type="button" class="icon-btn" onclick="removeStep(this)" title="Delete step" aria-label="Delete step">✕</button></div>';
+  if(afterRow&&afterRow.parentNode===list)list.insertBefore(d,afterRow.nextSibling);else list.appendChild(d);
+  renumberSteps();
+  return d;
 }
-function removeStep(btn){btn.closest('.step-row').remove();document.querySelectorAll('.step-num').forEach(function(el,i){el.textContent=i+1;});}
+function insertStepBelow(btn){var d=addStep('',btn.closest('.step-row'));var ta=d.querySelector('textarea');if(ta)ta.focus();}
+function moveStep(btn,dir){
+  var row=btn.closest('.step-row'),list=row.parentNode;
+  var sib=dir<0?row.previousElementSibling:row.nextElementSibling;if(!sib)return;
+  if(dir<0)list.insertBefore(row,sib);else list.insertBefore(sib,row);
+  renumberSteps();
+  try{row.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}
+}
+function clickStepNum(el){
+  var row=el.closest('.step-row'),list=document.getElementById('stepList');
+  var rows=stepRows();
+  if(!pickedStep){
+    pickedStep=row;row.classList.add('picked');list.classList.add('moving');
+    showToast('Step '+(rows.indexOf(row)+1)+' picked up — click another step\u2019s number to move it there');
+    return;
+  }
+  if(pickedStep===row){clearStepPick();return;}
+  var from=rows.indexOf(pickedStep),to=rows.indexOf(row),moved=pickedStep;
+  if(from<to)list.insertBefore(moved,row.nextSibling);else list.insertBefore(moved,row);   // it takes the clicked step's place
+  clearStepPick();renumberSteps();
+  showToast('Moved to step '+(stepRows().indexOf(moved)+1));
+  try{moved.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}
+}
+function removeStep(btn){var row=btn.closest('.step-row');if(row===pickedStep)clearStepPick();row.remove();renumberSteps();}
 function toggleCheck(label){setTimeout(function(){label.classList.toggle('checked',label.querySelector('input').checked);},0);}
 function previewPhoto(){
   var url=document.getElementById('f_photo').value.trim();
@@ -3215,7 +3452,7 @@ async function saveRecipe(){
   if(!dbReady){showToast('⚠️ Database not connected');return;}
   var ingredients=Array.from(document.querySelectorAll('.ing-row')).map(function(r){var o={name:r.querySelector('.ing-name').value.trim(),qty:r.querySelector('.ing-qty').value.trim(),unit:r.querySelector('.ing-unit').value.trim()},q2=r.querySelector('.ing-qty2').value.trim(),u2=r.querySelector('.ing-unit2').value.trim();if(q2&&o.qty&&u2){o.qty2=q2;o.unit2=u2;}return o;}).filter(function(i){return i.name;});
   var steps=Array.from(document.querySelectorAll('#stepList textarea')).map(function(t){return t.value.trim();}).filter(Boolean);
-  var diets=Array.from(document.querySelectorAll('.diet-check input:checked')).map(function(el){return el.value;});
+  var diets=computeDiets(ingredients,document.getElementById('f_carbs').value);
   var data={name:name,category:document.getElementById('f_cat').value,cuisine:document.getElementById('f_cuisine').value,author:document.getElementById('f_author').value.trim(),servings:document.getElementById('f_servings').value,pan:document.getElementById('f_pan').value,active:document.getElementById('f_active').value,passive:document.getElementById('f_passive').value,photo:document.getElementById('f_photo').value.trim(),description:document.getElementById('f_desc').value.trim(),cal:document.getElementById('f_cal').value,protein:document.getElementById('f_protein').value,carbs:document.getElementById('f_carbs').value,fat:document.getElementById('f_fat').value,pairings:document.getElementById('f_pairings').value.trim(),sourceUrl:document.getElementById('f_sourceUrl').value.trim(),diets:diets,ingredients:ingredients,steps:steps};
   data.tags=parseTags(document.getElementById('f_tags').value);
   if(!editingId){
