@@ -609,13 +609,15 @@ body.locked #acctOverlay .x-btn,body.locked #acctOverlay .modal-foot .btn:not(.b
 body.locked .tabbar{display:none!important}
 
 /* ===== step reordering ===== */
-.step-num{cursor:pointer;user-select:none;transition:all .15s}
-.step-num:hover,.step-num:focus-visible{background:var(--rust);color:#fff;outline:none}
-.step-row.picked .step-num{background:var(--rust);color:#fff;box-shadow:0 0 0 3px var(--rust2)}
-.step-row.picked textarea{border-color:var(--rust);background:var(--rust-pale)}
-#stepList.moving .step-row:not(.picked) .step-num{border:1.5px dashed var(--rust);animation:stepPulse 1.2s ease-in-out infinite}
-@keyframes stepPulse{50%{box-shadow:0 0 0 4px var(--rust-pale)}}
-.step-actions{display:grid;grid-template-columns:repeat(2,31px);gap:4px}
+.step-handle{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;border-radius:var(--rs);padding-bottom:2px}
+.step-handle:focus-visible{outline:2px solid var(--rust)}
+.step-grip{font-size:calc(13px*var(--fs));line-height:1;color:var(--ink3);letter-spacing:-1px}
+.step-handle:hover .step-num,.step-handle:focus-visible .step-num{background:var(--rust);color:#fff}
+.step-handle:hover .step-grip{color:var(--rust)}
+.step-row.dragging{opacity:.95;background:var(--rust-pale);border-radius:var(--rs);box-shadow:0 6px 18px rgba(44,36,22,.22);position:relative;z-index:2}
+.step-row.dragging textarea{border-color:var(--rust)}
+#stepList.moving,#stepList.moving *{cursor:grabbing!important}
+.step-actions{display:flex;flex-direction:column;gap:4px}
 .icon-btn.mv:hover{border-color:var(--rust);color:var(--rust);background:var(--rust-pale)}
 .step-hint,.diet-note{font-size:calc(11.5px*var(--fs));color:var(--ink3);line-height:1.5;margin:-.1rem 0 .55rem}
 /* ===== auto diet labels ===== */
@@ -1208,7 +1210,7 @@ body.locked .tabbar{display:none!important}
       <div class="section-sep">Ingredients <button class="add-row-btn" onclick="addIng()">＋ Add</button></div>
       <div id="ingList"></div>
       <div class="section-sep">Steps <button class="add-row-btn" onclick="addStep()">＋ Add</button></div>
-      <div class="step-hint">Tip: click a step's number to pick it up, then click another step's number to move it there. You can also use ▲ ▼, or ＋ to add a new step right below one.</div>
+      <div class="step-hint">Tip: press and hold the ⠿ grip next to a step's number, then drag it to a new spot. Use ＋ to add a blank step right below one.</div>
       <div id="stepList"></div>
     </div>
     <div class="modal-foot">
@@ -3377,7 +3379,7 @@ function clearForm(){
   ['f_name','f_author','f_servings','f_active','f_passive','f_photo','f_desc','f_cal','f_protein','f_carbs','f_fat','f_pairings','f_tags','f_sourceUrl'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['f_cat','f_cuisine','f_pan'].forEach(function(id){var el=document.getElementById(id);if(el)el.selectedIndex=0;});
   document.getElementById('ingList').innerHTML='';
-  document.getElementById('stepList').innerHTML='';clearStepPick();
+  document.getElementById('stepList').innerHTML='';endStepDrag();
   var pf=document.getElementById('f_photoFile');if(pf)pf.value='';
   pendingPhotoData=null;previewPhoto();
   updateDietPreview();
@@ -3394,49 +3396,70 @@ function addIng(name,qty,unit,qty2,unit2){
     '<div class="ing-plus"'+(qty2?'':' hidden')+'><span>plus</span><input type="text" placeholder="Amount" value="'+h(qty2)+'" class="ing-qty2"><input type="text" placeholder="Unit" value="'+h(unit2)+'" class="ing-unit2"></div>';
   document.getElementById('ingList').appendChild(d);
 }
-var pickedStep=null;
 function stepRows(){return Array.prototype.slice.call(document.querySelectorAll('#stepList .step-row'));}
 function renumberSteps(){stepRows().forEach(function(row,i){row.querySelector('.step-num').textContent=i+1;var ta=row.querySelector('textarea');if(ta)ta.placeholder='Step '+(i+1)+'…';});}
-function clearStepPick(){if(pickedStep)pickedStep.classList.remove('picked');pickedStep=null;var l=document.getElementById('stepList');if(l)l.classList.remove('moving');}
 function addStep(text,afterRow){
   text=(typeof text==='string')?text:'';
   var list=document.getElementById('stepList');
   var d=document.createElement('div');d.className='step-row';
-  d.innerHTML='<div class="step-num" role="button" tabindex="0" title="Click to pick up this step, then click another step\u2019s number to move it there" onclick="clickStepNum(this)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();clickStepNum(this);}"></div>'+
+  d.innerHTML='<div class="step-handle" role="button" tabindex="0" title="Press and drag to move this step" aria-label="Drag to reorder step. With this focused, use the up and down arrow keys." onpointerdown="startStepDrag(event)" onkeydown="stepHandleKey(event)"><div class="step-num"></div><div class="step-grip" aria-hidden="true">⠿</div></div>'+
     '<textarea rows="2">'+h(text)+'</textarea>'+
     '<div class="step-actions">'+
-    '<button type="button" class="icon-btn mv" onclick="moveStep(this,-1)" title="Move up" aria-label="Move step up">▲</button>'+
-    '<button type="button" class="icon-btn mv" onclick="moveStep(this,1)" title="Move down" aria-label="Move step down">▼</button>'+
-    '<button type="button" class="icon-btn mv" onclick="insertStepBelow(this)" title="Add a step below" aria-label="Add a step below">＋</button>'+
+    '<button type="button" class="icon-btn mv" onclick="insertStepBelow(this)" title="Add a blank step below" aria-label="Add a blank step below">＋</button>'+
     '<button type="button" class="icon-btn" onclick="removeStep(this)" title="Delete step" aria-label="Delete step">✕</button></div>';
   if(afterRow&&afterRow.parentNode===list)list.insertBefore(d,afterRow.nextSibling);else list.appendChild(d);
   renumberSteps();
   return d;
 }
 function insertStepBelow(btn){var d=addStep('',btn.closest('.step-row'));var ta=d.querySelector('textarea');if(ta)ta.focus();}
-function moveStep(btn,dir){
-  var row=btn.closest('.step-row'),list=row.parentNode;
-  var sib=dir<0?row.previousElementSibling:row.nextElementSibling;if(!sib)return;
-  if(dir<0)list.insertBefore(row,sib);else list.insertBefore(sib,row);
+function removeStep(btn){btn.closest('.step-row').remove();renumberSteps();}
+/* press-and-drag reordering (mouse, pen and touch) */
+var dragRow=null,dragY=0,dragRaf=0;
+function startStepDrag(e){
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  e.preventDefault();
+  dragRow=e.currentTarget.closest('.step-row');dragY=e.clientY;
+  dragRow.classList.add('dragging');document.getElementById('stepList').classList.add('moving');
+  document.addEventListener('pointermove',dragStepMove);
+  document.addEventListener('pointerup',endStepDrag);
+  document.addEventListener('pointercancel',endStepDrag);
+  dragRaf=requestAnimationFrame(dragScrollTick);
+}
+function dragStepMove(e){
+  if(!dragRow)return;
+  dragY=e.clientY;dragPlace();
+}
+function dragPlace(){
+  var list=document.getElementById('stepList'),before=null,others=stepRows().filter(function(r){return r!==dragRow;});
+  for(var i=0;i<others.length;i++){var b=others[i].getBoundingClientRect();if(dragY<b.top+b.height/2){before=others[i];break;}}
+  if(before){if(dragRow.nextElementSibling!==before)list.insertBefore(dragRow,before);}
+  else if(list.lastElementChild!==dragRow)list.appendChild(dragRow);
   renumberSteps();
-  try{row.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}
 }
-function clickStepNum(el){
-  var row=el.closest('.step-row'),list=document.getElementById('stepList');
-  var rows=stepRows();
-  if(!pickedStep){
-    pickedStep=row;row.classList.add('picked');list.classList.add('moving');
-    showToast('Step '+(rows.indexOf(row)+1)+' picked up — click another step\u2019s number to move it there');
-    return;
-  }
-  if(pickedStep===row){clearStepPick();return;}
-  var from=rows.indexOf(pickedStep),to=rows.indexOf(row),moved=pickedStep;
-  if(from<to)list.insertBefore(moved,row.nextSibling);else list.insertBefore(moved,row);   // it takes the clicked step's place
-  clearStepPick();renumberSteps();
-  showToast('Moved to step '+(stepRows().indexOf(moved)+1));
-  try{moved.scrollIntoView({block:'nearest',behavior:'smooth'});}catch(e){}
+function dragScrollTick(){      // scroll the form when the finger/mouse is near the top or bottom edge
+  if(!dragRow)return;
+  var ov=document.getElementById('addOverlay'),edge=70,v=0;
+  if(dragY<edge)v=-Math.ceil((edge-dragY)/4);else if(dragY>window.innerHeight-edge)v=Math.ceil((dragY-(window.innerHeight-edge))/4);
+  if(v&&ov){ov.scrollTop+=v;dragPlace();}
+  dragRaf=requestAnimationFrame(dragScrollTick);
 }
-function removeStep(btn){var row=btn.closest('.step-row');if(row===pickedStep)clearStepPick();row.remove();renumberSteps();}
+function endStepDrag(){
+  document.removeEventListener('pointermove',dragStepMove);
+  document.removeEventListener('pointerup',endStepDrag);
+  document.removeEventListener('pointercancel',endStepDrag);
+  cancelAnimationFrame(dragRaf);
+  var l=document.getElementById('stepList');if(l)l.classList.remove('moving');
+  if(dragRow){dragRow.classList.remove('dragging');dragRow=null;}
+  renumberSteps();
+}
+function stepHandleKey(e){      // keyboard alternative: focus the grip, then ↑ / ↓
+  if(e.key!=='ArrowUp'&&e.key!=='ArrowDown')return;
+  e.preventDefault();
+  var row=e.currentTarget.closest('.step-row'),list=row.parentNode;
+  var sib=e.key==='ArrowUp'?row.previousElementSibling:row.nextElementSibling;if(!sib)return;
+  if(e.key==='ArrowUp')list.insertBefore(row,sib);else list.insertBefore(sib,row);
+  renumberSteps();e.currentTarget.focus();
+}
 function toggleCheck(label){setTimeout(function(){label.classList.toggle('checked',label.querySelector('input').checked);},0);}
 function previewPhoto(){
   var url=document.getElementById('f_photo').value.trim();
